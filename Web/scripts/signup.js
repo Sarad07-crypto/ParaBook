@@ -29,7 +29,7 @@ const validateForm = (formSelector) => {
     },
     {
       attribute: "text-only",
-      isValid: (input) => !/^[A-Za-z\s]{2,}$/.test(input.value),
+      isValid: (input) => !/^[A-Za-z]{2,}$/.test(input.value),
     },
     {
       attribute: "pattern",

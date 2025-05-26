@@ -43,8 +43,8 @@ function sendMail_verification($firstName, $email, $_verify, $otp_code)
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    $firstName = $_POST["firstName"];
-    $lastName = $_POST["lastName"];
+    $firstName = htmlspecialchars(trim($_POST["firstName"]), ENT_QUOTES, 'UTF-8');
+    $lastName  = htmlspecialchars(trim($_POST["lastName"]), ENT_QUOTES, 'UTF-8');
     $email = $_POST["email"];
     $contact = $_POST["contact"];
     $password = $_POST["password"];

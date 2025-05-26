@@ -4,7 +4,7 @@
     use PHPMailer\PHPMailer\SMTP;
     use PHPMailer\PHPMailer\Exception;
 
-    session_start();
+    // session_start();
 
     $duration = 60;
 
@@ -38,7 +38,7 @@
     }
 
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        include "connection.php";
+        include "../connection.php";
 
         if (!isset($_SESSION['Email'], $_SESSION['user_id'])) {
             echo "<script>alert('Session expired. Please login again.');</script>";
@@ -92,14 +92,17 @@
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Email Verification</title>
 </head>
+
 <body>
     <form action="" method="post">
-        <div style="background-color: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+        <div
+            style="background-color: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
             <h2 style="text-align: center;">Verify Your Email</h2>
             <p><?php if (isset($expiryTime)) echo "OTP will expire at: $expiryTime"; ?></p>
             <p style="text-align: center;">Please enter the OTP sent to your email.</p>
@@ -112,30 +115,31 @@
     </form>
 
     <script>
-        const duration = <?php echo $duration; ?>;
-        const key = "endTime";
-        const now = Date.now();
+    const duration = <?php echo $duration; ?>;
+    const key = "endTime";
+    const now = Date.now();
 
-        let end = localStorage.getItem(key);
+    let end = localStorage.getItem(key);
 
-        if (!end || now > end) {
-            end = now + duration * 1000;
-            localStorage.setItem(key, end);
-        } else {
-            end = parseInt(end);
+    if (!end || now > end) {
+        end = now + duration * 1000;
+        localStorage.setItem(key, end);
+    } else {
+        end = parseInt(end);
+    }
+
+    function showTime() {
+        const left = Math.max(0, Math.floor((end - Date.now()) / 1000));
+        document.getElementById("timer").innerText = left > 0 ? left + "s" : "Time's up!";
+        if (left <= 0) {
+            clearInterval(timer);
+            localStorage.removeItem(key);
         }
+    }
 
-        function showTime() {
-            const left = Math.max(0, Math.floor((end - Date.now()) / 1000));
-            document.getElementById("timer").innerText = left > 0 ? left + "s" : "Time's up!";
-            if (left <= 0) {
-                clearInterval(timer);
-                localStorage.removeItem(key);
-            }
-        }
-
-        showTime();
-        const timer = setInterval(showTime, 1000);
+    showTime();
+    const timer = setInterval(showTime, 1000);
     </script>
 </body>
+
 </html>
