@@ -7,7 +7,7 @@ class Connect extends PDO
         parent::__construct(
             "mysql:host=localhost:3307;dbname=parabook",
             'root',
-            'parabook',
+            '',
             array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8")
         );
     }
@@ -54,23 +54,6 @@ class Controller
         return $content;
     }
 
-    //checks if user is logged in
-    // function checkUserStatus($id, $sess)
-    // {
-    //     $db = new Connect;
-    //     $user = $db->prepare(" SELECT id FROM users WHERE id=:id AND session=:session");
-    //     $user->execute([
-    //         ":id" => intval($id),
-    //         ":session" => $_SESSION
-    //     ]);
-    //     $userInfo = $user->fetch(PDO::FETCH_ASSOC);
-    //     if (!$userInfo) {
-    //         return FALSE;
-    //     } else {
-    //         return TRUE;
-    //     }
-    // }
-
     function insertData($data)
     {
 
@@ -110,7 +93,7 @@ class Controller
 
             if ($mainUser) {
                 session_destroy();
-                echo "<script>alert('User already registered.'); window.location.href='ParaBook/Web/php/login_signup/login.php';</script>";
+                echo "<script>alert('User already registered.'); window.location.href='/ParaBook/Web/php/login_signup/login.php';</script>";
                 exit();
             }
 
