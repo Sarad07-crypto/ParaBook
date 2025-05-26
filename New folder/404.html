@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ParaBook Header</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>  
+<style>
+      :root {
+  --primary-color: #007BFF;
+  --gradient: linear-gradient(90deg, #1e90ff, #0056b3);
+  --header-padding: 12px 30px;
+  --logo-size: 24px;
+  --footer-padding: 30px 0 10px 0;
+  --footer-font-size: 15px;
+  --footer-gap: 30px;
+  --nav-link-margin: 0 20px;
+  --nav-link-font-size: 16px;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #fff;
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--header-padding);
+  background-color: #fff;
+  border-bottom: 1px solid #ccc;
+}
+
+.logo {
+  font-weight: bold;
+  font-size: var(--logo-size);
+  color: var(--primary-color);
+  display: block;
+}
+
+.search-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  margin: 0 30px;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 400px;
+  border: 1px solid #ccc;
+  border-radius: 25px;
+  padding: 6px 15px;
+}
+
+.search-box input {
+  border: none;
+  outline: none;
+  flex: 1;
+  font-size: 14px;
+}
+
+.search-box button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--primary-color);
+  font-size: 16px;
+}
+
+.right-section {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.right-section i {
+  font-size: 18px;
+  color: var(--primary-color);
+  cursor: pointer;
+}
+
+.switch-text {
+  font-size: 14px;
+  color: #333;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #ccc;
+  overflow: hidden;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.nav-bar {
+  background: var(--gradient);
+  display: flex;
+  justify-content: center;
+  padding: 10px 0;
+  color: white;
+}
+
+.nav-bar a {
+  margin: var(--nav-link-margin);
+  text-decoration: none;
+  color: white;
+  font-weight: 500;
+  font-size: var(--nav-link-font-size);
+}
+
+.nav-bar a:hover {
+  text-decoration: underline;
+}
+
+.darkmode {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.footer {
+  background: linear-gradient(180deg, #1e90ff, #0056b3);
+  color: #fff;
+  padding: var(--footer-padding);
+  font-size: var(--footer-font-size);
+  margin-top: 50px;
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  max-width: 1200px;
+  margin: 0 auto;
+  gap: var(--footer-gap);
+}
+
+.footer-col {
+  min-width: 180px;
+}
+
+.footer-col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 18px 0;
+}
+
+.footer-col ul li {
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: text-decoration 0.2s;
+}
+
+.footer-col ul li:hover {
+  text-decoration: underline;
+}
+
+.footer-social {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.footer-social a {
+  color: #fff;
+  font-size: 18px;
+  margin-left: 6px;
+  transition: color 0.2s;
+}
+
+.footer-social a:hover {
+  color: #333;
+}
+
+.footer-bottom {
+  text-align: center;
+  margin-top: 18px;
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+/* Hamburger menu styles */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  gap: 6px;
+}
+.hamburger span {
+  display: block;
+  height: 4px;
+  width: 100%;
+  background: var(--primary-color);
+  border-radius: 2px;
+  transition: 0.3s;
+}
+
+/* Sidebar styles */
+.sidebar {
+  display: none;
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 80vw;
+  max-width: 320px;
+  height: 100vh;
+  background: #fff;
+  box-shadow: -2px 0 12px rgba(0,0,0,0.15);
+  z-index: 999;
+  flex-direction: column;
+  padding: 30px 20px 20px 20px;
+  transition: transform 0.3s;
+  transform: translateX(100%);
+}
+.sidebar.active {
+  display: flex;
+  transform: translateX(0);
+}
+.sidebar .close-btn {
+  align-self: flex-end;
+  font-size: 24px;
+  color: var(--primary-color);
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+.sidebar .sidebar-section {
+  margin-bottom: 24px;
+}
+.sidebar .sidebar-links a,
+.sidebar .sidebar-section span,
+.sidebar .sidebar-section .avatar {
+  display: block;
+  margin-bottom: 16px;
+  color: #333;
+  font-size: 17px;
+  text-decoration: none;
+  font-weight: 500;
+}
+.sidebar .avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #ccc;
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: #555;
+}
+
+/* Logout button styles */
+.logout-btn {
+  width: 100%;
+  padding: 10px 0;
+  background: var(--primary-color);
+  color: #fff;
+  border: none;
+  border-radius: 22px;
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.logout-btn:hover {
+  background: #0056b3;
+}
+
+/* Sidebar backdrop styles */
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 998;
+  background: rgba(255,255,255,0.3);
+  backdrop-filter: blur(6px);
+  transition: opacity 0.3s;
+  opacity: 0;
+  pointer-events: none;
+}
+.sidebar-backdrop.active {
+  display: block;
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Responsive styles */
+@media (max-width: 900px) {
+  :root {
+    --header-padding: 12px 10px;
+    --nav-link-margin: 0 10px;
+  }
+  .top-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .search-container {
+    margin: 10px 0;
+    width: 100%;
+  }
+  .right-section {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 600px) {
+  :root {
+    --logo-size: 20px;
+    --footer-gap: 18px;
+    --footer-padding: 20px 0 8px 0;
+    --nav-link-font-size: 15px;
+  }
+  .top-bar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 10px 5px;
+  }
+  .logo {
+    margin-bottom: 8px;
+    display: none !important;
+  }
+  .search-container {
+    margin: 8px 0;
+    width: 100%;
+  }
+  .search-box {
+    max-width: 100%;
+    padding: 4px 8px;
+  }
+  .right-section {
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-start;
+  }
+  .nav-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 8px 0;
+  }
+  .nav-bar a {
+    margin: 6px 0;
+  }
+  .footer-content {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0 10px;
+  }
+  .footer-col {
+    min-width: unset;
+    width: 100%;
+  }
+  /* Responsive: show hamburger, hide header content */
+  .hamburger {
+    display: flex;
+  }
+  .top-bar-content {
+    display: none;
+  }
+  .top-bar.active .top-bar-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+  }
+  .logo, .top-bar-content, .nav-bar {
+    display: none !important;
+  }
+  .hamburger {
+    display: flex;
+    z-index: 1001;
+  }
+  .sidebar {
+    display: flex;
+    transform: translateX(100%);
+  }
+  .sidebar.active {
+    transform: translateX(0);
+  }
+  body.sidebar-open {
+    overflow: hidden;
+  }
+}
+.logo {
+  display: block;
+}
+.responsive-logo {
+  display: none;
+}
+@media (max-width: 600px) {
+  .logo {
+    display: none !important;
+  }
+  .responsive-logo {
+    display: block !important;
+    position: absolute;
+    left: 0; right: 0;
+    margin: 0 auto;
+    text-align: center;
+    font-size: var(--logo-size);
+    color: var(--primary-color);
+    font-weight: bold;
+    z-index: 1002;
+    background: #fff;
+    height: 36px;
+    line-height: 36px;
+    pointer-events: none;
+  }
+  .top-bar {
+    position: relative;
+    min-height: 36px;
+  }
+  .hamburger {
+    position: relative;
+    z-index: 1003;
+  }
+}
+/* Hide mobile search icon and box by default */
+.search-icon-mobile,
+.mobile-search-box {
+  display: none;
+}
+
+/* Show only on mobile */
+@media (max-width: 600px) {
+  .search-icon-mobile {
+    display: block;
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 22px;
+    color: var(--primary-color);
+    cursor: pointer;
+    z-index: 1004;
+    background: #fff;
+    padding: 4px 6px;
+    border-radius: 50%;
+    transition: background 0.2s;
+  }
+  .search-icon-mobile:hover {
+    background: #f0f0f0;
+  }
+  .mobile-search-box {
+    display: none;
+    position: absolute;
+    right: 50px;
+    top: 8px;
+    width: 65vw;
+    max-width: 320px;
+    z-index: 1005;
+    background: #fff;
+    border-radius: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 6px 15px;
+  }
+  .mobile-search-box.active {
+    display: flex;
+    align-items: center;
+  }
+}
+.company-section {
+  max-width: 1200px;
+  margin: 40px auto 0 auto;
+  padding: 0 20px;
+}
+
+.company-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 20px;
+}
+
+.company-header h1 {
+  font-size: 22px;
+  color: #333;
+  margin: 0;
+}
+
+.company-results {
+  font-size: 14px;
+  color: #666;
+}
+.company-sort {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  /* Remove width: 100%; from here! */
+}
+
+.company-sort label {
+  display: flex;
+  align-items: center;      /* Ensures label content is vertically centered */
+  font-size: 14px;
+  color: #333;
+  margin: 0;
+}
+
+.sort-select {
+  margin-left: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  background: #fff;
+  color: #007bff;
+  border: 0px;
+}
+
+
+
+.company-sort i {
+  font-size: 12px;
+  color: #007bff;
+}
+
+.company-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 28px 18px;
+}
+
+.company-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.company-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.company-thumbnail {
+  height: 150px;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #999;
+}
+
+.company-info {
+  padding: 15px;
+}
+
+.company-title {
+  font-size: 18px;
+  color: #333;
+  margin: 0 0 10px 0;
+}
+
+.company-desc {
+  font-size: 14px;
+  color: #666;
+  margin: 0 0 10px 0;
+}
+
+.company-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: #333;
+}
+
+.company-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.company-reviews {
+  font-size: 12px;
+  color: #999;
+}
+
+.company-price {
+  font-size: 16px;
+  color: #007bff;
+  font-weight: bold;
+
+}
+
+@media (max-width: 600px) {
+  .company-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .company-sort {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    width: 100%;
+  }
+  .company-sort label {
+    width: 100%;
+    font-size: 15px;
+    gap: 8px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .sort-select {
+    width: auto;
+    max-width: 250px;
+    margin-left: 6px;
+    margin-top: 0;
+    flex-shrink: 1;
+  }
+}
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #fff;
+  color: #333;
+  overflow-x: hidden;
+  position: relative;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30px 60px;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  z-index: 2;
+}
+
+.logo img {
+  height: 40px;
+}
+
+.nav-links a {
+  margin-left: 30px;
+  text-decoration: none;
+  color: #000;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.nav-links a:hover {
+  color: #007bff;
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 20px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.error-box {
+  max-width: 600px;
+}
+
+.illustration {
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 20px;
+}
+
+.error-code {
+  font-size: 72px;
+  color: #007bff;
+  margin-bottom: 10px;
+}
+
+.error-message {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.sub-message {
+  font-size: 16px;
+  margin-bottom: 30px;
+  color: #555;
+}
+
+.btn {
+  display: inline-block;
+  background-color: #007bff;
+  color: white;
+  padding: 12px 25px;
+  text-decoration: none;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  transition: background-color 0.3s;
+}
+
+.btn:hover {
+  background-color: #0056b3;
+}
+
+.background-circle {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  background: linear-gradient(145deg, #7ab6ff, #4385ff);
+  border-radius: 50%;
+  z-index: 0;
+  opacity: 0.2;
+}
+
+.top-left {
+  top: 100px;
+  left: -100px;
+}
+
+.bottom-right {
+  bottom: 50px;
+  right: -100px;
+}
+
+</style>
+<body>
+  <header class="header">
+    <div class="top-bar">
+      <!-- Hamburger menu for mobile -->
+      <div class="hamburger" onclick="openSidebar()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <!-- Desktop ParaBook logo -->
+      <div class="logo">ParaBook</div>
+      <!-- Responsive ParaBook logo in the center for mobile -->
+      <div class="responsive-logo">Parabook</div>
+      <div class="search-icon-mobile" onclick="toggleMobileSearch()">
+        <i class="fas fa-search"></i>
+      </div>
+      <div class="mobile-search-box" id="mobile-search-box">
+        <input type="text" placeholder="Search..." style="border:none;outline:none;flex:1;font-size:14px;background:transparent;">
+      </div>
+      <div class="top-bar-content" style="display: flex; flex: 1; align-items: center;">
+        <div class="search-container">
+          <div class="search-box">
+            <input type="text" placeholder="looking for any company today ?" />
+            <button><i class="fas fa-search"></i></button>
+          </div>
+          <div class="darkmode">
+            <a href="#"><img src="Images/e.png" /></a>
+          </div>
+        </div>
+        <div class="right-section">
+          <a href="#"><img src="Images/a.png" /></a>
+          <a href="#"><img src="Images/b.png" /></a>
+          <a href="#"><img src="Images/c.png" /></a>
+          <a href="#"><img src="Images/d.png" /></a>
+          <span class="switch-text">Switch to passenger</span>
+          <div class="avatar">
+            
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Navigation Bar -->
+    <div class="nav-bar">
+      <a href="#">Dashboard</a>
+      <a href="#">Bookings</a>
+      <a href="#">Flights</a>
+      <a href="#">Services</a>
+      <a href="#">Statistics</a>
+    </div>
+  </header>
+
+  <!-- Blur overlay for sidebar -->
+  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+  <!-- Sidebar for mobile -->
+  <div class="sidebar" id="sidebar">
+    <button class="close-btn" onclick="closeSidebar()">&times;</button>
+    <!-- Avatar at the top -->
+    <div class="avatar" style="margin-bottom: 24px; margin-top: 10px; align-self: center;">User</div>
+    <div class="sidebar-section sidebar-links">
+      <a href="#">Dashboard</a>
+      <a href="#">Bookings</a>
+      <a href="#">Flights</a>
+      <a href="#">Services</a>
+      <a href="#">Statistics</a>
+    </div>
+    <div class="sidebar-section">
+      <a href="#" style="text-decoration: none;">Notfication</a><br>
+      <a href="#" style="text-decoration: none;">Mail</a><br>
+      <a href="#" style="text-decoration: none;">Favourites</a><br>
+      <a href="#" style="text-decoration: none;">Contact</a>
+      <span class="switch-text">Switch to passenger</span>
+      <button class="logout-btn">Log out</button>
+    </div>
+  </div>
+
+
+   <main class="container">
+    <div class="error-box">
+      <img src="Images/404.jpg" alt="404 illustration" class="illustration" />
+      
+      <p class="error-message">Something went wrong.</p>
+      <p class="sub-message">Sorry, we can't find the page you're looking for.</p>
+      <a href="#" class="btn">Go Back</a>
+    </div>
+  </main>
+
+  
+      
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-col">
+        <ul>
+          <li>About us</li>
+          <li>Feedback</li>
+          <li>Security & Safety</li>
+        </ul>
+        <div class="footer-social">
+          <span>Follow us on:</span>
+          <a href="#"><i class="fab fa-facebook-f"></i></a>
+          <a href="#"><i class="fab fa-twitter"></i></a>
+          <a href="#"><i class="fab fa-instagram"></i></a>
+          <a href="#"><i class="fab fa-linkedin-in"></i></a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <ul>
+          <li>Help & Support</li>
+          <li>ParaBook Foundation</li>
+          <li>Terms of Services</li>
+          <li>Consulting</li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <ul>
+          <li>Privacy Policy</li>
+          <li>Service Catalog</li>
+          <li>Cookie Settings</li>
+          <li>Events & Forum</li>
+          <li>Community Hub</li>
+          <li>Quality Guide</li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <ul>
+          <li>Accessibility</li>
+          <li>Mobile App</li>
+          <li>Enterprise Solution</li>
+          <li>Affiliates</li>
+          <li>Invite a friend</li>
+          <li>Career</li>
+          <li>FAQ</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2015 - 2025 ParaBook® Global Inc.
+    </div>
+  </footer>
+  <script src="index.js"></script>
+
+</body>
+</html>
