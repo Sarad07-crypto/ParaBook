@@ -1,7 +1,8 @@
 <?php
-
-require_once '../../vendor/autoload.php';
-include("../connection.php");
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+    require_once ROOT_PATH . '\Parabook\Web\vendor\autoload.php';
+    require_once __DIR__ . '/../connection.php';
 
 // Collect and sanitize inputs
 use PHPMailer\PHPMailer\PHPMailer;
@@ -14,7 +15,7 @@ function sendMail_verification($firstName, $email, $_verify, $otp_code)
     $mail = new PHPMailer(true);
 
     try {
-        require_once '../env.php';
+    require_once ROOT_PATH . '\Parabook\Web\php\env.php';
         // $mail->SMTPDebug = SMTP::DEBUG_SERVER;
         $mail->isSMTP();
 
@@ -34,7 +35,7 @@ function sendMail_verification($firstName, $email, $_verify, $otp_code)
         $mail->Body = $email_body;
         $mail->send();
         echo "<script>alert('Verification email sent!');</script>";
-        // echo"<script>window.location.href='verify.php';</script>";
+        // echo"<script>window.location.href='/verify';</script>";
     } catch (Exception $e) {
         echo "Mail Error: {$mail->ErrorInfo}";
     }
@@ -66,7 +67,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $check->store_result();
 
     if ($check->num_rows > 0) {
-        echo "<script>alert('Email already exists!'); window.location.href='signup.php';</script>";
+        echo "<script>alert('Email already exists!'); window.location.href='/signup';</script>";
         $check->close();
         $connect->close();
         exit();
@@ -99,7 +100,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     sendMail_verification($firstName, $email, $verify_token, $otp_code);
 
     echo "<script>alert('Registration successful! Please verify your email.');</script>";
-    echo "<script>window.location.href='verify.php?token=$verify_token';</script>";
+    echo "<script>window.location.href='/verify?token=$verify_token';</script>";
 
     $connect->close();
 }

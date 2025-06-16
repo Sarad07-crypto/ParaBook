@@ -1,4 +1,5 @@
 <?php
+    require_once __DIR__ . '/../../../index.php';
     require_once('g-config.php');
     session_start();
 
@@ -8,5 +9,7 @@
         exit();
     } else {
         echo "Invalid login request.";
+        header('Location: /login');
+        
     }
 ?>
