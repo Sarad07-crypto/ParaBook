@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ParaBook Header</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="style.css" />
+   <link rel="stylesheet" href="style2.css" />
+</head>  
+<body>
+  <header class="header">
+    <div class="top-bar">
+      <!-- Hamburger menu for mobile -->
+      <div class="hamburger" onclick="openSidebar()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <!-- Desktop ParaBook logo -->
+      <div class="logo">ParaBook</div>
+      <!-- Responsive ParaBook logo in the center for mobile -->
+      <div class="responsive-logo">Parabook</div>
+      <div class="search-icon-mobile" onclick="toggleMobileSearch()">
+        <i class="fas fa-search"></i>
+      </div>
+      <div class="mobile-search-box" id="mobile-search-box">
+        <input type="text" placeholder="Search..." style="border:none;outline:none;flex:1;font-size:14px;background:transparent;">
+      </div>
+      <div class="top-bar-content" style="display: flex; flex: 1; align-items: center;">
+        <div class="search-container">
+          <div class="search-box">
+            <input type="text" placeholder="looking for any company today ?" />
+            <button><i class="fas fa-search"></i></button>
+          </div>
+          <div class="darkmode">
+            <a href="#"><i class="fas fa-moon" style="color:#007BFF;"></i></a>
+          </div>
+        </div>
+        <div class="right-section">
+  <a href="#"><i class="fas fa-bell"></i></a>
+  <a href="#"><i class="fas fa-envelope"></i></a>
+  <a href="#"><i class="fas fa-heart"></i></a>
+  <a href="#"><i class="fas fa-headphones"></i></a>
+  <span class="switch-text">Switch to passenger</span>
+  <div class="avatar"><img src="images\o.png"></div>
+</div>
+        </div>
+      </div>
+    </div>
+    <!-- Navigation Bar -->
+    <div class="nav-bar">
+      <a href="#">Dashboard</a>
+      <a href="#">Bookings</a>
+      <a href="#">Flights</a>
+      <a href="#">Services</a>
+      <a href="#">Statistics</a>
+    </div>
+  </header>
+
+  <!-- Blur overlay for sidebar -->
+  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+  <!-- Sidebar for mobile -->
+  <div class="sidebar" id="sidebar">
+    <button class="close-btn" onclick="closeSidebar()">&times;</button>
+    <!-- Avatar at the top -->
+    <div class="avatar" style="margin-bottom: 24px; margin-top: 10px; align-self: center;"><img src="images\o.png"></div>
+    <div class="sidebar-section sidebar-links">
+      <a href="#">Dashboard</a>
+      <a href="#">Bookings</a>
+      <a href="#">Flights</a>
+      <a href="#">Services</a>
+      <a href="#">Statistics</a>
+    </div>
+    <div class="sidebar-section">
+      <a href="#" style="text-decoration: none;">Notfication</a><br>
+      <a href="#" style="text-decoration: none;">Mail</a><br>
+      <a href="#" style="text-decoration: none;">Favourites</a><br>
+      <a href="#" style="text-decoration: none;">Contact</a>
+      <span class="switch-text">Switch to passenger</span>
+      <button class="logout-btn">Log out</button>
+    </div>
+  </div>
+  <!-- Company Registration Form -->
+  <div class="company-registration">
+  <h2>Register Paragliding Company</h2>
+  <form action="register_company.php" method="POST" enctype="multipart/form-data">
+    <div class="form-group">
+      <label for="company_name">Company Name <span style="color:red">*</span></label>
+      <input type="text" id="company_name" name="company_name" required>
+    </div>
+    <div class="form-group">
+      <label for="company_logo">Company Logo</label>
+      <input type="file" id="company_logo" name="company_logo" accept="image/*">
+    </div>
+    <div class="form-group">
+      <label for="company_description">Company Description</label>
+      <textarea id="company_description" name="company_description" rows="3"></textarea>
+    </div>
+    <div class="form-group">
+      <label for="established_year">Established Year</label>
+      <input type="number" id="established_year" name="established_year" min="1900" max="2099" step="1">
+    </div>
+    <button type="submit" class="register-btn">Register</button>
+  </form>
+</div>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-col">
+        <ul>
+          <li>About us</li>
+          <li>Feedback</li>
+          <li>Security & Safety</li>
+        </ul>
+        <div class="footer-social">
+          <span>Follow us on:</span>
+          <a href="#"><i class="fab fa-facebook-f"></i></a>
+          <a href="#"><i class="fab fa-twitter"></i></a>
+          <a href="#"><i class="fab fa-instagram"></i></a>
+          <a href="#"><i class="fab fa-linkedin-in"></i></a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <ul>
+          <li>Help & Support</li>
+          <li>ParaBook Foundation</li>
+          <li>Terms of Services</li>
+          <li>Consulting</li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <ul>
+          <li>Privacy Policy</li>
+          <li>Service Catalog</li>
+          <li>Cookie Settings</li>
+          <li>Events & Forum</li>
+          <li>Community Hub</li>
+          <li>Quality Guide</li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <ul>
+          <li>Accessibility</li>
+          <li>Mobile App</li>
+          <li>Enterprise Solution</li>
+          <li>Affiliates</li>
+          <li>Invite a friend</li>
+          <li>Career</li>
+          <li>FAQ</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2015 - 2025 ParaBook® Global Inc.
+    </div>
+  </footer>
+  <script src="index.js"></script>
+
+</body>
+</html>

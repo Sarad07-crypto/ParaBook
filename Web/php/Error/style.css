@@ -15,6 +15,25 @@ body {
   font-family: Arial, sans-serif;
 }
 
+.add-company-btn {
+  background: #007BFF;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  margin-left: 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: background 0.2s;
+}
+.add-company-btn:hover {
+  background: #0056b3;
+}
+
 .header {
   position: sticky;
   top: 0;
@@ -605,6 +624,24 @@ body {
 
 }
 
+.add-company-btn {
+  background: #007BFF;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  margin-left: 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: background 0.2s;
+}
+.add-company-btn:hover {
+  background: #0056b3;
+}
 @media (max-width: 600px) {
   .company-header {
     flex-direction: column;
