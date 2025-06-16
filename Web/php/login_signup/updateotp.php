@@ -1,5 +1,6 @@
 <?php
     require '../../vendor/autoload.php';
+    require_once '../env.php';
     use PHPMailer\PHPMailer\PHPMailer;
     use PHPMailer\PHPMailer\SMTP;
     use PHPMailer\PHPMailer\Exception;
@@ -16,8 +17,8 @@
             $mail->isSMTP();
             $mail->Host = "smtp.gmail.com";
             $mail->SMTPAuth = true;
-            $mail->Username = 'saradcr7adhikari@gmail.com';
-            $mail->Password = 'vtsl wtoo zusf ojbp';
+            $mail->Username = $MAIL;
+            $mail->Password = $PASSWORD;
             $mail->SMTPSecure = 'tls';
             $mail->Port = 587;
 

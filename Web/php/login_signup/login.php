@@ -1,9 +1,8 @@
 <?php
-  require_once('../google/g-config.php');
-  require_once('../facebook/f-config.php');
-  require_once('../google/core/controller.class.php');
+    require_once ROOT_PATH . '\Parabook\Web\php\google\g-config.php';
+    require_once ROOT_PATH . '\Parabook\Web\php\facebook\f-config.php';
+    require_once ROOT_PATH . '\Parabook\Web\php\google\core\controller.class.php';
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -11,7 +10,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login</title>
-    <link rel="stylesheet" href="../../css/login.css" />
+    <link rel="stylesheet" href="/Web/css/login.css" />
     <!-- Boxicons CSS -->
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
 </head>
@@ -22,20 +21,17 @@
         <div class="sub-container">
             <div class="login-wrapper-cols">
 
-
                 <h1>Welcome to</h1>
                 <h1>ParaBook</h1>
                 <div class="img">
-                    <img id="slideshow" src="/ParaBook/Assets/Images/01.png" width="500px" height="600px" />
+                    <img id="slideshow" src="/Assets/Images/01.png" width="500px" height="600px" />
                 </div>
             </div>
             <div class="login-wrapper-cols">
                 <div class="login-form">
-                    <!-- <div class="circle1"></div>
-          <div class="circle2"></div> -->
                     <h3>Log In</h3>
                     <p>Welcome back! Please enter your credentials</p>
-                    <form class="form" method="post" action="loginCheck.php">
+                    <form class="form" method="post" action="/logincheck">
                         <div class="input-box-wrapper">
                             <div class="input-box">
                                 <input type="text" name="email" placeholder="Email"
@@ -67,12 +63,12 @@
                         <span>or continue with</span>
                     </div>
                     <div class="alt-signup">
-                        <a href="../google/auth_provider.php?provider=google" class="google-btn">Google</a>
+                        <a href="/auth/google?provider=google" class="google-btn">Google</a>
                         <a href="<?php echo $fullURL ?>" class="facebook-btn">Facebook</a>
                     </div>
                     <div class="no-account">
                         <p>Don't have an account?</p>
-                        <a href="signup.php">Sign up</a>
+                        <a href="/signup">Sign up</a>
                     </div>
                 </div>
             </div>
@@ -93,10 +89,10 @@
             <p style="margin-top: 10px">© All copyright reserved by ParaBook</p>
         </div>
         <div class="foot-img">
-            <img src="/Parabook/Assets/Icons/cloud-01.png" />
+            <img src="/Assets/Icons/cloud-01.png" />
         </div>
     </footer>
-    <script src="../../scripts/index.js"></script>
+    <script src="/Web/scripts/index.js"></script>
 </body>
 
 </html>

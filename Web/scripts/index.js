@@ -18,12 +18,12 @@ showPWDIcons.forEach((icon) => {
 // image slideshow
 const imageElement = document.getElementById("slideshow");
 const imagePaths = [
-  "/ParaBook/Assets/Images/01.png",
-  "/ParaBook/Assets/Images/02.png",
-  "/ParaBook/Assets/Images/03.png",
-  "/ParaBook/Assets/Images/04.png",
-  "/ParaBook/Assets/Images/05.png",
-  "/ParaBook/Assets/Images/06.png",
+  "/Assets/Images/01.png",
+  "/Assets/Images/02.png",
+  "/Assets/Images/03.png",
+  "/Assets/Images/04.png",
+  "/Assets/Images/05.png",
+  "/Assets/Images/06.png",
 ];
 let currentIndex = 0;
 setInterval(() => {

@@ -1,0 +1,52 @@
+# Enable URL rewriting
+RewriteEngine On
+RewriteBase /
+
+
+# Handle Google callback
+# Redirect to HTTPS (optional, if using SSL)
+# Uncomment the lines below if your server supports SSL
+# RewriteCond %{HTTPS} off
+# RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Clean URLs - remove .php extension
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+
+# Route everything to index.php
+RewriteRule ^ index.php [QSA,L]
+
+# Prevent access to sensitive directories
+RedirectMatch 403 ^/config/
+RedirectMatch 403 ^/includes/
+RedirectMatch 403 ^/sql/
+
+# For Subbase Use
+# RedirectMatch 403 ^/event-management-system/config/
+
+
+# Deny direct access to .php files inside includes/
+
+<FilesMatch "\.(php)$">
+# For Subbase Use
+#<If "%{REQUEST_URI} =~ m#^/event-management-system/includes/#">
+    <If "%{REQUEST_URI} =~ m#^/includes/#">
+        Require all denied
+    </If>
+</FilesMatch>
+
+# Disable directory browsing
+Options -Indexes
+
+# Restrict access to .htaccess itself
+<Files .htaccess>
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+# Set default index file
+DirectoryIndex index.php
+
+php_flag display_errors off
+php_flag display_startup_errors off
+php_value error_reporting 32767

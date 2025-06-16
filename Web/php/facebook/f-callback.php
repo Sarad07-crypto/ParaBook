@@ -1,6 +1,6 @@
 <?php
     require_once("f-config.php");
-    require_once("../connection.php");
+    require_once __DIR__ . '/../connection.php';
 
     try {
         $accessToken = $handler->getAccessToken();
@@ -8,12 +8,12 @@
         echo "Response Exception: " . $e->getMessage();
         exit();
     } catch (\Facebook\Exceptions\FacebookSDKException $e) {
-        echo "SDK Exception: " . $e->getMessage();
-        exit();
+        // echo "SDK Exception: " . $e->getMessage();
+        // exit();
     }
 
     if (!$accessToken) {
-        header('Location: ../login_signup/login.php');
+        header('Location: /login');
         exit();
     }
 
@@ -40,28 +40,44 @@
     $_SESSION['userData'] = $userData;
     $_SESSION['access_token'] = (string) $accessToken;
 
-    function insertData($userData) {
-        global $connect; // use mysqli connection from connection.php
+    function insertData($userData, $connect) {
+
+        if (!$connect || $connect->connect_error) {
+            die("Database connection failed");
+        }
 
         $session = bin2hex(random_bytes(16));
 
-        // Escape values to prevent SQL injection
-        $email = mysqli_real_escape_string($connect, $userData['email']);
-        $f_id = mysqli_real_escape_string($connect, $userData['id']);
-        $f_name = mysqli_real_escape_string($connect, $userData['first_name']);
-        $l_name = mysqli_real_escape_string($connect, $userData['last_name']);
-        $avatar = mysqli_real_escape_string($connect, $userData['picture']['url']);
+        $email = $userData['email'];
+        $f_id = $userData['id'];
+        $f_name = $userData['first_name'];
+        $l_name = $userData['last_name'];
+        $avatar = $userData['picture']['url'];
 
-        // Check if email exists in users table
-        $checkMainUser = mysqli_query($connect, "SELECT * FROM users WHERE email = '$email'");
-        $mainUser = mysqli_fetch_assoc($checkMainUser);
+        // Check if email already exists
+        $checkMainUser = mysqli_prepare($connect, "SELECT * FROM users WHERE email = ?");
+        mysqli_stmt_bind_param($checkMainUser, "s", $email);
+        mysqli_stmt_execute($checkMainUser);
+        $result = mysqli_stmt_get_result($checkMainUser);
+        $mainUser = mysqli_fetch_assoc($result);
 
-        // Check if user with facebook_id already exists
-        $checkUser = mysqli_query($connect, "SELECT id FROM users WHERE facebook_id = '$f_id'");
-        $existingUser = mysqli_fetch_assoc($checkUser);
+        // Check if Facebook ID exists
+        $checkUser = mysqli_prepare($connect, "SELECT id FROM users WHERE facebook_id = ?");
+        mysqli_stmt_bind_param($checkUser, "s", $f_id);
+        mysqli_stmt_execute($checkUser);
+        $result = mysqli_stmt_get_result($checkUser);
+        $existingUser = mysqli_fetch_assoc($result);
 
         if ($existingUser) {
             $userId = $existingUser['id'];
+
+            // 🔍 Fetch account type from users_info
+            $accTypeQuery = mysqli_prepare($connect, "SELECT acc_type FROM users_info WHERE user_id = ?");
+            mysqli_stmt_bind_param($accTypeQuery, "i", $userId);
+            mysqli_stmt_execute($accTypeQuery);
+            $accResult = mysqli_stmt_get_result($accTypeQuery);
+            $accRow = mysqli_fetch_assoc($accResult);
+            $_SESSION['acc_type'] = $accRow['acc_type'] ?? 'passenger';
 
             // Update session
             $updateSession = mysqli_prepare($connect, "
@@ -75,18 +91,18 @@
             setcookie("id", $userId, time() + 60 * 60 * 24 * 30, "/", NULL);
             setcookie("session", $session, time() + 60 * 60 * 24 * 30, "/", NULL);
 
-            header('Location: ../home/passenger.php');
+            header('Location: /home');
             exit;
         }
 
-        if ($mainUser) {        
+        if ($mainUser) {
             unset($_SESSION['userData']);
             unset($_SESSION['access_token']);
-            echo "<script>alert('User already register!!!'); window.location.href='../login_signup/login.php';</script>";
+            echo "<script>alert('User already registered.'); window.location.href='/login';</script>";
             exit();
         }
 
-        // Insert into users
+        // Insert new user
         $insertUser = mysqli_prepare($connect, "
             INSERT INTO users (email, password, google_id, facebook_id, sign_with)
             VALUES (?, NULL, NULL, ?, 'facebook')
@@ -95,18 +111,24 @@
         mysqli_stmt_execute($insertUser);
         $userId = mysqli_insert_id($connect);
 
+        // 🟡 You can define a default acc_type here (e.g., 'passenger')
+        $defaultAccType = 'passenger'; // or get it dynamically from UI later
+
         // Insert into users_info
         $insertInfo = mysqli_prepare($connect, "
             INSERT INTO users_info (
                 user_id, acc_type, firstName, lastName, gender, contact, dob, country, avatar
             ) VALUES (
-                ?, NULL, ?, ?, NULL, NULL, NULL, NULL, ?
+                ?, ?, ?, ?, NULL, NULL, NULL, NULL, ?
             )
         ");
-        mysqli_stmt_bind_param($insertInfo, "isss", $userId, $f_name, $l_name, $avatar);
+        mysqli_stmt_bind_param($insertInfo, "issss", $userId, $defaultAccType, $f_name, $l_name, $avatar);
         mysqli_stmt_execute($insertInfo);
 
-        // Insert into users_verify
+        // Set session variable for acc_type
+        $_SESSION['acc_type'] = $defaultAccType;
+
+        // Insert verification info
         $insertverify = mysqli_prepare($connect, "
             INSERT INTO users_verify (user_id, verify_token, is_verified, otp, otp_expiry)
             VALUES (?, NULL, 1, NULL, NULL)
@@ -122,14 +144,13 @@
         mysqli_stmt_bind_param($insertSession, "is", $userId, $session);
         mysqli_stmt_execute($insertSession);
 
-        // Set cookies
         setcookie("id", $userId, time() + 60 * 60 * 24 * 30, "/", NULL);
         setcookie("session", $session, time() + 60 * 60 * 24 * 30, "/", NULL);
 
-        header('Location: ../home/passenger.php');
+        header('Location: /home');
         exit;
     }
 
-    insertData($userData);
+    insertData($userData,$connect);
 
 ?>

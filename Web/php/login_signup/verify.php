@@ -1,5 +1,5 @@
 <?php
-include '../connection.php';
+    require_once __DIR__ . '/../connection.php';
 
 $duration = 60;
 $token = '';
@@ -36,15 +36,15 @@ if (isset($_POST['verify'])) {
                 $update->execute();
 
                 echo "<script>alert('Email verified successfully!');</script>";
-                echo "<script>window.location.href='login.php';</script>";
+                echo "<script>window.location.href='/';</script>";
             } else {
-                echo "<script>alert('Invalid OTP!'); window.location.href='verify.php?token=$token';</script>";
+                echo "<script>alert('Invalid OTP!'); window.location.href='/verify?token=$token';</script>";
             }
         } else {
-            echo "<script>alert('Invalid or expired token!'); window.location.href='login.php';</script>";
+            echo "<script>alert('Invalid or expired token!'); window.location.href='/';</script>";
         }
     } else {
-        echo "<script>alert('Missing verification token!'); window.location.href='login.php';</script>";
+        echo "<script>alert('Missing verification token!'); window.location.href='/';</script>";
     }
 }
 if (!empty($token)) {
@@ -73,87 +73,97 @@ if (!empty($token)) {
     <title>Document</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            background: #1170e3;
-            min-height: 100vh;
-            margin: 0;
-            font-family: 'Montserrat', Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        form {
-            width: 370px;
-        }
-        .card {
-            background: #eaf4fb;
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(17, 112, 227, 0.13);
-            padding: 36px 28px;
-            border: none;
-            transition: box-shadow 0.2s;
-        }
-        .card:hover {
-            box-shadow: 0 12px 40px rgba(17, 112, 227, 0.18);
-        }
-        h2 {
-            text-align: center;
-            color: #2d3a4b;
-            margin-bottom: 14px;
-            font-weight: 700;
-            letter-spacing: 1px;
-        }
-        p {
-            color: #3a4a5d;
-            text-align: center;
-            margin-bottom: 18px;
-            font-size: 1rem;
-        }
-        input[type="text"] {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 18px;
-            border: 1.5px solid #dbeafe;
-            border-radius: 8px;
-            background: #f8fbff;
-            font-size: 1rem;
-            transition: border 0.2s, box-shadow 0.2s;
-            box-shadow: 0 1px 4px rgba(17,112,227,0.07);
-        }
-        input[type="text"]:focus {
-            outline: none;
-            border: 1.5px solid #1170e3;
-            box-shadow: 0 0 0 2px #b6e0fe;
-        }
-        input[type="submit"] {
-            width: 100%;
-            background: #1170e3;
-            color: #fff;
-            border: none;
-            padding: 12px 0;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: background 0.18s, transform 0.18s;
-            box-shadow: 0 2px 8px rgba(17,112,227,0.13);
-        }
-        input[type="submit"]:hover {
-            background: #0d5bb5;
-            transform: translateY(-2px) scale(1.03);
-        }
-        #timer {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #1170e3;
-            margin-bottom: 0;
-            letter-spacing: 1px;
-        }
+    body {
+        background: #1170e3;
+        min-height: 100vh;
+        margin: 0;
+        font-family: 'Montserrat', Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    form {
+        width: 370px;
+    }
+
+    .card {
+        background: #eaf4fb;
+        border-radius: 20px;
+        box-shadow: 0 8px 32px rgba(17, 112, 227, 0.13);
+        padding: 36px 28px;
+        border: none;
+        transition: box-shadow 0.2s;
+    }
+
+    .card:hover {
+        box-shadow: 0 12px 40px rgba(17, 112, 227, 0.18);
+    }
+
+    h2 {
+        text-align: center;
+        color: #2d3a4b;
+        margin-bottom: 14px;
+        font-weight: 700;
+        letter-spacing: 1px;
+    }
+
+    p {
+        color: #3a4a5d;
+        text-align: center;
+        margin-bottom: 18px;
+        font-size: 1rem;
+    }
+
+    input[type="text"] {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 18px;
+        border: 1.5px solid #dbeafe;
+        border-radius: 8px;
+        background: #f8fbff;
+        font-size: 1rem;
+        transition: border 0.2s, box-shadow 0.2s;
+        box-shadow: 0 1px 4px rgba(17, 112, 227, 0.07);
+    }
+
+    input[type="text"]:focus {
+        outline: none;
+        border: 1.5px solid #1170e3;
+        box-shadow: 0 0 0 2px #b6e0fe;
+    }
+
+    input[type="submit"] {
+        width: 100%;
+        background: #1170e3;
+        color: #fff;
+        border: none;
+        padding: 12px 0;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.18s, transform 0.18s;
+        box-shadow: 0 2px 8px rgba(17, 112, 227, 0.13);
+    }
+
+    input[type="submit"]:hover {
+        background: #0d5bb5;
+        transform: translateY(-2px) scale(1.03);
+    }
+
+    #timer {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1170e3;
+        margin-bottom: 0;
+        letter-spacing: 1px;
+    }
     </style>
 </head>
 
 <body>
-    <form action="verify.php" method="post">
+    <form action="/verify" method="post">
         <input type="hidden" name="token" value="<?php echo htmlspecialchars($token); ?>">
         <div class="card">
             <h2>Verify Your Email</h2>
