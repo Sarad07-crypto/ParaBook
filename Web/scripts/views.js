@@ -96,3 +96,17 @@ function renderPagination() {
 
 // Initialize
 showPage(1);
+
+function showInitial(img, initial) {
+  const container = img.parentNode;
+
+  // Remove broken image
+  img.remove();
+
+  // Create a fallback element with the initial
+  const fallback = document.createElement("div");
+  fallback.className = "initial-avatar";
+  fallback.textContent = initial;
+
+  container.appendChild(fallback);
+}

@@ -1,5 +1,7 @@
 <?php
     session_start();
+    $firstName = $_SESSION['firstName'];
+    $firstInitial = strtoupper(substr($firstName, 0, 1));
 ?>
 
 <!DOCTYPE html>
@@ -10,7 +12,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-    <link rel="stylesheet" href="/Web/css/views.css" />
+    <link rel="stylesheet" href="/Web/css/views.css?v=1.0" />
 </head>
 
 <body>
@@ -49,13 +51,16 @@
                     <a href="#"><i class="fas fa-heart"></i></a>
                     <a href="#"><i class="fas fa-headphones"></i></a>
                     <span class="switch-text">Switch to passenger</span>
-                    <div class="avatar"><img src="<?php echo $avatar ?>" alt="image not found"></div>
+                    <div class="avatar">
+                        <img src="<?php echo $avatar ?>" alt="image not found"
+                            onerror="showInitial(this, '<?php echo $firstInitial ?>')">
+                    </div>
                 </div>
             </div>
         </div>
         </div>
         <!-- Navigation Bar -->
-        <div class="nav-bar">
+        <div class=" nav-bar">
             <a href="#">Dashboard</a>
             <a href="#">Bookings</a>
             <a href="#">Flights</a>
@@ -91,7 +96,8 @@
             <button class="logout-btn" onclick="window.location.href='/logout'">Log out</button>
         </div>
     </div>
-    <script src="/Web/scripts/views.js"></script>
+
+    <script src="/Web/scripts/views.js?v=1.0"></script>
 </body>
 
 </html>

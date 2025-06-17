@@ -50,11 +50,10 @@
 
     if ($accType === 'company') {
         require('partials/header_C.php');
+        require('addServices.php');
     } else {
         require('partials/header_P.php');
+        require('partials/main.php');
     }
-
-    require('partials/main.php');
     require('partials/footer.php');
-?>
 ?>

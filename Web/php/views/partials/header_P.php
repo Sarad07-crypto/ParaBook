@@ -1,5 +1,7 @@
 <?php
     session_start();
+    $firstName = $_SESSION['firstName'];
+    $firstInitial = strtoupper(substr($firstName, 0, 1));
 ?>
 
 <!DOCTYPE html>
@@ -48,8 +50,10 @@
                     <a href="#"><i class="fas fa-envelope"></i></a>
                     <a href="#"><i class="fas fa-heart"></i></a>
                     <a href="#"><i class="fas fa-headphones"></i></a>
-                    <span class="switch-text">Switch to passenger</span>
-                    <div class="avatar"><img src="<?php echo $avatar ?>" alt="image not found"></div>
+                    <span class="switch-text">Complete your profile</span>
+                    <div class="avatar">
+                        <img src="<?php echo $avatar ?>" alt="image not found">
+                    </div>
                 </div>
             </div>
         </div>
@@ -89,7 +93,7 @@
             <button class="logout-btn" onclick="window.location.href='/logout'">Log out</button>
         </div>
     </div>
-    <script src="/Web/scripts/views.js"></script>
+    <script src="/Web/scripts/views.js?v=1.0"></script>
 </body>
 
 </html>
