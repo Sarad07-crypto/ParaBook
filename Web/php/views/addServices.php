@@ -5,57 +5,66 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title></title>
+    <link rel="stylesheet" href="Web/css/addServices.css" />
+    <link href="https://cdn.boxicons.com/fonts/basic/boxicons.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
-<style>
-.add-company-wrapper {
-    height: 600px;
-    margin: 50px;
-}
-
-.add-company-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 220px;
-    height: 160px;
-    background: #f5f7fa;
-    border: 2px dashed #007BFF;
-    border-radius: 12px;
-    cursor: pointer;
-    margin: 24px auto;
-    transition: background 0.2s, border-color 0.2s;
-}
-
-.add-company-card:hover {
-    background: #e6f0ff;
-    border-color: #0056b3;
-}
-
-.add-company-icon {
-    font-size: 48px;
-    color: #007BFF;
-    margin-bottom: 12px;
-    font-weight: bold;
-    line-height: 1;
-}
-
-.add-company-text {
-    font-size: 18px;
-    color: #333;
-    font-weight: 500;
-}
-</style>
 
 <body>
     <div class="add-company-wrapper">
-        <div class="add-company-card" onclick="window.location.href='/serviceform'">
+        <div class="add-company-card" id="loadServiceForm">
             <div class="add-company-icon">+</div>
             <div class="add-company-text">Add Service</div>
         </div>
     </div>
+    <div id="serviceModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeModal">&times;</span>
+            <div id="serviceFormContainer">Loading...</div>
+        </div>
+    </div>
+    <script>
+    // Load the modal and form content
+    $(document).on('click', '#loadServiceForm', function() {
+        $('body').css('overflow', 'hidden');
+        $('#serviceModal').addClass('show'); // Use .show instead of fadeIn
+
+        $('#serviceFormContainer').html('<div class="loading-spinner">Loading form...</div>');
+
+        $.ajax({
+            url: 'Web/php/views/serviceForm.php',
+            type: 'GET',
+            success: function(data) {
+                $('#serviceFormContainer').html(data);
+                // Load the script only once per click
+                $.getScript('Web/scripts/serviceForm.js', function() {
+                    initServiceForm();
+                });
+            },
+            error: function() {
+                $('#serviceFormContainer').html('<p>Failed to load form.</p>');
+            }
+        });
+    });
 
 
+    // Close modal by clicking close button
+    $(document).on('click', '#closeModal', function() {
+        $('#serviceModal').removeClass('show');
+        $('body').css('overflow', 'auto');
+        $('#serviceFormContainer').empty();
+    });
+
+    // Close modal by clicking outside modal-content
+    $(window).on('click', function(e) {
+        if ($(e.target).is('#serviceModal')) {
+            $('#serviceModal').removeClass('show');
+            $('body').css('overflow', 'auto');
+            $('#serviceFormContainer').empty();
+        }
+    });
+    </script>
+    <script src="Web/scripts/serviceForm.js?v=1.0"></script>
 </body>
 
 </html>

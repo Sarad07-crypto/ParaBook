@@ -22,7 +22,6 @@
     }
 ?>
 
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -31,10 +30,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
 </head>
+<style>
+body {
+    display: block !important;
+    position: static !important;
+    margin: 0;
+    padding: 0;
+    overflow: auto !important;
+}
+</style>
 
 <body>
 
+    <?php
+        $accType = $_SESSION['acc_type'] ?? 'passenger';
+        if ($accType === 'company') {
+            require('partials/header_C.php');
+            require('addServices.php');
+        } else {
+            require('partials/header_P.php');
+            require('partials/main.php');
+        }
+    ?>
 
+    <?php require('partials/footer.php'); ?>
     <script>
     if (window.location.hash && window.location.hash === '#_=_') {
         // Remove hash without reloading
@@ -44,16 +63,3 @@
 </body>
 
 </html>
-
-<?php
-    $accType = $_SESSION['acc_type'] ?? 'passenger';
-
-    if ($accType === 'company') {
-        require('partials/header_C.php');
-        require('addServices.php');
-    } else {
-        require('partials/header_P.php');
-        require('partials/main.php');
-    }
-    require('partials/footer.php');
-?>

@@ -80,8 +80,6 @@
         <div class="sidebar-section sidebar-links">
             <a href="#">Dashboard</a>
             <a href="#">Bookings</a>
-            <a href="#">Flights</a>
-            <a href="#">Services</a>
             <a href="#">Statistics</a>
         </div>
         <div class="sidebar-section">

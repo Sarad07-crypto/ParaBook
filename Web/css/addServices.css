@@ -1,0 +1,238 @@
+.add-company-wrapper {
+  height: 600px;
+  margin: 50px;
+}
+
+.add-company-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 220px;
+  height: 160px;
+  background: #f5f7fa;
+  border: 2px dashed #007bff;
+  border-radius: 12px;
+  cursor: pointer;
+  margin: 24px auto;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.add-company-card:hover {
+  background: #e6f0ff;
+  border-color: #0056b3;
+}
+
+.add-company-icon {
+  font-size: 48px;
+  color: #007bff;
+  margin-bottom: 12px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.add-company-text {
+  font-size: 18px;
+  color: #333;
+  font-weight: 500;
+}
+
+.modal {
+  display: flex;
+  /* Always flex */
+  visibility: hidden;
+  /* Hide content initially */
+  opacity: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.modal.show {
+  visibility: visible;
+  opacity: 1;
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+#serviceFormContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* serviceForm css */
+
+:root {
+  --primary: #eeeeee;
+  --secondary: #2192ff;
+  --grey: #808080;
+  --white: #ffffff;
+  --black: #222222;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: var(--primary);
+}
+
+.wrapper {
+  width: 70%;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
+.progress {
+  position: absolute;
+  height: 3px;
+  top: 32%;
+  width: 0%;
+  left: 5%;
+  transform: translateY(-50%);
+  background-color: var(--secondary);
+  transition: width 0.3s;
+  z-index: 2;
+}
+
+.progress-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  position: relative;
+}
+
+.progress-container::after {
+  content: "";
+  position: absolute;
+  height: 3px;
+  width: 95%;
+  top: 30%;
+  left: 5%;
+  background-color: var(--grey);
+  z-index: 1;
+}
+
+.progress-step {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  font-weight: 500;
+  z-index: 2;
+}
+
+.progress-step .bx {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--grey);
+  width: 50px;
+  height: 50px;
+  border: 3px solid var(--grey);
+  border-radius: 50%;
+  margin-bottom: 10px;
+  background-color: var(--primary);
+  transition: border 0.3s, color 0.3s;
+}
+
+.progress-step .bx.active {
+  border: 3px solid var(--secondary);
+  color: var(--secondary);
+}
+
+.bx {
+  color: black;
+  font-size: 20px;
+}
+
+.btn {
+  padding: 10px 20px;
+  margin: 5px;
+  background-color: #0099ff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.btn-container .btn {
+  padding: 0.5rem 1.5rem;
+  margin: 0 1rem;
+  border-radius: 20px;
+  background-color: var(--secondary);
+  color: var(--white);
+  cursor: pointer;
+  border: 1px solid var(--secondary);
+}
+
+.btn.disabled {
+  border: 1px solid var(--grey);
+  background-color: var(--grey);
+  color: var(--white);
+  cursor: not-allowed;
+}
+
+.form-step {
+  display: none;
+  flex-direction: column;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.form-step input,
+.form-step textarea,
+.form-step select {
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+  width: 100%;
+  border: 1px solid var(--grey);
+  border-radius: 8px;
+}
+
+.form-step.active {
+  display: flex;
+}
