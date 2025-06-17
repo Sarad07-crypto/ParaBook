@@ -27,6 +27,10 @@ $routes = [
     '/google/callback' => 'Web/php/google/controller.php',
     '/facebook/callback' => 'Web/php/facebook/f-callback.php',
     
+    '/serviceform' => 'Web/php/views/serviceForm.php',
+
+
+    
 ];
 
 function routeToController($uri, $routes) {
