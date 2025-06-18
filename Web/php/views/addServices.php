@@ -64,7 +64,6 @@
         }
     });
     </script>
-    <script src="Web/scripts/serviceForm.js?v=1.0"></script>
 </body>
 
 </html>

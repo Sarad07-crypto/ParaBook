@@ -22,39 +22,50 @@
             </div>
             <div class="progress-step"><i class="bx bx-images"></i>Gallery</div>
         </div>
-        <form id="multiStepForm">
+        <form id="multiStepForm" method="POST" action="/home" enctype="multipart/form-data">
             <div class="form-step" id="step-1">
-                <input type="text" placeholder="Company Name" required />
-                <input type="text" placeholder="Service Title" required />
-                <input type="text" placeholder="Address" required />
-                <input type="text" placeholder="Contact" required />
-                <input type="text" placeholder="PAN Number" required />
+                <input type="text" name="companyName" placeholder="Company Name" required />
+                <input type="text" name="serviceTitle" placeholder="Service Title" required />
+                <input type="text" name="address" placeholder="Address" required />
+                <input type="text" name="contact" placeholder="Contact" required />
+                <input type="text" name="panNumber" placeholder="PAN Number" required />
             </div>
 
             <div class="form-step" id="step-2">
-                <textarea placeholder="Write your service description here..." rows="20" cols="200" maxlength="1000"
-                    required></textarea>
+                <textarea name="serviceDescription" placeholder="Write your service description here..." rows="20"
+                    cols="200" maxlength="1000" required></textarea>
             </div>
 
             <div class="form-step" id="step-3">
                 <label for="flight-type-name">Flight Type Name:</label>
-                <input type="text" id="flight-type-name" placeholder="e.g., Normal Tandem" required />
-
+                <input type="text" id="flight-type-name" placeholder="e.g., Normal Tandem" />
                 <label for="flight-type-price">Price (Rs):</label>
-                <input type="number" id="flight-type-price" placeholder="e.g., 5000" required />
-
+                <input type="number" id="flight-type-price" placeholder="e.g., 5000" />
                 <button type="button" id="add-flight-type">Add</button>
 
                 <ul id="flight-type-list"></ul>
+
+                <!-- Container for added flight types as hidden inputs -->
+                <div id="flight-types-hidden-inputs"></div>
             </div>
 
             <div class="form-step" id="step-4">
                 <label>Upload 4 Office Photos:</label>
-                <input type="file" accept="image/*" multiple required />
+                <input type="file" name="officePhotos[]" id="officePhotos" accept="image/*" multiple required />
+                <div class="counter" id="photoCounter">0 of 4 photos uploaded</div>
+                <div id="officePhotosPreview" class="image-preview">
+                    <div class="empty-state">No office photos uploaded yet</div>
+                </div>
+
                 <label>Thumbnail Image:</label>
-                <input type="file" accept="image/*" required />
+                <input type="file" name="thumbnail" id="thumbnail" accept="image/*" required />
+                <div id="thumbnailPreview" class="image-preview">
+                    <div class="empty-state">No thumbnail uploaded yet</div>
+                </div>
             </div>
+
         </form>
+
 
         <div class="btn-container">
             <button class="btn" id="prev" onclick="prev()">Previous</button>

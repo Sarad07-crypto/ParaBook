@@ -21,15 +21,10 @@ $routes = [
     '/verify' => log_sign . '/verify.php',
     '/logout' => log_sign . '/logout.php',
     
-    // '/home' => 'Web/php/home/passenger.php',
     '/home' => 'Web/php/views/home.php',
     '/auth/google' => 'Web/php/google/auth_provider.php',
     '/google/callback' => 'Web/php/google/controller.php',
     '/facebook/callback' => 'Web/php/facebook/f-callback.php',
-    
-    '/serviceform' => 'Web/php/views/serviceForm.php',
-
-
     
 ];
 
