@@ -78,6 +78,7 @@
             $accResult = mysqli_stmt_get_result($accTypeQuery);
             $accRow = mysqli_fetch_assoc($accResult);
             $_SESSION['acc_type'] = $accRow['acc_type'] ?? 'passenger';
+            $_SESSION['user_id'] = $userId;
 
             // Update session
             $updateSession = mysqli_prepare($connect, "

@@ -22,7 +22,7 @@
             </div>
             <div class="progress-step"><i class="bx bx-images"></i>Gallery</div>
         </div>
-        <form id="multiStepForm" method="POST" action="/home" enctype="multipart/form-data">
+        <form id="multiStepForm" method="POST" action="/servicePost" enctype="multipart/form-data">
             <div class="form-step" id="step-1">
                 <input type="text" name="companyName" placeholder="Company Name" required />
                 <input type="text" name="serviceTitle" placeholder="Service Title" required />
@@ -45,7 +45,6 @@
 
                 <ul id="flight-type-list"></ul>
 
-                <!-- Container for added flight types as hidden inputs -->
                 <div id="flight-types-hidden-inputs"></div>
             </div>
 
