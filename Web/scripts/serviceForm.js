@@ -114,7 +114,6 @@ function initServiceForm() {
     resetForm();
   };
 
-  // Image preview functionality
   console.log("Initializing image preview...");
 
   const officeInput = document.getElementById("officePhotos");
@@ -233,7 +232,6 @@ function initServiceForm() {
     });
   }
 
-  // Thumbnail handler
   if (thumbnailInput) {
     thumbnailInput.addEventListener("change", function (e) {
       console.log("Thumbnail input changed");
@@ -244,12 +242,10 @@ function initServiceForm() {
     });
   }
 
-  // Initialize image previews
   displayOfficePhotos();
   displayThumbnail(null);
   updateCounter();
 
-  // === FORM SUBMISSION - FIXED AND DEBUGGED ===
   console.log("Setting up form submission...");
 
   const form = document.getElementById("multiStepForm");
@@ -267,7 +263,6 @@ function initServiceForm() {
       console.log("=== FORM SUBMIT EVENT TRIGGERED ===");
       e.preventDefault();
 
-      // Add flight types as hidden inputs
       if (hiddenContainer) {
         console.log("Adding flight types to hidden container:", flightTypes);
         hiddenContainer.innerHTML = "";
@@ -277,24 +272,22 @@ function initServiceForm() {
 
           const hiddenName = document.createElement("input");
           hiddenName.type = "hidden";
-          hiddenName.name = "flightTypes[][name]";
+          hiddenName.name = `flightTypes[${index}][name]`; // ✅ indexed
           hiddenName.value = flight.name;
 
           const hiddenPrice = document.createElement("input");
           hiddenPrice.type = "hidden";
-          hiddenPrice.name = "flightTypes[][price]";
-          hiddenPrice.value = flight.price;
+          hiddenPrice.name = `flightTypes[${index}][price]`; // ✅ indexed
+          hiddenPrice.value = String(flight.price);
 
           hiddenContainer.appendChild(hiddenName);
           hiddenContainer.appendChild(hiddenPrice);
         });
       }
 
-      // Create FormData
       console.log("Creating FormData...");
       const formData = new FormData(form);
 
-      // Add managed office photos
       if (officeFiles.length > 0) {
         console.log("Adding office photos to FormData:", officeFiles.length);
         formData.delete("officePhotos[]");
@@ -305,7 +298,6 @@ function initServiceForm() {
         });
       }
 
-      // Debug: Log all form data
       console.log("=== FORM DATA CONTENTS ===");
       for (let [key, value] of formData.entries()) {
         if (value instanceof File) {
@@ -315,50 +307,34 @@ function initServiceForm() {
         }
       }
 
-      // Get form action
-      const action = form.getAttribute("action") || "/home";
+      const action = form.getAttribute("action");
       console.log("Submitting to:", action);
 
-      // Submit form
-      console.log("Sending fetch request...");
-      fetch(action, {
+      // Send data via jQuery AJAX
+      console.log("Sending jQuery AJAX request...");
+      $.ajax({
+        url: action,
         method: "POST",
-        body: formData,
-      })
-        .then((response) => {
-          console.log("Response received:", {
-            status: response.status,
-            statusText: response.statusText,
-            ok: response.ok,
-          });
-
-          if (!response.ok) {
-            throw new Error(
-              `HTTP error! status: ${response.status} - ${response.statusText}`
-            );
-          }
-          return response.text();
-        })
-        .then((data) => {
-          console.log("=== SUCCESS ===");
-          console.log("Server response:", data);
-          alert("Form submitted successfully!");
-
-          // Optional: Reset form or close modal
+        data: formData,
+        processData: false,
+        contentType: false,
+        dataType: "text",
+        success: function (response) {
+          console.log("Response received:", response);
           form.reset();
           $("#serviceModal").removeClass("show");
-        })
-        .catch((error) => {
+        },
+        error: function (xhr, status, error) {
           console.error("=== ERROR ===");
-          console.error("Submission failed:", error);
-          alert("Submission failed: " + error.message);
-        });
+          console.error("Submission failed:", status, error);
+          console.error("Full response:", xhr.responseText);
+          alert("Submission failed: " + error);
+        },
+      });
     });
 
     console.log("Form submission setup complete");
   } else {
     console.error("Form element not found!");
   }
-
-  console.log("=== initServiceForm completed ===");
 }

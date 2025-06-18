@@ -43,6 +43,7 @@ body {
 <body>
 
     <?php
+    
         $accType = $_SESSION['acc_type'] ?? 'passenger';
         if ($accType === 'company') {
             require('partials/header_C.php');

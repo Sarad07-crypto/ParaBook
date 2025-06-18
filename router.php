@@ -9,22 +9,25 @@ if (strpos($uri, $basePath) === 0) {
 
 $uri = rtrim($uri, '/') ?: '/';
 
-const log_sign =  'Web/php/login_signup';
+const LOG_SIGN =  'Web/php/login_signup';
+const PHP = 'Web/php/';
 
 $routes = [
 
-    '/' => log_sign . '/login.php',
-    '/login' => log_sign . '/login.php',
-    '/logincheck' => log_sign . '/loginCheck.php',
-    '/signup' => log_sign . '/signup.php',
-    '/signcheck' => log_sign . '/signCheck.php',
-    '/verify' => log_sign . '/verify.php',
-    '/logout' => log_sign . '/logout.php',
+    '/' => LOG_SIGN . '/login.php',
+    '/login' => LOG_SIGN . '/login.php',
+    '/logincheck' => LOG_SIGN . '/loginCheck.php',
+    '/signup' => LOG_SIGN . '/signup.php',
+    '/signcheck' => LOG_SIGN . '/signCheck.php',
+    '/verify' => LOG_SIGN . '/verify.php',
+    '/logout' => LOG_SIGN . '/logout.php',
     
-    '/home' => 'Web/php/views/home.php',
-    '/auth/google' => 'Web/php/google/auth_provider.php',
-    '/google/callback' => 'Web/php/google/controller.php',
-    '/facebook/callback' => 'Web/php/facebook/f-callback.php',
+    '/home' => PHP . 'views/home.php',
+    '/auth/google' => PHP . 'google/auth_provider.php',
+    '/google/callback' => PHP . 'google/controller.php',
+    '/facebook/callback' => PHP . 'facebook/f-callback.php',
+
+    '/servicePost' => PHP . 'formDatabase/serviceForm.data.php',
     
 ];
 

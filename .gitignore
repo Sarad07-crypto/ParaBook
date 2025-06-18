@@ -1,3 +1,4 @@
 /Web/vendor
 /Web/composer.lock
 /Web/php/.env
+/Assets/uploads
