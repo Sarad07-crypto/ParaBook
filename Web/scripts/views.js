@@ -110,3 +110,28 @@ function showInitial(img, initial) {
 
   container.appendChild(fallback);
 }
+function toggleDropdown() {
+    var menu = document.getElementById('dropdownMenu');
+    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+}
+
+// Hide dropdown when clicking outside
+window.onclick = function(event) {
+    if (!event.target.closest('.avatar-dropdown')) {
+        document.getElementById('dropdownMenu').style.display = 'none';
+    }
+}
+function darkModeToggle() {
+    document.body.classList.toggle('dark-mode');
+    // Save preference
+    if(document.body.classList.contains('dark-mode')) {
+        localStorage.setItem('theme', 'dark');
+    } else {
+        localStorage.setItem('theme', 'light');
+    }
+}
+window.onload = function() {
+    if(localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark-mode');
+    }
+};
