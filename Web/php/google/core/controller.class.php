@@ -37,6 +37,7 @@ class Controller
                 $accTypeResult = $accTypeQuery->fetch(PDO::FETCH_ASSOC);
                 $accType = $accTypeResult['acc_type'] ?? 'passenger';
                 $_SESSION['acc_type'] = $accType;
+                $_SESSION['user_id'] = $userId;
                 
                 // Update session
                 $updateSession = $db->prepare("

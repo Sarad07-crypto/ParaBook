@@ -71,7 +71,6 @@
         if ($existingUser) {
             $userId = $existingUser['id'];
 
-            // 🔍 Fetch account type from users_info
             $accTypeQuery = mysqli_prepare($connect, "SELECT acc_type FROM users_info WHERE user_id = ?");
             mysqli_stmt_bind_param($accTypeQuery, "i", $userId);
             mysqli_stmt_execute($accTypeQuery);
@@ -112,8 +111,7 @@
         mysqli_stmt_execute($insertUser);
         $userId = mysqli_insert_id($connect);
 
-        // 🟡 You can define a default acc_type here (e.g., 'passenger')
-        $defaultAccType = 'passenger'; // or get it dynamically from UI later
+        $defaultAccType = 'passenger';
 
         // Insert into users_info
         $insertInfo = mysqli_prepare($connect, "
@@ -126,7 +124,6 @@
         mysqli_stmt_bind_param($insertInfo, "issss", $userId, $defaultAccType, $f_name, $l_name, $avatar);
         mysqli_stmt_execute($insertInfo);
 
-        // Set session variable for acc_type
         $_SESSION['acc_type'] = $defaultAccType;
 
         // Insert verification info
