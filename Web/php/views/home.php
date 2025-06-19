@@ -43,14 +43,13 @@ body {
 <body>
 
     <?php
-    
         $accType = $_SESSION['acc_type'] ?? 'passenger';
         if ($accType === 'company') {
             require('partials/header_C.php');
             require('addServices.php');
         } else {
             require('partials/header_P.php');
-            require('partials/main.php');
+            require('servicePassenger.php');
         }
     ?>
 
