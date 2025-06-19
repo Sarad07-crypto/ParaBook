@@ -114,6 +114,7 @@ function initServiceForm() {
     resetForm();
   };
 
+  // Image preview functionality
   console.log("Initializing image preview...");
 
   const officeInput = document.getElementById("officePhotos");
@@ -232,6 +233,7 @@ function initServiceForm() {
     });
   }
 
+  // Thumbnail handler
   if (thumbnailInput) {
     thumbnailInput.addEventListener("change", function (e) {
       console.log("Thumbnail input changed");
@@ -242,6 +244,7 @@ function initServiceForm() {
     });
   }
 
+  // Initialize image previews
   displayOfficePhotos();
   displayThumbnail(null);
   updateCounter();
@@ -263,6 +266,7 @@ function initServiceForm() {
       console.log("=== FORM SUBMIT EVENT TRIGGERED ===");
       e.preventDefault();
 
+      // Add flight types as hidden inputs
       if (hiddenContainer) {
         console.log("Adding flight types to hidden container:", flightTypes);
         hiddenContainer.innerHTML = "";
@@ -272,12 +276,12 @@ function initServiceForm() {
 
           const hiddenName = document.createElement("input");
           hiddenName.type = "hidden";
-          hiddenName.name = `flightTypes[${index}][name]`; // ✅ indexed
+          hiddenName.name = `flightTypes[${index}][name]`;
           hiddenName.value = flight.name;
 
           const hiddenPrice = document.createElement("input");
           hiddenPrice.type = "hidden";
-          hiddenPrice.name = `flightTypes[${index}][price]`; // ✅ indexed
+          hiddenPrice.name = `flightTypes[${index}][price]`;
           hiddenPrice.value = String(flight.price);
 
           hiddenContainer.appendChild(hiddenName);
@@ -285,9 +289,11 @@ function initServiceForm() {
         });
       }
 
+      // Create FormData
       console.log("Creating FormData...");
       const formData = new FormData(form);
 
+      // Add managed office photos
       if (officeFiles.length > 0) {
         console.log("Adding office photos to FormData:", officeFiles.length);
         formData.delete("officePhotos[]");
@@ -298,6 +304,7 @@ function initServiceForm() {
         });
       }
 
+      // Debug: Log all form data
       console.log("=== FORM DATA CONTENTS ===");
       for (let [key, value] of formData.entries()) {
         if (value instanceof File) {
@@ -307,6 +314,7 @@ function initServiceForm() {
         }
       }
 
+      // Get form action
       const action = form.getAttribute("action");
       console.log("Submitting to:", action);
 
@@ -318,11 +326,12 @@ function initServiceForm() {
         data: formData,
         processData: false,
         contentType: false,
-        dataType: "text",
+        dataType: "text", // 🟢 important: don't force JSON parsing
         success: function (response) {
           console.log("Response received:", response);
           form.reset();
           $("#serviceModal").removeClass("show");
+          $(document).trigger("serviceAdded");
         },
         error: function (xhr, status, error) {
           console.error("=== ERROR ===");

@@ -46,6 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['lastName'] = $userInfo['lastName'];
                 $_SESSION['avatar'] = $userInfo['avatar'];
                 $_SESSION['acc_type'] = $userInfo['acc_type'];
+                $_SESSION['user_id'] = $userId;
         
                 $session = bin2hex(random_bytes(16));
                 // Update session
