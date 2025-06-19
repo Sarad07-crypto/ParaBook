@@ -62,7 +62,7 @@
                     <div class="empty-state">No thumbnail uploaded yet</div>
                 </div>
             </div>
-
+            <input type="hidden" name="service_id" value="<?= htmlspecialchars($service['id'] ?? '') ?>">
         </form>
 
 

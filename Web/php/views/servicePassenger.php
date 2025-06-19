@@ -20,7 +20,7 @@
         <div class="company-header">
             <div>
                 <h1>Companies you are looking for</h1>
-                <div class="company-results">1000+ results</div>
+                <div class="company-results">Loading...</div>
             </div>
             <div class="company-sort">
                 <label style="margin-left: 24px;">
@@ -57,6 +57,8 @@
                 console.log("AJAX success. Response received:", response);
 
                 if (response.success && response.services.length > 0) {
+                    $(".company-results").text(
+                        `${response.count} result${response.count !== 1 ? 's' : ''}`);
                     const companyGrid = $(".company-grid");
                     console.log("Found companyGrid element:", companyGrid.length);
 
