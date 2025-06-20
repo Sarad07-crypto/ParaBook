@@ -51,24 +51,25 @@
                     <a href="#"><i class="fas fa-heart"></i></a>
                     <a href="#"><i class="fas fa-headphones"></i></a>
                     <span class="switch-text">Complete your profile</span>
-                     <div class="avatar-dropdown">
-    <div class="avatar" onclick="toggleDropdown()">
-        <img src="<?php echo $avatar ?>" alt="image not found"
-            onerror="showInitial(this, '<?php echo $firstInitial ?>')">
-    </div>
-    <div id="dropdownMenu" class="dropdown-menu">
-        <div class="dropdown-header">
-            <strong>            <?php echo htmlspecialchars($_SESSION['firstName']) . " " . htmlspecialchars($_SESSION['lastName']); ?>
-</strong>
-        </div>
-        <a href="/profile"><i class="fa fa-user"></i> Profile</a>
-        <a href="/settings"><i class="fa fa-cog"></i> Settings</a>
-        <a href="/help"><i class="fa fa-question-circle"></i> Help & Support</a>
-        <form action="/logout" method="post">
-            <button type="submit" class="logout-btn"><i class="fa fa-sign-out"></i> Log Out</button>
-        </form>
-    </div>
-</div>
+                    <div class="avatar-dropdown">
+                        <div class="avatar" onclick="toggleDropdown()">
+                            <img src="<?php echo $avatar ?>" alt="image not found"
+                                onerror="showInitial(this, '<?php echo $firstInitial ?>')">
+                        </div>
+                        <div id="dropdownMenu" class="dropdown-menu">
+                            <div class="dropdown-header">
+                                <strong>
+                                    <?php echo htmlspecialchars($_SESSION['firstName']) . " " . htmlspecialchars($_SESSION['lastName']); ?>
+                                </strong>
+                            </div>
+                            <a href="/profile"><i class="fa fa-user"></i> Profile</a>
+                            <a href="/settings"><i class="fa fa-cog"></i> Settings</a>
+                            <a href="/help"><i class="fa fa-question-circle"></i> Help & Support</a>
+                            <form action="/logout" method="post">
+                                <button type="submit" class="logout-btn"><i class="fa fa-sign-out"></i> Log Out</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -81,7 +82,7 @@
         </div>
     </header>
 
-    
+
     <!-- Blur overlay for sidebar -->
     <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
 
