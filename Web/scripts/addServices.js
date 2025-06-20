@@ -39,6 +39,32 @@ $(window).on("click", function (e) {
   }
 });
 
+// When clicking on any company card, load the modal with existing service data
+$(document).on("click", ".company-card", function () {
+  const serviceId = $(this).data("service-id");
+
+  $("body").css("overflow", "hidden");
+  $("#serviceModal").addClass("show");
+  $("#serviceFormContainer").html(
+    '<div class="loading-spinner">Loading form...</div>'
+  );
+
+  $.ajax({
+    url: "Web/php/views/serviceForm.php",
+    type: "GET",
+    success: function (data) {
+      $("#serviceFormContainer").html(data);
+      $.getScript("Web/scripts/serviceForm.js", function () {
+        initServiceForm();
+        loadServiceData(serviceId);
+      });
+    },
+    error: function () {
+      $("#serviceFormContainer").html("<p>Failed to load form.</p>");
+    },
+  });
+});
+
 // Function to load and display company services
 function loadCompanyServices() {
   console.log("loadCompanyServices called");

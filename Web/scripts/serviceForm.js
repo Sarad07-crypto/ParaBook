@@ -70,6 +70,7 @@ function initServiceForm() {
             `;
       list.appendChild(li);
     });
+    console.log("Rendering list with flightTypes:", flightTypes);
   }
 
   function resetForm() {
@@ -136,17 +137,31 @@ function initServiceForm() {
     if (counter) {
       counter.textContent = `${officeFiles.length} of 4 photos uploaded`;
     }
+
+    // Remove required attribute if photos exist
+    if (officeInput && officeFiles.length > 0) {
+      officeInput.removeAttribute("required");
+    } else if (officeInput) {
+      officeInput.setAttribute("required", "required");
+    }
   }
 
-  function createImageElement(file, onRemove) {
-    console.log("Creating image element for:", file.name);
+  function createImageElement(file, onRemove, isExisting = false) {
+    console.log("Creating image element for:", isExisting ? file : file.name);
     const container = document.createElement("div");
     container.className = "preview-image";
 
     const img = document.createElement("img");
-    const imgUrl = URL.createObjectURL(file);
-    img.src = imgUrl;
-    img.alt = file.name;
+    if (isExisting) {
+      // For existing photos from database
+      img.src = file;
+      img.alt = "Office Photo";
+    } else {
+      // For newly uploaded files
+      const imgUrl = URL.createObjectURL(file);
+      img.src = imgUrl;
+      img.alt = file.name;
+    }
 
     const removeBtn = document.createElement("button");
     removeBtn.className = "remove-btn";
@@ -154,7 +169,9 @@ function initServiceForm() {
     removeBtn.type = "button";
 
     removeBtn.addEventListener("click", function () {
-      URL.revokeObjectURL(img.src);
+      if (!isExisting) {
+        URL.revokeObjectURL(img.src);
+      }
       container.remove();
       onRemove();
     });
@@ -173,17 +190,31 @@ function initServiceForm() {
       if (officeFiles.length === 0) {
         officePreview.innerHTML =
           '<div class="empty-state">No office photos uploaded yet</div>';
+        // Add required attribute if no photos
+        if (officeInput) {
+          officeInput.setAttribute("required", "required");
+        }
         return;
       }
 
       officeFiles.forEach((file) => {
-        const element = createImageElement(file, function () {
-          officeFiles = officeFiles.filter((f) => f !== file);
-          displayOfficePhotos();
-          updateCounter();
-        });
+        const isExisting = typeof file === "string";
+        const element = createImageElement(
+          file,
+          function () {
+            officeFiles = officeFiles.filter((f) => f !== file);
+            displayOfficePhotos();
+            updateCounter();
+          },
+          isExisting
+        );
         officePreview.appendChild(element);
       });
+
+      // Remove required attribute if photos exist
+      if (officeInput && officeFiles.length > 0) {
+        officeInput.removeAttribute("required");
+      }
     }
   }
 
@@ -195,16 +226,30 @@ function initServiceForm() {
       if (!file) {
         thumbnailPreview.innerHTML =
           '<div class="empty-state">No thumbnail uploaded yet</div>';
+        // Add required attribute if no thumbnail
+        if (thumbnailInput) {
+          thumbnailInput.setAttribute("required", "required");
+        }
         return;
       }
 
-      const element = createImageElement(file, function () {
-        displayThumbnail(null);
-        if (thumbnailInput) {
-          thumbnailInput.value = "";
-        }
-      });
+      const isExisting = typeof file === "string";
+      const element = createImageElement(
+        file,
+        function () {
+          displayThumbnail(null);
+          if (thumbnailInput) {
+            thumbnailInput.value = "";
+          }
+        },
+        isExisting
+      );
       thumbnailPreview.appendChild(element);
+
+      // Remove required attribute if thumbnail exists
+      if (thumbnailInput) {
+        thumbnailInput.removeAttribute("required");
+      }
     }
   }
 
@@ -214,11 +259,14 @@ function initServiceForm() {
       console.log("Office input changed, files:", e.target.files.length);
 
       const newFiles = Array.from(e.target.files);
+      const currentFileCount = officeFiles.filter(
+        (f) => f instanceof File
+      ).length;
 
-      if (officeFiles.length + newFiles.length > 4) {
+      if (currentFileCount + newFiles.length > 4) {
         alert(
           `Cannot upload more than 4 photos. You can upload ${
-            4 - officeFiles.length
+            4 - currentFileCount
           } more.`
         );
         e.target.value = "";
@@ -291,17 +339,76 @@ function initServiceForm() {
 
       // Create FormData
       console.log("Creating FormData...");
-      const formData = new FormData(form);
+      const formData = new FormData();
 
-      // Add managed office photos
-      if (officeFiles.length > 0) {
-        console.log("Adding office photos to FormData:", officeFiles.length);
-        formData.delete("officePhotos[]");
+      // Add all form fields manually (except file inputs)
+      const formElements = form.elements;
+      for (let i = 0; i < formElements.length; i++) {
+        const element = formElements[i];
 
-        officeFiles.forEach((file, index) => {
-          console.log(`Adding office photo ${index}:`, file.name);
+        // Skip file inputs and buttons
+        if (
+          element.type === "file" ||
+          element.type === "button" ||
+          element.type === "submit"
+        ) {
+          continue;
+        }
+
+        // Skip empty values for non-required fields
+        if (element.name && element.value !== "") {
+          formData.append(element.name, element.value);
+          console.log(`Added field: ${element.name} = ${element.value}`);
+        }
+      }
+
+      // Handle office photos
+      const newOfficeFiles = officeFiles.filter((f) => f instanceof File);
+      const existingOfficePhotos = officeFiles.filter(
+        (f) => typeof f === "string"
+      );
+
+      console.log(
+        "Office photos - New files:",
+        newOfficeFiles.length,
+        "Existing:",
+        existingOfficePhotos.length
+      );
+
+      if (newOfficeFiles.length > 0) {
+        newOfficeFiles.forEach((file, index) => {
+          console.log(`Adding new office photo ${index}:`, file.name);
           formData.append("officePhotos[]", file);
         });
+      }
+
+      // Add existing office photos as a separate field so server knows which ones to keep
+      if (existingOfficePhotos.length > 0) {
+        existingOfficePhotos.forEach((photoPath, index) => {
+          console.log(`Keeping existing office photo ${index}:`, photoPath);
+          formData.append("existingOfficePhotos[]", photoPath);
+        });
+      }
+
+      // Handle thumbnail
+      const thumbnailFile =
+        thumbnailInput && thumbnailInput.files && thumbnailInput.files[0];
+      if (thumbnailFile) {
+        console.log("Adding new thumbnail file:", thumbnailFile.name);
+        formData.append("thumbnail", thumbnailFile);
+      } else if (
+        window.serviceFormData &&
+        window.serviceFormData.currentThumbnail
+      ) {
+        // Send existing thumbnail path
+        console.log(
+          "Keeping existing thumbnail:",
+          window.serviceFormData.currentThumbnail
+        );
+        formData.append(
+          "existingThumbnail",
+          window.serviceFormData.currentThumbnail
+        );
       }
 
       // Debug: Log all form data
@@ -318,7 +425,18 @@ function initServiceForm() {
       const action = form.getAttribute("action");
       console.log("Submitting to:", action);
 
-      // Send data via jQuery AJAX
+      // Validate required data
+      if (flightTypes.length === 0) {
+        alert("Please add at least one flight type.");
+        return;
+      }
+
+      if (officeFiles.length === 0) {
+        alert("Please upload at least one office photo.");
+        return;
+      }
+
+      // Send data via jQuery AJAX with better error handling
       console.log("Sending jQuery AJAX request...");
       $.ajax({
         url: action,
@@ -326,18 +444,82 @@ function initServiceForm() {
         data: formData,
         processData: false,
         contentType: false,
-        dataType: "text", // 🟢 important: don't force JSON parsing
+        dataType: "text",
+        timeout: 30000, // 30 second timeout
+        beforeSend: function () {
+          // Disable submit button to prevent double submission
+          const submitBtn = document.getElementById("submitBtn");
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Submitting...";
+          }
+        },
         success: function (response) {
           console.log("Response received:", response);
+
+          // Try to parse response as JSON to check for success/error
+          try {
+            const jsonResponse = JSON.parse(response);
+            if (jsonResponse.success === false) {
+              console.error("Server returned error:", jsonResponse.message);
+              alert("Error: " + jsonResponse.message);
+              return;
+            }
+          } catch (e) {
+            // Response is not JSON, that's fine
+            console.log("Response is not JSON, treating as success");
+          }
+
+          // Reset form and close modal on success
           form.reset();
+          flightTypes.length = 0;
+          officeFiles.length = 0;
+          renderList();
+          displayOfficePhotos();
+          displayThumbnail(null);
+          updateCounter();
+
           $("#serviceModal").removeClass("show");
           $(document).trigger("serviceAdded");
+
+          alert("Service saved successfully!");
         },
         error: function (xhr, status, error) {
-          console.error("=== ERROR ===");
-          console.error("Submission failed:", status, error);
-          console.error("Full response:", xhr.responseText);
-          alert("Submission failed: " + error);
+          console.error("=== AJAX ERROR ===");
+          console.error("Status:", status);
+          console.error("Error:", error);
+          console.error("Status Code:", xhr.status);
+          console.error("Response Text:", xhr.responseText);
+
+          let errorMessage = "Submission failed";
+
+          if (xhr.status === 0) {
+            errorMessage = "Network error - please check your connection";
+          } else if (xhr.status === 413) {
+            errorMessage = "Files too large - please reduce image sizes";
+          } else if (xhr.status === 500) {
+            errorMessage = "Server error - please try again";
+          } else if (xhr.responseText) {
+            // Try to extract meaningful error from response
+            try {
+              const jsonError = JSON.parse(xhr.responseText);
+              errorMessage =
+                jsonError.message || jsonError.error || errorMessage;
+            } catch (e) {
+              // If response is not JSON, show first 200 chars
+              errorMessage = xhr.responseText.substring(0, 200);
+            }
+          }
+
+          alert("Error: " + errorMessage);
+        },
+        complete: function () {
+          // Re-enable submit button
+          const submitBtn = document.getElementById("submitBtn");
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Submit";
+          }
         },
       });
     });
@@ -346,4 +528,109 @@ function initServiceForm() {
   } else {
     console.error("Form element not found!");
   }
+
+  // Expose functions and variables that need to be accessed by loadServiceData
+  window.serviceFormData = {
+    flightTypes: flightTypes,
+    renderList: renderList,
+    officeFiles: officeFiles,
+    displayOfficePhotos: displayOfficePhotos,
+    displayThumbnail: displayThumbnail,
+    updateCounter: updateCounter,
+    currentThumbnail: null, // Track current thumbnail
+  };
+}
+
+function loadServiceData(serviceId) {
+  if (!serviceId) return;
+
+  $.ajax({
+    url: "Web/php/AJAX/getServiceData.php",
+    method: "GET",
+    data: { service_id: serviceId },
+    dataType: "json",
+    success: function (res) {
+      console.log("Service data loaded:", res);
+
+      if (!res.success) {
+        alert("Failed to load service");
+        return;
+      }
+
+      const { service, flightTypes, officePhotos } = res.data;
+
+      // Fill text fields
+      $('[name="companyName"]').val(service.company_name);
+      $('[name="serviceTitle"]').val(service.service_title);
+      $('[name="address"]').val(service.address);
+      $('[name="contact"]').val(service.contact);
+      $('[name="panNumber"]').val(service.pan_number);
+      $('[name="serviceDescription"]').val(service.service_description);
+
+      // Add or update hidden service_id field
+      let serviceIdInput = $('[name="service_id"]');
+      if (serviceIdInput.length === 0) {
+        $("#multiStepForm").append(
+          `<input type="hidden" name="service_id" value="${service.id}">`
+        );
+      } else {
+        serviceIdInput.val(service.id);
+      }
+
+      // Load flight types - FIXED
+      if (window.serviceFormData && window.serviceFormData.flightTypes) {
+        console.log("Loading flight types:", flightTypes);
+
+        // Clear existing flight types
+        window.serviceFormData.flightTypes.length = 0;
+
+        // Add flight types from database
+        flightTypes.forEach((ft) => {
+          window.serviceFormData.flightTypes.push({
+            name: ft.name,
+            price: ft.price,
+          });
+        });
+
+        // Re-render the flight types list
+        window.serviceFormData.renderList();
+        console.log("Flight types loaded and rendered");
+      } else {
+        console.error(
+          "serviceFormData not available - make sure initServiceForm() was called first"
+        );
+      }
+
+      // Load office photos - FIXED
+      if (window.serviceFormData && window.serviceFormData.officeFiles) {
+        console.log("Loading office photos:", officePhotos);
+
+        // Clear existing office files
+        window.serviceFormData.officeFiles.length = 0;
+
+        // Add existing photos as strings (URLs)
+        officePhotos.forEach((photoPath) => {
+          window.serviceFormData.officeFiles.push(photoPath);
+        });
+
+        // Re-display office photos
+        window.serviceFormData.displayOfficePhotos();
+        window.serviceFormData.updateCounter();
+        console.log("Office photos loaded and displayed");
+      }
+
+      // Load thumbnail - FIXED
+      if (service.thumbnail_path && window.serviceFormData) {
+        console.log("Loading thumbnail:", service.thumbnail_path);
+        window.serviceFormData.currentThumbnail = service.thumbnail_path;
+        window.serviceFormData.displayThumbnail(service.thumbnail_path);
+      }
+    },
+    error: function (xhr, status, error) {
+      console.error("AJAX error:", error);
+      console.log("Status:", status);
+      console.log("Response text:", xhr.responseText);
+      alert("Error loading service data: " + error);
+    },
+  });
 }
