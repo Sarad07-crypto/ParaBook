@@ -7,10 +7,14 @@
     if (isset($_SESSION['user_email'])) {
         $loginType = 'google';
         $avatar = htmlspecialchars($_SESSION['avatar'] ?? 'default-avatar.png');
+        
+        $_SESSION['firstName'] = $_SESSION['givenName'];
+        $_SESSION['lastName'] = $_SESSION['familyName'];
 
     } elseif (isset($_SESSION['access_token']) && isset($_SESSION['userData'])) {
         $loginType = 'facebook';
         $avatar = htmlspecialchars($_SESSION['userData']['picture']['url'] ?? 'default-avatar.png');
+        
 
     } elseif (isset($_SESSION['Email'])) {
         $loginType = 'form';
