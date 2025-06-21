@@ -59,10 +59,22 @@ body {
 
     <?php require('partials/footer.php'); ?>
     <script>
+    const userAccountType = '<?php echo $accType; ?>';
+
     if (window.location.hash && window.location.hash === '#_=_') {
         // Remove hash without reloading
         history.replaceState(null, null, window.location.href.split('#')[0]);
     }
+
+    $(document).on("click", ".company-card", function() {
+        const serviceId = $(this).data("service-id");
+        if (serviceId) {
+
+            if (userAccountType === 'passenger') {
+                window.location.href = `/serviceDescription?service_id=${serviceId}`;
+            }
+        }
+    });
     </script>
 </body>
 
