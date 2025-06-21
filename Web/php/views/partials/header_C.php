@@ -79,7 +79,7 @@
         <!-- Navigation Bar -->
         <div class=" nav-bar">
             <a href="#">Dashboard</a>
-            <a href="#">Bookings</a>
+            <a href="/bookingCompany">Bookings</a>
             <a href="#">Flights</a>
             <a href="#">Services</a>
             <a href="#">Statistics</a>

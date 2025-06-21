@@ -17,6 +17,11 @@ function initServiceForm() {
   let currentStep = 1;
 
   function next() {
+    // Validate current step before proceeding
+    if (!validateStep(currentStep)) {
+      return; // Stop if validation fails
+    }
+
     if (currentStep < progressStep.length) {
       currentStep++;
       refresh();
@@ -57,6 +62,108 @@ function initServiceForm() {
   }
 
   refresh();
+
+  function validateStep(stepNumber) {
+    switch (stepNumber) {
+      case 1:
+        return validateStep1();
+      case 2:
+        return validateStep2();
+      case 3:
+        return validateStep3();
+      case 4:
+        return validateStep4();
+      default:
+        return true;
+    }
+  }
+
+  function validateStep1() {
+    const companyName = document
+      .querySelector('[name="companyName"]')
+      .value.trim();
+    const serviceTitle = document
+      .querySelector('[name="serviceTitle"]')
+      .value.trim();
+    const address = document.querySelector('[name="address"]').value.trim();
+    const contact = document.querySelector('[name="contact"]').value.trim();
+    const panNumber = document.querySelector('[name="panNumber"]').value.trim();
+
+    // Company name validation
+    if (!companyName || companyName.length < 2) {
+      alert("Company name must be at least 2 characters long");
+      return false;
+    }
+
+    // Service title validation
+    if (!serviceTitle || serviceTitle.length < 3) {
+      alert("Service title must be at least 3 characters long");
+      return false;
+    }
+
+    // Address validation
+    if (!address || address.length < 5) {
+      alert("Address must be at least 5 characters long");
+      return false;
+    }
+
+    // Contact validation (10 digits starting with 9)
+    const contactRegex = /^9[0-9]{9}$/;
+    if (!contact || !contactRegex.test(contact)) {
+      alert("Contact number must be 10 digits starting with 9");
+      return false;
+    }
+
+    // PAN number validation (9 digits for Nepal)
+    const panRegex = /^[0-9]{9}$/;
+    if (!panNumber || !panRegex.test(panNumber)) {
+      alert("PAN number must be exactly 9 digits");
+      return false;
+    }
+
+    return true;
+  }
+
+  function validateStep2() {
+    const description = document
+      .querySelector('[name="serviceDescription"]')
+      .value.trim();
+
+    if (!description || description.length < 20) {
+      alert("Service description must be at least 20 characters long");
+      return false;
+    }
+
+    return true;
+  }
+
+  function validateStep3() {
+    if (flightTypes.length === 0) {
+      alert("Please add at least one flight type with pricing");
+      return false;
+    }
+    return true;
+  }
+
+  function validateStep4() {
+    if (officeFiles.length === 0) {
+      alert("Please upload at least one office photo");
+      return false;
+    }
+
+    // Check if thumbnail exists (either uploaded or existing)
+    const thumbnailFile =
+      thumbnailInput && thumbnailInput.files && thumbnailInput.files[0];
+    const hasExistingThumbnail =
+      window.serviceFormData && window.serviceFormData.currentThumbnail;
+
+    if (!thumbnailFile && !hasExistingThumbnail) {
+      alert("Please upload a thumbnail image");
+      return false;
+    }
+
+    return true;
+  }
 
   function renderList() {
     if (!list) return;
@@ -289,6 +396,22 @@ function initServiceForm() {
       if (file) {
         displayThumbnail(file);
       }
+    });
+  }
+
+  // Real-time PAN validation
+  const panInput = document.querySelector('[name="panNumber"]');
+  if (panInput) {
+    panInput.addEventListener("input", function (e) {
+      e.target.value = e.target.value.replace(/[^0-9]/g, "");
+    });
+  }
+
+  // Real-time contact validation
+  const contactInput = document.querySelector('[name="contact"]');
+  if (contactInput) {
+    contactInput.addEventListener("input", function (e) {
+      e.target.value = e.target.value.replace(/[^0-9]/g, "");
     });
   }
 
