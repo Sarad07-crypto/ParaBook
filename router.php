@@ -21,6 +21,7 @@ $routes = [
     '/signcheck' => LOG_SIGN . '/signCheck.php',
     '/verify' => LOG_SIGN . '/verify.php',
     '/logout' => LOG_SIGN . '/logout.php',
+   
     
     '/home' => PHP . 'views/home.php',
     '/auth/google' => PHP . 'google/auth_provider.php',
@@ -32,7 +33,7 @@ $routes = [
     '/accountSelection' => PHP . 'views/accountSelection.php',
 
     '/serviceDescription' => PHP . 'views/serviceDesc.php',
-    
+    '/bookingpassenger' => PHP . 'views/booking.html',
 ];
 
 function routeToController($uri, $routes) {

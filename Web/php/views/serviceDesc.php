@@ -151,12 +151,13 @@
                     <?php echo htmlspecialchars($service['service_title'] ?? 'Service Booking'); ?><br>
                     <span style="font-size:0.98rem;color:rgba(255,255,255,0.8);">Available now • Flexible booking</span>
                 </div>
-                <button class="book-btn" onclick="bookService(<?php echo $serviceId; ?>)">Book Now</button>
+                <button class="book-btn" onclick="window.location.href='/bookingpassenger'"(<?php echo $serviceId; ?>)>Book Now</button>
             </div>
         </div>
     </div>
 
     <script>
+       
     // Dynamic slider with PHP-generated photo array
     const screenshots = <?php echo json_encode($officePhotos); ?>;
     let selected = 0;

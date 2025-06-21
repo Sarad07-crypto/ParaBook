@@ -24,6 +24,7 @@
         </div>
         <form id="multiStepForm" method="POST" action="/servicePost" enctype="multipart/form-data">
             <div class="form-step" id="step-1">
+                 <label for="companyName" >Company :</label>
                 <input type="text" name="companyName" placeholder="Company Name" required />
                 <input type="text" name="serviceTitle" placeholder="Service Title" required />
                 <input type="text" name="address" placeholder="Address" required />
