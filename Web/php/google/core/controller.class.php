@@ -49,13 +49,19 @@ class Controller
             if ($existingUser) {
                 $userId = $existingUser['id'];
 
-                // Fetch account type
-                $accTypeQuery = $db->prepare("SELECT acc_type FROM users_info WHERE user_id = :user_id");
-                $accTypeQuery->execute([":user_id" => $userId]);
-                $accTypeResult = $accTypeQuery->fetch(PDO::FETCH_ASSOC);
-                $accType = $accTypeResult['acc_type'] ?? 'passenger';
+                // Fetch account type and user info including avatar
+                $userInfoQuery = $db->prepare("SELECT acc_type, firstName, lastName, avatar FROM users_info WHERE user_id = :user_id");
+                $userInfoQuery->execute([":user_id" => $userId]);
+                $userInfo = $userInfoQuery->fetch(PDO::FETCH_ASSOC);
+                $accType = $userInfo['acc_type'] ?? 'passenger';
+                
+                // Set session variables including avatar
                 $_SESSION['acc_type'] = $accType;
                 $_SESSION['user_id'] = $userId;
+                $_SESSION['user_email'] = $data['email'];
+                $_SESSION['avatar'] = $userInfo['avatar'] ?? 'default-avatar.png';
+                $_SESSION['givenName'] = $userInfo['firstName'] ?? $data['givenName'];
+                $_SESSION['familyName'] = $userInfo['lastName'] ?? $data['familyName'];
                 
                 // Update session
                 $updateSession = $db->prepare("
@@ -126,7 +132,6 @@ class Controller
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
-        
         // Debug logging
         error_log("CompleteRegistration called. Session data: " . print_r($_SESSION, true));
         error_log("Current session ID: " . session_id());
@@ -220,9 +225,12 @@ class Controller
                 // Commit transaction
                 $db->commit();
 
-                // Set session variables
                 $_SESSION['acc_type'] = $acc_type;
                 $_SESSION['user_id'] = $userId;
+                $_SESSION['user_email'] = $data['email'];
+                $_SESSION['avatar'] = $data['avatar'] ?? 'default-avatar.png';
+                $_SESSION['givenName'] = $data['givenName'];
+                $_SESSION['familyName'] = $data['familyName'];
 
                 // Set cookies
                 setcookie("id", $userId, time() + 60 * 60 * 24 * 30, "/");

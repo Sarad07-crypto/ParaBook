@@ -330,7 +330,6 @@ $content_rendered = true;
             });
         }
 
-        // Updated JavaScript with better debugging for account selection
         document.getElementById('accountTypeForm').addEventListener('submit', function(e) {
             e.preventDefault();
             console.log('Form submitted');
