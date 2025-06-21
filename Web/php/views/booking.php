@@ -1,3 +1,33 @@
+<?php 
+session_start();
+$userid = $_SESSION['user_id'];
+include "Web/php/connection.php";
+
+// Fetch user info
+$fill = $connect->prepare("SELECT firstName, lastName, gender, contact, country FROM users_info WHERE user_id = ?");
+if (!$fill) {
+    die("Prepare failed: " . $connect->error);
+}
+$fill->bind_param("i", $userid);
+$fill->execute();
+$result = $fill->get_result()->fetch_assoc();
+$Firstname = $result['firstName'] ?? '';
+$Lastname = $result['lastName'] ?? '';
+$gender = $result['gender'] ?? '';
+$contact = $result['contact'] ?? '';
+$country = $result['country'] ?? '';
+
+
+$fillemail2 = $connect->prepare("SELECT email FROM users WHERE id = ?");
+if (!$fillemail2) {
+    die("Prepare failed: " . $connect->error);
+}
+$fillemail2->bind_param("i", $userid);
+$fillemail2->execute();
+$emailResult = $fillemail2->get_result()->fetch_assoc();
+$email = $emailResult['email'] ?? '';
+
+?>
 <body style="background: #fff; min-height: 100vh">
   <div class="main-wrap">
     <div class="booking-form-section">
@@ -10,6 +40,7 @@
               type="text"
               id="mainName"
               name="mainName"
+               value ="<?php echo $Firstname . ' ' . $Lastname; ?>"
               required
               placeholder="Your Name"
             />
@@ -20,6 +51,7 @@
               type="email"
               id="mainEmail"
               name="mainEmail"
+              value ="<?php echo $email; ?>"
               required
               placeholder="you@email.com"
             />
@@ -32,6 +64,7 @@
               type="tel"
               id="mainPhone"
               name="mainPhone"
+              value="<?php echo $contact; ?>"
               required
               placeholder="e.g. +977-98XXXXXXXX"
             />
@@ -42,6 +75,7 @@
               type="text"
               id="mainNationality"
               name="mainNationality"
+              value="<?php echo $country; ?>"
               required
               placeholder="Your Country"
             />
@@ -50,7 +84,8 @@
         <div class="form-row">
           <div class="form-group">
             <label for="mainDate">Preferred Date</label>
-            <input type="date" id="mainDate" name="mainDate" required />
+            <input type="date" id="mainDate" name="mainDate"
+            value ="<?php echo $country ?>" required />
           </div>
           <div class="form-group">
             <label for="mainPickup">Pickup Location</label>
@@ -99,6 +134,17 @@
             />
           </div>
         </div>
+            <div class="form-group">
+       <label>Gender:</label>
+    <select name="gender" required>
+        <option value="">Select Gender</option>
+        <option value="Male" <?php if ($gender == 'Male') echo 'selected'; ?>>Male</option>
+        <option value="Female" <?php if ($gender == 'Female') echo 'selected'; ?>>Female</option>
+        <option value="Other" <?php if ($gender == 'Other') echo 'selected'; ?>>Other</option>
+    </select><br><br>
+        </select>
+    </div>
+
         <div class="form-group">
           <label for="mainNotes">Special Requests / Medical Conditions</label>
           <textarea
@@ -515,4 +561,5 @@
       if (e.key === "Escape") closeTermsCard();
     });
   </script>
+
 </body>

@@ -33,7 +33,7 @@ $routes = [
     '/accountSelection' => PHP . 'views/accountSelection.php',
 
     '/serviceDescription' => PHP . 'views/serviceDesc.php',
-    '/bookingpassenger' => PHP . 'views/booking.html',
+    '/bookingpassenger' => PHP . 'views/booking.php',
 ];
 
 function routeToController($uri, $routes) {
