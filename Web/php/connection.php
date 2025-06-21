@@ -2,7 +2,7 @@
 $_servername = "localhost:3307";
 $_username = "root";
 $_password = "parabook";
-$_database = "parabook";
+$_database = "";
 
 $connect = mysqli_connect($_servername, $_username, $_password, $_database);
 

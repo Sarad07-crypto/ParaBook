@@ -1,6 +1,7 @@
 <?php 
 session_start();
 $userid = $_SESSION['user_id'];
+$serviceId = $_SESSION['service_id'] ?? 0;
 include "Web/php/connection.php";
 
 // Fetch user info
@@ -27,6 +28,15 @@ $fillemail2->execute();
 $emailResult = $fillemail2->get_result()->fetch_assoc();
 $email = $emailResult['email'] ?? '';
 
+$servicefetch = $connect->prepare("SELECT flight_type_name,price FROM service_flight_types WHERE id = ?");
+if (!$servicefetch) {
+    die("Prepare failed: " . $connect->error);
+}
+$servicefetch->bind_param("i", $serviceId);
+$servicefetch->execute();
+$serviceResult = $servicefetch->get_result()->fetch_assoc();
+$flightTypeName = $serviceResult['flight_type_name'] ?? '';
+$flightTypePrice = $serviceResult['price'] ?? 0;
 ?>
 <body style="background: #fff; min-height: 100vh">
   <div class="main-wrap">
@@ -99,13 +109,13 @@ $email = $emailResult['email'] ?? '';
           </div>
           <div class="form-group">
             <label for="mainFlightType">Flight Type</label>
-            <select id="mainFlightType" name="mainFlightType" required>
-              <option value="">Select Flight Type</option>
-              <option value="Standard">Standard (15-20 min)</option>
-              <option value="Cross Country">Cross Country (30-40 min)</option>
-              <option value="Acro">Acro (with stunts)</option>
-              <option value="Premium">Premium (longer scenic flight)</option>
-            </select>
+            <input
+              type="text"
+              id="mainFlightType"
+              name="mainFlightType"
+              value="<?php echo $flightTypeName ,$flightTypePrice; ?>"
+              readonly
+              placeholder="Flight Type"
           </div>
         </div>
         <div class="form-row">
