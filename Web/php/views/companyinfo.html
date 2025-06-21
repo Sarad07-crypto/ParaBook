@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SkyHigh Paragliding - Adventure Booking</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f5f7fa;
+      color: #222;
+    }
+    .main-wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      gap: 32px;
+      padding: 40px 16px 24px 16px;
+    }
+    .left-section {
+      flex: 2.2;
+      min-width: 0;
+    }
+    .right-section {
+      flex: 1;
+      min-width: 320px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+      padding: 28px 24px 24px 24px;
+      margin-top: 16px;
+      height: fit-content;
+      position: sticky;
+      top: 32px;
+    }
+    .company-title {
+      font-size: 2.1rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #0073e6;
+    }
+    .profile-row {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+    .profile-pic {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #e0e0e0;
+      background: #f0f0f0;
+    }
+    .profile-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .profile-name {
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+    .profile-role {
+      font-size: 0.98rem;
+      color: #555;
+    }
+    .rating-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.1rem;
+      margin-bottom: 18px;
+    }
+    .stars {
+      color: #f5b301;
+      font-size: 1.3rem;
+      letter-spacing: 1px;
+    }
+    .reviews {
+      color: #888;
+      font-size: 1rem;
+    }
+    .highlight {
+      background: #fffbe6;
+      border-left: 4px solid #ffe066;
+      padding: 10px 16px;
+      border-radius: 6px;
+      margin-bottom: 18px;
+      font-size: 1.02rem;
+      color: #444;
+    }
+    .main-image {
+      width: 100%;
+      border-radius: 14px;
+      margin-bottom: 18px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      object-fit: cover;
+      max-height: 340px;
+    }
+    .desc-section {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+      padding: 24px 20px 18px 20px;
+      margin-bottom: 24px;
+    }
+    .desc-section h2 {
+      margin-top: 0;
+      color: #222;
+      font-size: 1.3rem;
+      margin-bottom: 10px;
+    }
+    .desc-section p {
+      color: #555;
+      line-height: 1.7;
+      margin-bottom: 10px;
+      font-size: 1.05rem;
+    }
+    .screenshots-list {
+      display: flex;
+      gap: 14px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+    .screenshots-list img {
+      width: 120px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 7px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border 0.2s;
+    }
+    .screenshots-list img.selected {
+      border: 2px solid #0073e6;
+    }
+    .book-box {
+      background: #f0f6ff;
+      border-radius: 10px;
+      padding: 20px 16px 16px 16px;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .book-price {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #0073e6;
+      margin-bottom: 8px;
+    }
+    .book-desc {
+      color: #444;
+      font-size: 1.08rem;
+      margin-bottom: 18px;
+    }
+    .book-btn {
+      display: inline-block;
+      background: #0073e6;
+      color: white;
+      padding: 13px 38px;
+      text-decoration: none;
+      font-weight: 600;
+      border-radius: 8px;
+      transition: background 0.3s, box-shadow 0.2s;
+      font-size: 1.13rem;
+      box-shadow: 0 2px 8px rgba(0,115,230,0.08);
+      border: none;
+      outline: none;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+    .book-btn:hover, .book-btn:focus {
+      background: #005bb5;
+      box-shadow: 0 4px 16px rgba(0,115,230,0.13);
+    }
+    @media (max-width: 900px) {
+      .main-wrap { flex-direction: column; gap: 0; }
+      .right-section { margin-top: 32px; position: static; width: 100%; }
+      .left-section { width: 100%; }
+    }
+    @media (max-width: 600px) {
+      .main-wrap { padding: 16px 2vw; }
+      .profile-row { gap: 10px; }
+      .profile-pic { width: 48px; height: 48px; }
+      .screenshots-list img { width: 70px; height: 48px; }
+      .main-image { max-height: 180px; }
+      .desc-section, .right-section { padding: 12px 6px; }
+      .book-box { padding: 12px 4px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-wrap">
+    <!-- Left Section -->
+    <div class="left-section">
+      <div class="company-title">SkyHigh Paragliding - Tandem Adventure</div>
+      <div class="profile-row">
+        <img src="pilot.jpg" alt="Lead Pilot" class="profile-pic">
+        <div class="profile-info">
+          <span class="profile-name">Sabin Pandey</span>
+          <span class="profile-role">Lead Paragliding Pilot</span>
+        </div>
+      </div>
+      <div class="rating-row">
+        <span class="stars">&#9733;&#9733;&#9733;&#9733;&#9734;</span>
+        <span class="reviews">4.0 (120 reviews)</span>
+      </div>
+      <div class="highlight">
+        <b>People keep coming back!</b> SkyHigh Paragliding has an exceptional number of repeat adventurers.
+      </div>
+      <!-- Replace the image and thumbnails section with this slider block -->
+      <div class="slider-area" style="margin-bottom:24px;">
+        <div class="main-slider" style="position:relative;width:100%;max-width:700px;margin:auto;background:#e0dddd;border-radius:12px 12px 0 0;overflow:hidden;aspect-ratio:16/7;display:flex;align-items:center;justify-content:center;">
+          <button class="slider-arrow left" onclick="prevScreenshot()" aria-label="Previous" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.45);border:none;color:#fff;font-size:2.2rem;padding:0 18px;border-radius:6px;cursor:pointer;z-index:2;opacity:0.8;">&#8592;</button>
+          <img id="mainImage" src="main-paragliding.jpg" alt="Paragliding Adventure" style="width:100%;height:100%;object-fit:cover;display:block;transition:opacity 0.3s;">
+          <button class="slider-arrow right" onclick="nextScreenshot()" aria-label="Next" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.45);border:none;color:#fff;font-size:2.2rem;padding:0 18px;border-radius:6px;cursor:pointer;z-index:2;opacity:0.8;">&#8594;</button>
+        </div>
+        <div class="thumbs-bar screenshots-list" id="screenshotsList" style="display:flex;gap:8px;background:#e6eaf0;padding:10px 0;border-radius:0 0 12px 12px;justify-content:center;align-items:center;overflow-x:auto;max-width:700px;margin:auto;">
+          <img src="main-paragliding.jpg" alt="Screenshot 1" onclick="selectScreenshot(0)" class="selected" style="width:100px;height:60px;object-fit:cover;border-radius:4px;cursor:pointer;border:2px solid #0073e6;opacity:1;">
+          <img src="screenshot2.jpg" alt="Screenshot 2" onclick="selectScreenshot(1)" style="width:100px;height:60px;object-fit:cover;border-radius:4px;cursor:pointer;border:2px solid transparent;opacity:0.8;">
+          <img src="screenshot3.jpg" alt="Screenshot 3" onclick="selectScreenshot(2)" style="width:100px;height:60px;object-fit:cover;border-radius:4px;cursor:pointer;border:2px solid transparent;opacity:0.8;">
+          <img src="screenshot4.jpg" alt="Screenshot 4" onclick="selectScreenshot(3)" style="width:100px;height:60px;object-fit:cover;border-radius:4px;cursor:pointer;border:2px solid transparent;opacity:0.8;">
+        </div>
+      </div>
+      <div class="desc-section">
+        <h2>About This Adventure</h2>
+        <p>
+          Welcome to SkyHigh Paragliding! Ready to soar above breathtaking valleys and mountains? We offer scenic tandem flights with certified pilots—safe, thrilling, and unforgettable.
+        </p>
+        <p>
+          Whether it's your first time or you’re an adrenaline junkie, we’ll take you flying with stunning views. No prior experience needed!
+        </p>
+        <p>
+          Book your flight now and secure your adventure of a lifetime.
+        </p>
+      </div>
+    </div>
+    <!-- Right Section -->
+    <div class="right-section">
+      <div class="book-box">
+        <div class="book-price">$120</div>
+        <div class="book-desc">
+          Tandem Paragliding Flight<br>
+          <span style="font-size:0.98rem;color:#0073e6;">7-day availability &bull; 4 free reschedules</span>
+        </div>
+        <button class="book-btn">Book Now</button>
+      </div>
+      <div style="font-size:0.98rem;color:#666;text-align:center;">
+        Need flexibility? <a href="#" style="color:#0073e6;text-decoration:underline;">Request a custom date</a>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Optimized slider with auto-play and thumbnail sync
+    const screenshots = [
+      "main-paragliding.jpg",
+      "screenshot2.jpg",
+      "screenshot3.jpg",
+      "screenshot4.jpg"
+    ];
+    let selected = 0;
+    const mainImage = document.getElementById('mainImage');
+    const thumbs = document.getElementById('screenshotsList').children;
+    let sliderInterval;
+
+    function updateScreenshot(idx) {
+      selected = idx;
+      mainImage.style.opacity = 0.6;
+      setTimeout(() => {
+        mainImage.src = screenshots[idx];
+        mainImage.style.opacity = 1;
+      }, 120);
+      for(let i=0; i<thumbs.length; i++) {
+        thumbs[i].classList.toggle('selected', i === idx);
+        thumbs[i].style.border = i === idx ? "2px solid #0073e6" : "2px solid transparent";
+        thumbs[i].style.opacity = i === idx ? "1" : "0.8";
+      }
+    }
+    function selectScreenshot(idx) {
+      updateScreenshot(idx);
+      resetSliderInterval();
+    }
+    function prevScreenshot() {
+      selected = (selected - 1 + screenshots.length) % screenshots.length;
+      updateScreenshot(selected);
+      resetSliderInterval();
+    }
+    function nextScreenshot() {
+      selected = (selected + 1) % screenshots.length;
+      updateScreenshot(selected);
+      resetSliderInterval();
+    }
+    function autoSlide() {
+      nextScreenshot();
+    }
+    function resetSliderInterval() {
+      clearInterval(sliderInterval);
+      sliderInterval = setInterval(autoSlide, 5000);
+    }
+    // Initialize slider
+    updateScreenshot(0);
+    resetSliderInterval();
+    // Optional: Keyboard navigation
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'ArrowLeft') prevScreenshot();
+      if (e.key === 'ArrowRight') nextScreenshot();
+    });
+  </script>
+</body>
+</html>
