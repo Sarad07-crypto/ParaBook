@@ -28,6 +28,8 @@ $routes = [
     '/facebook/callback' => PHP . 'facebook/f-callback.php',
 
     '/servicePost' => PHP . 'formDatabase/serviceForm.data.php',
+
+    '/accountSelection' => PHP . 'views/accountSelection.php',
     
 ];
 
