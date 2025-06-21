@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 setcookie("id", $userId, time() + 60 * 60 * 24 * 30, "/", NULL);
                 setcookie("session", $session, time() + 60 * 60 * 24 * 30, "/", NULL);
 
-                echo "<script>alert('You are already verified :)'); window.location.href='/home';</script>";
+                echo "<script>alert('You are already verified 😊'); window.location.href='/home';</script>";
 
             }
         } else {
