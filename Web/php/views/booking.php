@@ -1,6 +1,7 @@
 <?php 
 session_start();
 $userid = $_SESSION['user_id'];
+$serviceId = $_SESSION['service_id'] ?? 0;
 include "Web/php/connection.php";
 
 // Fetch user info
@@ -27,6 +28,15 @@ $fillemail2->execute();
 $emailResult = $fillemail2->get_result()->fetch_assoc();
 $email = $emailResult['email'] ?? '';
 
+$servicefetch = $connect->prepare("SELECT flight_type_name,price FROM service_flight_types WHERE id = ?");
+if (!$servicefetch) {
+    die("Prepare failed: " . $connect->error);
+}
+$servicefetch->bind_param("i", $serviceId);
+$servicefetch->execute();
+$serviceResult = $servicefetch->get_result()->fetch_assoc();
+$flightTypeName = $serviceResult['flight_type_name'] ?? '';
+$flightTypePrice = $serviceResult['price'] ?? 0;
 ?>
 
 <body style="background: #fff; min-height: 100vh">
