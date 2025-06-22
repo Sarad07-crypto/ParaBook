@@ -1,5 +1,6 @@
 <?php 
 session_start();
+
 $userid = $_SESSION['user_id'];
 $serviceId = $_SESSION['service_id'] ?? 0;
 include "Web/php/connection.php";
@@ -18,7 +19,6 @@ $gender = $result['gender'] ?? '';
 $contact = $result['contact'] ?? '';
 $country = $result['country'] ?? '';
 
-
 $fillemail2 = $connect->prepare("SELECT email FROM users WHERE id = ?");
 if (!$fillemail2) {
     die("Prepare failed: " . $connect->error);
@@ -28,16 +28,22 @@ $fillemail2->execute();
 $emailResult = $fillemail2->get_result()->fetch_assoc();
 $email = $emailResult['email'] ?? '';
 
-$servicefetch = $connect->prepare("SELECT flight_type_name,price FROM service_flight_types WHERE id = ?");
-if (!$servicefetch) {
-    die("Prepare failed: " . $connect->error);
+// Fetch flight types for the service
+$flightTypes = [];
+if ($serviceId > 0) {
+    $servicefetch = $connect->prepare("SELECT id, flight_type_name, price FROM service_flight_types WHERE service_id = ? ORDER BY price ASC");
+    if (!$servicefetch) {
+        die("Prepare failed: " . $connect->error);
+    }
+    $servicefetch->bind_param("i", $serviceId);
+    $servicefetch->execute();
+    $flightTypesResult = $servicefetch->get_result();
+    while ($row = $flightTypesResult->fetch_assoc()) {
+        $flightTypes[] = $row;
+    }
 }
-$servicefetch->bind_param("i", $serviceId);
-$servicefetch->execute();
-$serviceResult = $servicefetch->get_result()->fetch_assoc();
-$flightTypeName = $serviceResult['flight_type_name'] ?? '';
-$flightTypePrice = $serviceResult['price'] ?? 0;
 ?>
+<link rel="stylesheet" href="Web/css/booking_p.css" />
 
 <body style="background: #fff; min-height: 100vh">
     <div class="main-wrap">
@@ -48,30 +54,32 @@ $flightTypePrice = $serviceResult['price'] ?? 0;
                     <div class="form-group">
                         <label for="mainName">Full Name</label>
                         <input type="text" id="mainName" name="mainName"
-                            value="<?php echo $Firstname . ' ' . $Lastname; ?>" required placeholder="Your Name" />
+                            value="<?php echo htmlspecialchars($Firstname . ' ' . $Lastname); ?>" required
+                            placeholder="Your Name" />
                     </div>
                     <div class="form-group">
                         <label for="mainEmail">Email Address</label>
-                        <input type="email" id="mainEmail" name="mainEmail" value="<?php echo $email; ?>" required
-                            placeholder="you@email.com" />
+                        <input type="email" id="mainEmail" name="mainEmail"
+                            value="<?php echo htmlspecialchars($email); ?>" required placeholder="you@email.com" />
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="mainPhone">Contact Number</label>
-                        <input type="tel" id="mainPhone" name="mainPhone" value="<?php echo $contact; ?>" required
+                        <input type="tel" id="mainPhone" name="mainPhone"
+                            value="<?php echo htmlspecialchars($contact); ?>" required
                             placeholder="e.g. +977-98XXXXXXXX" />
                     </div>
                     <div class="form-group">
                         <label for="mainNationality">Nationality</label>
-                        <input type="text" id="mainNationality" name="mainNationality" value="<?php echo $country; ?>"
-                            required placeholder="Your Country" />
+                        <input type="text" id="mainNationality" name="mainNationality"
+                            value="<?php echo htmlspecialchars($country); ?>" required placeholder="Your Country" />
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="mainDate">Preferred Date</label>
-                        <input type="date" id="mainDate" name="mainDate" value="<?php echo $country ?>" required />
+                        <input type="date" id="mainDate" name="mainDate" required />
                     </div>
                     <div class="form-group">
                         <label for="mainPickup">Pickup Location</label>
@@ -82,17 +90,24 @@ $flightTypePrice = $serviceResult['price'] ?? 0;
                         <label for="mainFlightType">Flight Type</label>
                         <select id="mainFlightType" name="mainFlightType" required>
                             <option value="">Select Flight Type</option>
-                            <option value="Standard">Standard (15-20 min)</option>
-                            <option value="Cross Country">Cross Country (30-40 min)</option>
-                            <option value="Acro">Acro (with stunts)</option>
-                            <option value="Premium">Premium (longer scenic flight)</option>
+                            <?php if (!empty($flightTypes)): ?>
+                            <?php foreach ($flightTypes as $flightType): ?>
+                            <option value="<?php echo htmlspecialchars($flightType['id']); ?>"
+                                data-price="<?php echo htmlspecialchars($flightType['price']); ?>">
+                                <?php echo htmlspecialchars($flightType['flight_type_name']); ?>
+                                (Rs. <?php echo htmlspecialchars($flightType['price']); ?>)
+                            </option>
+                            <?php endforeach; ?>
+                            <?php else: ?>
+                            <option value="" disabled>No flight types available</option>
+                            <?php endif; ?>
                         </select>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="mainWeight">Weight (kg)</label>
-                        <input type="number" id="mainWeight" name="mainWeight" min="30" max="120" required
+                        <input type="number" id="mainWeight" name="mainWeight" min="30" max="120"
                             placeholder="e.g. 70" />
                     </div>
                     <div class="form-group">
@@ -108,7 +123,6 @@ $flightTypePrice = $serviceResult['price'] ?? 0;
                         <option value="Male" <?php if ($gender == 'Male') echo 'selected'; ?>>Male</option>
                         <option value="Female" <?php if ($gender == 'Female') echo 'selected'; ?>>Female</option>
                         <option value="Other" <?php if ($gender == 'Other') echo 'selected'; ?>>Other</option>
-                    </select><br><br>
                     </select>
                 </div>
 
@@ -117,6 +131,18 @@ $flightTypePrice = $serviceResult['price'] ?? 0;
                     <textarea id="mainNotes" name="mainNotes" rows="3"
                         placeholder="Anything we should know?"></textarea>
                 </div>
+
+                <!-- Price Display Section -->
+                <div class="form-group" id="priceDisplay"
+                    style="display: none; background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <h4 style="margin: 0 0 10px 0; color: #0d6efd;">Booking Summary</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span id="selectedFlightName" style="font-weight: 500;"></span>
+                        <span id="selectedFlightPrice"
+                            style="font-size: 1.2em; font-weight: bold; color: #28a745;"></span>
+                    </div>
+                </div>
+
                 <div class="form-group" style="
             margin-top: 18px;
             flex-direction: row;
@@ -130,7 +156,11 @@ $flightTypePrice = $serviceResult['price'] ?? 0;
                 </div>
                 <button type="submit" class="main-submit-btn">Book Now</button>
                 <div id="mainBookingSuccess" class="main-success-message" style="display: none">
-                    <span>&#10003;</span> Thank you! Your booking has been received.
+                    <span>&#10003;</span> <span id="successMessage">Thank you! Your booking has been received.</span>
+                </div>
+                <div id="mainBookingError" class="main-error-message"
+                    style="display: none; background: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                    <span id="errorMessage">An error occurred. Please try again.</span>
                 </div>
             </form>
         </div>
@@ -178,246 +208,89 @@ $flightTypePrice = $serviceResult['price'] ?? 0;
             </div>
         </div>
     </div>
-    <style>
-    body {
-        background: #fff;
-        min-height: 100vh;
-        margin: 0;
-        font-family: "Segoe UI", Arial, sans-serif;
-    }
 
-    .main-wrap {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0 16px;
-    }
-
-    .booking-form-section {
-        max-width: 1000px;
-        margin: 64px auto 0 auto;
-        background: linear-gradient(135deg,
-                #e0e7ff 0%,
-                #f0f4ff 60%,
-                #e0f7fa 100%);
-        border-radius: 24px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.13),
-            0 1.5px 8px rgba(13, 110, 253, 0.08);
-        padding: 48px 80px 40px 80px;
-        border: 1.5px solid #e3e8f7;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .booking-form-section::before {
-        content: "";
-        position: absolute;
-        top: -60px;
-        left: -60px;
-        width: 180px;
-        height: 180px;
-        background: radial-gradient(circle,
-                #b6e0fe 0%,
-                #e0e7ff 80%,
-                transparent 100%);
-        opacity: 0.35;
-        z-index: 0;
-    }
-
-    .booking-form-section::after {
-        content: "";
-        position: absolute;
-        bottom: -60px;
-        right: -60px;
-        width: 180px;
-        height: 180px;
-        background: radial-gradient(circle,
-                #a5f3fc 0%,
-                #f0f4ff 80%,
-                transparent 100%);
-        opacity: 0.25;
-        z-index: 0;
-    }
-
-    .booking-title {
-        text-align: center;
-        color: #0073e6;
-        font-size: 2.2rem;
-        margin-bottom: 32px;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-    }
-
-    .styled-booking-form {
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-    }
-
-    .form-row {
-        display: flex;
-        gap: 28px;
-        margin-bottom: 24px;
-    }
-
-    .form-group {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        margin-bottom: 0;
-    }
-
-    .form-group label {
-        margin-bottom: 10px;
-        color: #333;
-        font-weight: 500;
-        font-size: 1.05rem;
-    }
-
-    .form-group input,
-    .form-group textarea,
-    .form-group select {
-        padding: 14px 16px;
-        border: 1.5px solid #dbeafe;
-        border-radius: 8px;
-        font-size: 1.08rem;
-        background: #f6fafd;
-        transition: border 0.2s;
-        outline: none;
-        resize: none;
-        margin-bottom: 0;
-    }
-
-    .form-group input:focus,
-    .form-group textarea:focus,
-    .form-group select:focus {
-        border-color: #0d6efd;
-        background: #fff;
-    }
-
-    .form-group textarea {
-        width: 100%;
-        margin-top: 0;
-    }
-
-    .main-submit-btn {
-        width: 100%;
-        background: #0d6efd;
-        color: #fff;
-        border: none;
-        border-radius: 8px;
-        padding: 15px 0;
-        font-size: 1.15rem;
-        font-weight: 600;
-        cursor: pointer;
-        margin-top: 18px;
-        transition: background 0.2s, box-shadow 0.2s;
-        box-shadow: 0 2px 8px rgba(13, 110, 253, 0.08);
-    }
-
-    .main-submit-btn:hover,
-    .main-submit-btn:focus {
-        background: #0a58ca;
-        box-shadow: 0 4px 16px rgba(13, 110, 253, 0.13);
-    }
-
-    .main-success-message {
-        margin-top: 28px;
-        color: #007c3c;
-        font-size: 1.15rem;
-        text-align: center;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-    }
-
-    #termsModal .modal-content {
-        max-width: 600px;
-        width: 96vw;
-    }
-
-    .terms-card-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(30, 40, 60, 0.18);
-        z-index: 3000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        animation: fadeIn 0.2s;
-    }
-
-    .terms-card {
-        background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
-        border-radius: 20px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
-        padding: 38px 32px 28px 32px;
-        max-width: 540px;
-        width: 96vw;
-        position: relative;
-        animation: slideDown 0.25s;
-    }
-
-    .close-terms-card {
-        position: absolute;
-        top: 16px;
-        right: 18px;
-        background: none;
-        border: none;
-        font-size: 2rem;
-        color: #888;
-        cursor: pointer;
-        transition: color 0.2s;
-    }
-
-    .close-terms-card:hover {
-        color: #0073e6;
-    }
-
-    .terms-title {
-        margin-top: 0;
-        color: #0073e6;
-        font-size: 1.4rem;
-        margin-bottom: 18px;
-        text-align: center;
-    }
-
-    .terms-content {
-        max-height: 340px;
-        overflow-y: auto;
-        color: #222;
-        font-size: 1.08rem;
-        padding-right: 4px;
-    }
-
-    .terms-content ol {
-        padding-left: 18px;
-    }
-
-    @media (max-width: 900px) {
-        .booking-form-section {
-            padding: 24px 8px;
-            max-width: 98vw;
-        }
-
-        .form-row {
-            flex-direction: column;
-            gap: 0;
-        }
-    }
-
-    @media (max-width: 600px) {
-        .terms-card {
-            padding: 16px 4px;
-        }
-    }
-    </style>
     <script>
+    // Flight type selection handler
+    document.getElementById('mainFlightType').addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const priceDisplay = document.getElementById('priceDisplay');
+        const flightNameDisplay = document.getElementById('selectedFlightName');
+        const flightPriceDisplay = document.getElementById('selectedFlightPrice');
+
+        if (selectedOption.value && selectedOption.dataset.price) {
+            const flightName = selectedOption.textContent.split(' (Rs.')[0]; // Get name without price
+            const price = selectedOption.dataset.price;
+
+            flightNameDisplay.textContent = flightName;
+            flightPriceDisplay.textContent = 'Rs. ' + price;
+            priceDisplay.style.display = 'block';
+        } else {
+            priceDisplay.style.display = 'none';
+        }
+    });
+
+    // Function to submit booking data
+    const submitBookingData = async (formElement) => {
+        const formData = new FormData(formElement);
+
+        try {
+            const response = await fetch('Web/php/AJAX/submitBooking.php', {
+                method: 'POST',
+                body: formData
+            });
+
+            // Check if response is ok
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            // Get response text first to debug
+            const responseText = await response.text();
+            console.log('Raw response:', responseText);
+
+            // Try to parse as JSON
+            let result;
+            try {
+                result = JSON.parse(responseText);
+            } catch (parseError) {
+                console.error('JSON parse error:', parseError);
+                console.error('Response was:', responseText);
+                throw new Error('Invalid JSON response from server');
+            }
+
+            if (result.success) {
+                document.getElementById('successMessage').textContent =
+                    `Booking confirmed! Your booking number is: ${result.booking_no}`;
+                document.getElementById('mainBookingSuccess').style.display = 'flex';
+                document.getElementById('mainBookingError').style.display = 'none';
+
+                setTimeout(() => {
+                    document.getElementById('mainBookingSuccess').style.display = 'none';
+                    formElement.reset();
+                    formElement.querySelector('.main-submit-btn').style.display = '';
+                    formElement.querySelector('.main-submit-btn').disabled = false;
+                    formElement.querySelector('.main-submit-btn').textContent = 'Book Now';
+                    document.getElementById('priceDisplay').style.display = 'none';
+                }, 3000);
+            } else {
+                document.getElementById('errorMessage').textContent = result.message;
+                document.getElementById('mainBookingError').style.display = 'block';
+                document.getElementById('mainBookingSuccess').style.display = 'none';
+                formElement.querySelector('.main-submit-btn').style.display = '';
+                formElement.querySelector('.main-submit-btn').disabled = false;
+                formElement.querySelector('.main-submit-btn').textContent = 'Book Now';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('errorMessage').textContent = 'Network error: ' + error.message;
+            document.getElementById('mainBookingError').style.display = 'block';
+            document.getElementById('mainBookingSuccess').style.display = 'none';
+            formElement.querySelector('.main-submit-btn').style.display = '';
+            formElement.querySelector('.main-submit-btn').disabled = false;
+            formElement.querySelector('.main-submit-btn').textContent = 'Book Now';
+        }
+    };
+
     // Booking form validation
     const validateBookingForm = (formSelector) => {
         const formElement = document.querySelector(formSelector);
@@ -432,10 +305,10 @@ $flightTypePrice = $serviceResult['price'] ?? 0;
                         return !/^([^\s@]+)@([^\s@]+)\.[^\s@]{2,}$/.test(input.value);
                     }
                     if (input.type === "tel") {
-                        return !/^98\d{8}$/.test(input.value); // Nepal phone format
+                        return !/^(\+977-)?98\d{8}$/.test(input.value); // Updated Nepal phone format
                     }
                     if (input.type === "number" && input.name === "mainWeight") {
-                        return input.value < 30 || input.value > 120;
+                        return input.value !== '' && (input.value < 30 || input.value > 120);
                     }
                     if (input.type === "number" && input.name === "mainAge") {
                         return input.value < 10 || input.value > 80;
@@ -449,6 +322,7 @@ $flightTypePrice = $serviceResult['price'] ?? 0;
                     if (input.type === "date") {
                         const enteredDate = new Date(input.value);
                         const today = new Date();
+                        today.setHours(0, 0, 0, 0); // Reset time to compare dates only
                         return isNaN(enteredDate.getTime()) || enteredDate < today;
                     }
                     return false;
@@ -495,15 +369,18 @@ $flightTypePrice = $serviceResult['price'] ?? 0;
                 formElement.querySelectorAll("input, textarea, select")
             );
             const isValid = inputs.every((input) => validateSingleInput(input));
+
             if (isValid) {
-                formElement.querySelector(".main-submit-btn").style.display = "none";
-                document.getElementById("mainBookingSuccess").style.display = "flex";
-                setTimeout(() => {
-                    document.getElementById("mainBookingSuccess").style.display =
-                        "none";
-                    formElement.reset();
-                    formElement.querySelector(".main-submit-btn").style.display = "";
-                }, 2200);
+                // Disable submit button to prevent double submission
+                const submitBtn = formElement.querySelector(".main-submit-btn");
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Processing...";
+
+                // Hide any previous error messages
+                document.getElementById('mainBookingError').style.display = 'none';
+
+                // Submit the booking data
+                submitBookingData(formElement);
             }
         });
         setupInputEvents();
@@ -525,6 +402,9 @@ $flightTypePrice = $serviceResult['price'] ?? 0;
     document.addEventListener("keydown", function(e) {
         if (e.key === "Escape") closeTermsCard();
     });
+
+    // Set minimum date to today
+    document.getElementById('mainDate').min = new Date().toISOString().split('T')[0];
     </script>
 
 </body>

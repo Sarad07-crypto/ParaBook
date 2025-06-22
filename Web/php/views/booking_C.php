@@ -9,300 +9,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bookings Management</title>
-    <style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-
-    body {
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #f5f7fa;
-        color: #333;
-    }
-
-    .header h1 {
-        font-size: 2rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .header p {
-        opacity: 0.9;
-    }
-
-    .container {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 2rem;
-    }
-
-    .controls {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        margin-bottom: 2rem;
-    }
-
-    .controls-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1rem;
-        margin-bottom: 1rem;
-    }
-
-    .control-group {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .control-group label {
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-        color: #555;
-    }
-
-    .control-group input,
-    .control-group select {
-        padding: 0.75rem;
-        border: 2px solid #e1e5e9;
-        border-radius: 8px;
-        font-size: 0.9rem;
-        transition: border-color 0.3s ease;
-    }
-
-    .control-group input:focus,
-    .control-group select:focus {
-        outline: none;
-        border-color: #667eea;
-    }
-
-    .stats {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-        margin-bottom: 2rem;
-    }
-
-    .stat-card {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        text-align: center;
-    }
-
-    .stat-number {
-        font-size: 2rem;
-        font-weight: bold;
-        color: #667eea;
-    }
-
-    .stat-label {
-        color: #666;
-        margin-top: 0.5rem;
-    }
-
-    .bookings-container {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        overflow: hidden;
-    }
-
-    .bookings-header {
-        background: #f8f9fa;
-        padding: 1rem 1.5rem;
-        border-bottom: 1px solid #e9ecef;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .bookings-header h2 {
-        color: #333;
-    }
-
-    .pagination-info {
-        color: #666;
-        font-size: 0.9rem;
-    }
-
-    .booking-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .booking-table th {
-        background: #f8f9fa;
-        padding: 1rem;
-        text-align: left;
-        font-weight: 600;
-        color: #555;
-        border-bottom: 2px solid #e9ecef;
-    }
-
-    .booking-table td {
-        padding: 1rem;
-        border-bottom: 1px solid #f0f0f0;
-        vertical-align: top;
-    }
-
-    .booking-row {
-        transition: background-color 0.2s ease;
-    }
-
-    .booking-row:hover {
-        background-color: #f8f9ff;
-    }
-
-    .booking-number {
-        font-weight: bold;
-        color: #667eea;
-        font-family: "Courier New", monospace;
-    }
-
-    .status-badge {
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        text-transform: uppercase;
-    }
-
-    .status-confirmed {
-        background: #d4edda;
-        color: #155724;
-    }
-
-    .status-pending {
-        background: #fff3cd;
-        color: #856404;
-    }
-
-    .status-cancelled {
-        background: #f8d7da;
-        color: #721c24;
-    }
-
-    .flight-type {
-        background: #e3f2fd;
-        color: #1565c0;
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.8rem;
-    }
-
-    .actions {
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .btn {
-        padding: 0.5rem 1rem;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 0.8rem;
-        transition: all 0.2s ease;
-        text-decoration: none;
-        display: inline-block;
-    }
-
-    .btn-primary {
-        background: #667eea;
-        color: white;
-    }
-
-    .btn-secondary {
-        background: #6c757d;
-        color: white;
-    }
-
-    .btn-danger {
-        background: #dc3545;
-        color: white;
-    }
-
-    .btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    }
-
-    .pagination {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 1.5rem;
-        background: #f8f9fa;
-    }
-
-    .pagination button {
-        padding: 0.5rem 1rem;
-        border: 1px solid #dee2e6;
-        background: white;
-        color: #6c757d;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .pagination button:hover {
-        background: #667eea;
-        color: white;
-        border-color: #667eea;
-    }
-
-    .pagination button.active {
-        background: #667eea;
-        color: white;
-        border-color: #667eea;
-    }
-
-    .pagination button:disabled {
-        background: #f8f9fa;
-        color: #6c757d;
-        cursor: not-allowed;
-    }
-
-    .no-bookings {
-        text-align: center;
-        padding: 3rem;
-        color: #666;
-    }
-
-    .loading {
-        text-align: center;
-        padding: 2rem;
-        color: #667eea;
-    }
-
-    @media (max-width: 768px) {
-        .container {
-            padding: 1rem;
-        }
-
-        .booking-table {
-            font-size: 0.8rem;
-        }
-
-        .booking-table th,
-        .booking-table td {
-            padding: 0.5rem;
-        }
-
-        .actions {
-            flex-direction: column;
-        }
-    }
-    </style>
+    <link rel="stylesheet" href="Web/css/booking_C.css?v=1.0" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 
 <body>
     <div class="container">
-        <!-- Controls Section -->
+
         <div class="controls">
             <div class="controls-grid">
                 <div class="control-group">
@@ -366,9 +80,10 @@
             <table class="booking-table" id="bookingsTable">
                 <thead>
                     <tr>
-                        <th>Booking #</th>
+                        <th>Booking ID</th>
                         <th>Customer</th>
                         <th>Flight Date</th>
+                        <th>Contact no.</th>
                         <th>Pickup Location</th>
                         <th>Flight Type</th>
                         <th>Passenger Info</th>
@@ -377,7 +92,7 @@
                     </tr>
                 </thead>
                 <tbody id="bookingsTableBody">
-                    <!-- Bookings will be populated here -->
+
                 </tbody>
             </table>
 
@@ -396,355 +111,219 @@
     </div>
 
     <script>
-    // Sample data - In real application, this would come from your database
-    let allBookings = [{
-            booking_id: 1,
-            booking_no: "FB2024001234",
-            user_email: "john.doe@email.com",
-            date: "2025-07-15",
-            pickup: "Tribhuvan International Airport, Kathmandu",
-            flight_type: "Helicopter Tour - Everest Base Camp",
-            weight: 75.5,
-            age: 32,
-            condition: "Vegetarian meal preferred",
-            status: "confirmed",
-            created_at: "2025-06-20 10:30:00",
-        },
-        {
-            booking_id: 2,
-            booking_no: "FB2024001235",
-            user_email: "sarah.smith@email.com",
-            date: "2025-07-20",
-            pickup: "Pokhara Airport",
-            flight_type: "Scenic Flight - Annapurna Circuit",
-            weight: 62.0,
-            age: 28,
-            condition: null,
-            status: "pending",
-            created_at: "2025-06-21 14:15:00",
-        },
-        {
-            booking_id: 3,
-            booking_no: "FB2024001236",
-            user_email: "mike.wilson@email.com",
-            date: "2025-08-01",
-            pickup: "Lukla Airport",
-            flight_type: "Mountain Flight - Everest View",
-            weight: 80.2,
-            age: 45,
-            condition: "Mild altitude sensitivity",
-            status: "confirmed",
-            created_at: "2025-06-21 09:45:00",
-        },
-    ];
+    console.log("=== JAVASCRIPT STARTING ===");
 
-    // Add more sample data to simulate thousands of bookings
-    function generateSampleBookings() {
-        const flightTypes = [
-            "Helicopter Tour - Everest Base Camp",
-            "Scenic Flight - Annapurna Circuit",
-            "Mountain Flight - Everest View",
-            "Charter Flight - Mustang",
-            "Rescue Flight - Emergency",
-            "Cargo Flight - Supply Drop",
-        ];
+    $(document).ready(function() {
+        console.log("Document ready - starting data fetch...");
+        fetchData();
+    });
 
-        const locations = [
-            "Tribhuvan International Airport, Kathmandu",
-            "Pokhara Airport",
-            "Lukla Airport",
-            "Jomsom Airport",
-            "Simara Airport",
-            "Biratnagar Airport",
-        ];
+    function fetchData() {
+        console.log("Fetching data from fetchBookings.php...");
 
-        const statuses = ["confirmed", "pending", "cancelled"];
+        $.ajax({
+            url: 'Web/php/AJAX/fetchBookings.php',
+            method: 'GET',
+            dataType: 'json',
+            timeout: 10000,
+            beforeSend: function() {
+                console.log("AJAX request starting...");
+                $('#loadingIndicator').show();
+            },
+            success: function(response) {
+                console.log("SUCCESS! Response received:", response);
+                $('#loadingIndicator').hide();
 
-        for (let i = 4; i <= 150; i++) {
-            const randomDate = new Date();
-            randomDate.setDate(
-                randomDate.getDate() + Math.floor(Math.random() * 60) - 30
-            );
+                if (response.success && response.bookings) {
+                    console.log(`Found ${response.bookings.length} bookings`);
 
-            allBookings.push({
-                booking_id: i,
-                booking_no: `FB2024${String(i).padStart(6, "0")}`,
-                user_email: `user${i}@email.com`,
-                date: randomDate.toISOString().split("T")[0],
-                pickup: locations[Math.floor(Math.random() * locations.length)],
-                flight_type: flightTypes[Math.floor(Math.random() * flightTypes.length)],
-                weight: (Math.random() * 40 + 50).toFixed(1),
-                age: Math.floor(Math.random() * 50 + 18),
-                condition: Math.random() > 0.7 ? "Special dietary requirements" : null,
-                status: statuses[Math.floor(Math.random() * statuses.length)],
-                created_at: new Date(
-                        Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000
-                    )
-                    .toISOString()
-                    .replace("T", " ")
-                    .split(".")[0],
-            });
-        }
-    }
+                    // Display bookings
+                    renderBookings(response.bookings);
 
-    // Initialize sample data
-    generateSampleBookings();
+                    // Display statistics if available
+                    if (response.statistics) {
+                        displayStatistics(response.statistics);
+                    }
 
-    // Pagination variables
-    let currentPage = 1;
-    let itemsPerPage = 10;
-    let filteredBookings = [...allBookings];
-    let totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
+                    console.log("Data rendered successfully");
+                } else {
+                    console.error("Invalid response format:", response);
+                    showError("Invalid response from server");
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("AJAX ERROR!");
+                console.error("Status:", status);
+                console.error("Error:", error);
+                console.error("Status Code:", xhr.status);
+                console.error("Response Text:", xhr.responseText);
 
-    // Initialize the dashboard
-    function initializeDashboard() {
-        updateStatistics();
-        renderBookings();
-        updatePaginationControls();
-    }
-
-    // Update statistics
-    function updateStatistics() {
-        const total = allBookings.length;
-        const confirmed = allBookings.filter(
-            (b) => b.status === "confirmed"
-        ).length;
-        const pending = allBookings.filter(
-            (b) => b.status === "pending"
-        ).length;
-        const today = new Date().toISOString().split("T")[0];
-        const todayCount = allBookings.filter((b) => b.date === today).length;
-
-        document.getElementById("totalBookings").textContent = total;
-        document.getElementById("confirmedBookings").textContent = confirmed;
-        document.getElementById("pendingBookings").textContent = pending;
-        document.getElementById("todayBookings").textContent = todayCount;
-    }
-
-    // Filter bookings based on search criteria
-    function filterBookings() {
-        const search = document.getElementById("search").value.toLowerCase();
-        const statusFilter = document.getElementById("statusFilter").value;
-        const dateFrom = document.getElementById("dateFrom").value;
-        const dateTo = document.getElementById("dateTo").value;
-
-        filteredBookings = allBookings.filter((booking) => {
-            const matchesSearch = !search ||
-                booking.booking_no.toLowerCase().includes(search) ||
-                booking.user_email.toLowerCase().includes(search) ||
-                booking.pickup.toLowerCase().includes(search) ||
-                booking.flight_type.toLowerCase().includes(search);
-
-            const matchesStatus = !statusFilter || booking.status === statusFilter;
-
-            const matchesDateFrom = !dateFrom || booking.date >= dateFrom;
-            const matchesDateTo = !dateTo || booking.date <= dateTo;
-
-            return (
-                matchesSearch && matchesStatus && matchesDateFrom && matchesDateTo
-            );
+                $('#loadingIndicator').hide();
+                showError(`Failed to load data: ${error}`);
+            }
         });
-
-        currentPage = 1;
-        totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
-        renderBookings();
-        updatePaginationControls();
     }
 
-    // Render bookings table
-    function renderBookings() {
-        const tableBody = document.getElementById("bookingsTableBody");
-        const noBookingsDiv = document.getElementById("noBookings");
-        const table = document.getElementById("bookingsTable");
+    function renderBookings(bookings) {
+        console.log("Rendering bookings...");
+        const tbody = $('#bookingsTableBody');
+        tbody.empty();
 
-        if (filteredBookings.length === 0) {
-            table.style.display = "none";
-            noBookingsDiv.style.display = "block";
+        if (!bookings || bookings.length === 0) {
+            tbody.html('<tr><td colspan="9" style="text-align:center;">No bookings found</td></tr>');
             return;
         }
 
-        table.style.display = "table";
-        noBookingsDiv.style.display = "none";
+        bookings.forEach(function(booking) {
+            // Determine status class and button
+            const statusClass = booking.status === 'confirmed' ? 'status-confirmed' : 'status-pending';
+            const statusButton = booking.status === 'confirmed' ?
+                '<span style="color: green;">✓ Completed</span>' :
+                `<button class="complete-btn" onclick="completeBooking(${booking.booking_id})" data-booking-id="${booking.booking_id}">Complete</button>`;
 
-        const start = (currentPage - 1) * itemsPerPage;
-        const end = start + itemsPerPage;
-        const pageBookings = filteredBookings.slice(start, end);
+            const row = `
+            <tr id="booking-row-${booking.booking_id}">
+                <td>${booking.booking_no}</td>
+                <td>
+                    ${booking.user_name}<br>
+                    <small style="color:#666;">${booking.user_email}</small>
+                </td>
+                <td>${booking.formatted_date}</td>
+                <td>${booking.user_phone}</td>
+                <td>${booking.pickup}</td>
+                <td>${booking.flight_type}</td>
+                <td>
+                    <small>
+                        Weight: ${booking.weight}<br>
+                        Age: ${booking.age}<br>
+                        Condition: ${booking.medical_condition}
+                    </small>
+                </td>
+                <td><span class="${statusClass}">${booking.status}</span></td>
+                <td class="action-cell">
+                    ${statusButton}
+                </td>
+            </tr>`;
+            tbody.append(row);
+        });
 
-        tableBody.innerHTML = pageBookings
-            .map(
-                (booking) => `
-                <tr class="booking-row">
-                    <td>
-                        <div class="booking-number">${booking.booking_no}</div>
-                        <small style="color: #666;">${formatDate(
-                          booking.created_at
-                        )}</small>
-                    </td>
-                    <td>
-                        <div style="font-weight: 600;">${
-                          booking.user_email
-                        }</div>
-                    </td>
-                    <td>
-                        <div style="font-weight: 600;">${formatDate(
-                          booking.date
-                        )}</div>
-                    </td>
-                    <td>
-                        <div style="max-width: 200px; word-wrap: break-word;">
-                            ${booking.pickup}
-                        </div>
-                    </td>
-                    <td>
-                        <span class="flight-type">${booking.flight_type}</span>
-                    </td>
-                    <td>
-                        <div>Age: ${booking.age} years</div>
-                        <div>Weight: ${booking.weight} kg</div>
-                        ${
-                          booking.condition
-                            ? `<div style="color: #666; font-size: 0.8rem; margin-top: 0.25rem;">Note: ${booking.condition}</div>`
-                            : ""
-                        }
-                    </td>
-                    <td>
-                        <span class="status-badge status-${booking.status}">
-                            ${booking.status}
-                        </span>
-                    </td>
-                    <td>
-                        <div class="actions">
-                            <button class="btn btn-primary" onclick="viewBooking(${
-                              booking.booking_id
-                            })">View</button>
-                            <button class="btn btn-secondary" onclick="editBooking(${
-                              booking.booking_id
-                            })">Edit</button>
-                            ${
-                              booking.status !== "cancelled"
-                                ? `<button class="btn btn-danger" onclick="cancelBooking(${booking.booking_id})">Cancel</button>`
-                                : ""
-                            }
-                        </div>
-                    </td>
-                </tr>
-            `
-            )
-            .join("");
-
-        updatePaginationInfo();
+        console.log(`Rendered ${bookings.length} bookings`);
     }
 
-    // Format date for display
-    function formatDate(dateString) {
-        const date = new Date(dateString);
-        return date.toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "2-digit",
+    function completeBooking(bookingId) {
+        console.log("Completing booking:", bookingId);
+
+        // Disable the button to prevent multiple clicks
+        const button = $(`.complete-btn[data-booking-id="${bookingId}"]`);
+        button.prop('disabled', true).text('Processing...');
+
+        $.ajax({
+            url: 'Web/php/AJAX/fetchBookings.php',
+            method: 'POST',
+            dataType: 'json',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                action: 'complete',
+                booking_id: bookingId
+            }),
+            success: function(response) {
+                console.log("Complete booking response:", response);
+
+                if (response.success) {
+                    // Update the UI immediately
+                    updateBookingStatus(bookingId, 'confirmed');
+                    console.log(`Booking ${bookingId} marked as confirmed`);
+
+                    // Refresh statistics
+                    fetchData();
+
+                    // Show success message
+                    showSuccessMessage("Booking completed successfully!");
+                } else {
+                    console.error("Failed to complete booking:", response.message);
+                    showError(response.message || "Failed to complete booking");
+
+                    // Re-enable button on failure
+                    button.prop('disabled', false).text('Complete');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error completing booking:", error);
+                console.error("Response:", xhr.responseText);
+
+                showError("Failed to complete booking. Please try again.");
+
+                // Re-enable button on error
+                button.prop('disabled', false).text('Complete');
+            }
         });
     }
 
-    // Update pagination info
-    function updatePaginationInfo() {
-        const start = (currentPage - 1) * itemsPerPage + 1;
-        const end = Math.min(
-            currentPage * itemsPerPage,
-            filteredBookings.length
-        );
-        const total = filteredBookings.length;
+    function updateBookingStatus(bookingId, newStatus) {
+        const row = $(`#booking-row-${bookingId}`);
 
-        document.getElementById(
-            "paginationInfo"
-        ).textContent = `Showing ${start}-${end} of ${total} bookings`;
+        // Update status cell (now 8th column instead of 7th)
+        const statusCell = row.find('td:nth-child(8) span');
+        statusCell.text(newStatus).removeClass('status-pending').addClass('status-confirmed');
+
+        // Update action cell
+        const actionCell = row.find('.action-cell');
+        actionCell.html('<span style="color: green;">✓ Completed</span>');
     }
 
-    // Pagination functions
-    function goToPage(page) {
-        if (page >= 1 && page <= totalPages) {
-            currentPage = page;
-            renderBookings();
-            updatePaginationControls();
-        }
+    function displayStatistics(stats) {
+        console.log("Displaying statistics:", stats);
+
+        $('#totalBookings').text(stats.total || 0);
+        $('#confirmedBookings').text(stats.confirmed || 0);
+        $('#pendingBookings').text(stats.pending || 0);
+        $('#todayBookings').text(stats.today || 0);
     }
 
-    function nextPage() {
-        if (currentPage < totalPages) {
-            currentPage++;
-            renderBookings();
-            updatePaginationControls();
-        }
+    function showError(message) {
+        const tbody = $('#bookingsTableBody');
+        tbody.html(`
+        <tr>
+            <td colspan="9" style="text-align:center; color:red; padding:20px;">
+                <strong>Error:</strong> ${message}<br>
+                <button onclick="fetchData()">Try Again</button>
+            </td>
+        </tr>
+    `);
     }
 
-    function previousPage() {
-        if (currentPage > 1) {
-            currentPage--;
-            renderBookings();
-            updatePaginationControls();
-        }
+    function showSuccessMessage(message) {
+        const successDiv = $(
+            '<div class="success-message" style="position:fixed;top:20px;right:40%;background:#4CAF50;color:white;padding:15px;border-radius:5px;z-index:1000;">' +
+            message + '</div>');
+        $('body').append(successDiv);
+
+        // Remove after 3 seconds
+        setTimeout(function() {
+            successDiv.fadeOut(500, function() {
+                successDiv.remove();
+            });
+        }, 3000);
     }
 
-    function updatePaginationControls() {
-        const pageNumbers = document.getElementById("pageNumbers");
-        const firstBtn = document.getElementById("firstBtn");
-        const prevBtn = document.getElementById("prevBtn");
-        const nextBtn = document.getElementById("nextBtn");
-        const lastBtn = document.getElementById("lastBtn");
-
-        firstBtn.disabled = currentPage === 1;
-        prevBtn.disabled = currentPage === 1;
-        nextBtn.disabled = currentPage === totalPages;
-        lastBtn.disabled = currentPage === totalPages;
-
-        // Generate page numbers
-        let pages = [];
-        for (
-            let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++
-        ) {
-            pages.push(i);
-        }
-
-        pageNumbers.innerHTML = pages
-            .map(
-                (page) =>
-                `<button onclick="goToPage(${page})" class="${
-                page === currentPage ? "active" : ""
-              }">${page}</button>`
-            )
-            .join("");
+    function refreshData() {
+        console.log("Manual refresh triggered");
+        fetchData();
     }
 
-    // Action functions
-    function viewBooking(bookingId) {
-        const booking = allBookings.find((b) => b.booking_id === bookingId);
-        alert(
-            `Viewing booking details for ${booking.booking_no}\n\nCustomer: ${booking.user_email}\nFlight: ${booking.flight_type}\nDate: ${booking.date}`
-        );
-    }
+    // Global error handler
+    window.onerror = function(message, source, lineno, colno, error) {
+        console.error("JavaScript Error:", message, "at", source + ":" + lineno);
+        return false;
+    };
 
-    function editBooking(bookingId) {
-        const booking = allBookings.find((b) => b.booking_id === bookingId);
-        alert(
-            `Edit booking ${booking.booking_no}\n\nThis would open an edit form for the booking.`
-        );
-    }
-
-    function cancelBooking(bookingId) {
-        if (confirm("Are you sure you want to cancel this booking?")) {
-            const booking = allBookings.find((b) => b.booking_id === bookingId);
-            booking.status = "cancelled";
-            updateStatistics();
-            renderBookings();
-            alert(`Booking ${booking.booking_no} has been cancelled.`);
-        }
-    }
-
-    // Initialize dashboard on page load
-    document.addEventListener("DOMContentLoaded", initializeDashboard);
+    console.log("=== JAVASCRIPT LOADED ===");
     </script>
+
 </body>
 
 </html>
+
 
 <?php
   require 'partials/footer.php';

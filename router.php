@@ -35,8 +35,8 @@ $routes = [
     '/serviceDescription' => PHP . 'views/serviceDesc.php',
 
     // for booking
-    '/bookingpassenger' => PHP . 'views/booking.php',
-    '/bookingCompany' => PHP . 'views/booking_C.php',
+    '/bookingpassenger' => PHP . 'views/booking_P.php',
+    '/bookingcompany' => PHP . 'views/booking_C.php',
 ];
 
 function routeToController($uri, $routes) {

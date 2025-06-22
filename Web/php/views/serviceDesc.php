@@ -5,7 +5,7 @@
 
   // Get service_id from URL parameter
   $serviceId = isset($_GET['service_id']) ? intval($_GET['service_id']) : 0;
-$_SESSION['service_id'] = $serviceId; // Store in session for booking
+    $_SESSION['service_id'] = $serviceId; // Store in session for booking
   if (!$serviceId) {
   header('Location: /error?message=Invalid service ID');
   exit;
@@ -147,18 +147,20 @@ $_SESSION['service_id'] = $serviceId; // Store in session for booking
         <!-- Right Section -->
         <div class="right-section">
             <div class="book-box">
-                <div class="book-price">$<?php echo htmlspecialchars($minPrice); ?></div>
+                <div class="book-price">Rs.<?php echo htmlspecialchars($minPrice); ?></div>
                 <div class="book-desc">
                     <?php echo htmlspecialchars($service['service_title'] ?? 'Service Booking'); ?><br>
                     <span style="font-size:0.98rem;color:rgba(255,255,255,0.8);">Available now • Flexible booking</span>
                 </div>
-                <button class="book-btn" onclick="window.location.href='/bookingpassenger'"(<?php echo $serviceId; ?>)>Book Now</button>
+                <!-- Replace the existing book-btn line with this corrected version -->
+                <button class="book-btn"
+                    onclick="window.location.href='/bookingpassenger?service_id=<?php echo $serviceId; ?>'">Book
+                    Now</button>
             </div>
         </div>
     </div>
 
     <script>
-       
     // Dynamic slider with PHP-generated photo array
     const screenshots = <?php echo json_encode($officePhotos); ?>;
     let selected = 0;
