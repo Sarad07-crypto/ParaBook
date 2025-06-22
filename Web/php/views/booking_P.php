@@ -1,4 +1,6 @@
 <?php 
+  require 'avatar.php';
+  require 'partials/header_P.php';
 session_start();
 
 $userid = $_SESSION['user_id'];
@@ -408,3 +410,7 @@ if ($serviceId > 0) {
     </script>
 
 </body>
+
+<?php
+  require 'partials/footer.php';
+?>

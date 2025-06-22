@@ -20,6 +20,8 @@ body {
   top: 0;
   z-index: 100;
   background: #fff;
+  border-bottom: 0px solid #007bff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
 }
 
 .top-bar {
@@ -28,7 +30,9 @@ body {
   justify-content: space-between;
   padding: var(--header-padding);
   background-color: #fff;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 0px solid #ccc;
+  outline: 1px solid #f8f8f8;
+    outline-offset: -2px;
 }
 
 .logo {
@@ -122,6 +126,8 @@ body {
   justify-content: center;
   padding: 10px 0;
   color: white;
+   outline: 2px solid #007bff;
+    outline-offset: -2px;
 }
 
 .nav-bar a {
@@ -311,6 +317,8 @@ body.dark-mode .dropdown-menu {
   background: #23272a !important;
   color: #e0e0e0 !important;
   border: none !important;
+  outline: 2px solid #23272a !important;
+    outline-offset: -2px;
 }
 
 body.dark-mode .nav-bar a,
