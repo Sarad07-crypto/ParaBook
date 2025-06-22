@@ -333,3 +333,49 @@ body {
   color: #666;
   margin-top: 5px;
 }
+
+/* serviceForm.php */
+.input-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  gap: 10px;
+}
+
+.input-group label {
+  min-width: 200px;
+  font-weight: 500;
+  color: #333;
+  text-align: left;
+  flex-shrink: 0;
+}
+
+.input-group input,
+.input-group textarea {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.input-group textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.required {
+  color: #e74c3c;
+  font-weight: bold;
+}
+
+/* For file inputs, stack them vertically */
+.input-group:has(input[type="file"]) {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.input-group:has(input[type="file"]) label {
+  min-width: auto;
+  margin-bottom: 5px;
+}
