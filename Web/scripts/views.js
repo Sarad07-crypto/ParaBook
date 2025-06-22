@@ -135,3 +135,26 @@ window.onload = function () {
     document.body.classList.add("dark-mode");
   }
 };
+
+function toggleNotifDropdown(e) {
+    e.preventDefault();
+    const menu = document.getElementById('notifDropdown');
+    menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+    // Close if clicked outside
+    document.addEventListener('mousedown', notifOutsideClick);
+}
+function closeNotifDropdown() {
+    document.getElementById('notifDropdown').style.display = 'none';
+    document.removeEventListener('mousedown', notifOutsideClick);
+}
+function notifOutsideClick(e) {
+    const menu = document.getElementById('notifDropdown');
+    const bell = document.querySelector('.notif-dropdown-trigger');
+    if (!menu.contains(e.target) && !bell.contains(e.target)) {
+        closeNotifDropdown();
+    }
+}
+// Optional: ESC key closes dropdown
+document.addEventListener('keydown', function(e) {
+    if (e.key === "Escape") closeNotifDropdown();
+});

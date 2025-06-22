@@ -45,7 +45,32 @@
                     </div>
                 </div>
                 <div class="right-section">
-                    <a href="#"><i class="fas fa-bell"></i></a>
+                    <a href="#" class="notif-dropdown-trigger" onclick="toggleNotifDropdown(event)">
+                        <i class="fas fa-bell"></i>
+                    </a>
+                    <div id="notifDropdown" class="notif-dropdown-menu">
+                        <div class="notif-dropdown-header">
+                            <strong>Notifications</strong>
+                            <span class="notif-dropdown-close" onclick="closeNotifDropdown()">&times;</span>
+                        </div>
+                        <div class="notif-dropdown-list">
+                            <div class="notif-dropdown-item notif-unread">
+                                <i class="fas fa-user notif-icon"></i>
+                                <div>
+                                    <span><b>John Doe</b> booked a flight with you.</span>
+                                    <div class="notif-time">2m ago</div>
+                                </div>
+                            </div>
+                            <div class="notif-dropdown-item">
+                                <i class="fas fa-plane notif-icon"></i>
+                                <div>
+                                    <span>Your flight is scheduled for tomorrow.</span>
+                                    <div class="notif-time">1h ago</div>
+                                </div>
+                            </div>
+                            <!-- Add more notifications as needed -->
+                        </div>
+                    </div>
                     <a href="#"><i class="fas fa-envelope"></i></a>
                     <a href="#"><i class="fas fa-heart"></i></a>
                     <a href="#"><i class="fas fa-headphones"></i></a>
