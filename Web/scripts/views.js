@@ -1,45 +1,77 @@
+// Toggle notification panels and icon states
+function toggleNotificationPanel(event, type) {
+  event.preventDefault();
+
+  const panel = document.getElementById(`${type}-panel`);
+  const icon = document.getElementById(`${type}-icon`);
+
+  // Close all other panels first
+  closeAllNotificationPanels(type);
+
+  // Toggle current panel
+  if (panel.classList.contains("show")) {
+    panel.classList.remove("show");
+    // Switch back to outline icon
+    icon.className = `far fa-${type}`;
+    icon.classList.remove("icon-active");
+  } else {
+    panel.classList.add("show");
+    // Switch to filled icon
+    icon.className = `fas fa-${type}`;
+    icon.classList.add("icon-active");
+  }
+}
+
+// Close specific notification panel
+function closeNotificationPanel(type) {
+  const panel = document.getElementById(`${type}-panel`);
+  const icon = document.getElementById(`${type}-icon`);
+
+  panel.classList.remove("show");
+  // Switch back to outline icon
+  icon.className = `far fa-${type}`;
+  icon.classList.remove("icon-active");
+}
+
+// Close all notification panels except the specified one
+function closeAllNotificationPanels(except = null) {
+  const types = ["bell", "envelope", "heart"];
+  types.forEach((type) => {
+    if (type !== except) {
+      closeNotificationPanel(type);
+    }
+  });
+}
+
+// Toggle icon function for headphones
+function toggleIcon(element, iconName) {
+  if (element.classList.contains("fa-solid")) {
+    // Switch to outline version
+    element.classList.remove("fa-solid");
+    element.classList.add("far");
+    element.classList.remove("icon-active");
+  } else {
+    // Switch to filled version
+    element.classList.remove("far");
+    element.classList.add("fa-solid");
+    element.classList.add("icon-active");
+  }
+}
+
+// Sidebar functions
 function openSidebar() {
   document.getElementById("sidebar").classList.add("active");
   document.body.classList.add("sidebar-open");
   document.getElementById("sidebar-backdrop").classList.add("active");
 }
+
 function closeSidebar() {
   document.getElementById("sidebar").classList.remove("active");
   document.body.classList.remove("sidebar-open");
   document.getElementById("sidebar-backdrop").classList.remove("active");
 }
-// Optional: close sidebar when clicking outside
-document.addEventListener("click", function (e) {
-  const sidebar = document.getElementById("sidebar");
-  const hamburger = document.querySelector(".hamburger");
-  if (
-    sidebar.classList.contains("active") &&
-    !sidebar.contains(e.target) &&
-    !hamburger.contains(e.target)
-  ) {
-    closeSidebar();
-  }
-});
-// Optional: close menu when clicking outside (for better UX)
-document.addEventListener("click", function (e) {
-  const topBar = document.querySelector(".top-bar");
-  const hamburger = document.querySelector(".hamburger");
-  if (!topBar.contains(e.target) && topBar.classList.contains("active")) {
-    topBar.classList.remove("active");
-  }
-});
 
-// Close sidebar automatically when resizing from mobile to desktop
-window.addEventListener("resize", function () {
-  if (window.innerWidth > 600) {
-    closeSidebar();
-  }
-});
-
-function logout() {
-  // Add your logout logic here
-  alert("Logout clicked");
-}
+// Mobile search toggle
 function toggleMobileSearch() {
   var box = document.getElementById("mobile-search-box");
   if (box.classList.contains("active")) {
@@ -50,6 +82,88 @@ function toggleMobileSearch() {
   }
 }
 
+// Avatar dropdown - Updated to work with your existing CSS
+function toggleDropdown() {
+  var menu = document.getElementById("dropdownMenu");
+  if (menu.style.display === "block") {
+    menu.style.display = "none";
+  } else {
+    menu.style.display = "block";
+    // Close notification panels
+    closeAllNotificationPanels();
+  }
+}
+
+// Show initial for avatar fallback
+function showInitial(img, initial) {
+  const container = img.parentNode;
+  img.remove();
+  const fallback = document.createElement("div");
+  fallback.className = "initial-avatar";
+  fallback.textContent = initial;
+  container.appendChild(fallback);
+}
+
+// Dark mode toggle
+function darkModeToggle() {
+  document.body.classList.toggle("dark-mode");
+  if (document.body.classList.contains("dark-mode")) {
+    localStorage.setItem("theme", "dark");
+  } else {
+    localStorage.setItem("theme", "light");
+  }
+}
+
+// Event listeners
+document.addEventListener("click", function (e) {
+  const sidebar = document.getElementById("sidebar");
+  const hamburger = document.querySelector(".hamburger");
+
+  // Close sidebar when clicking outside
+  if (
+    sidebar.classList.contains("active") &&
+    !sidebar.contains(e.target) &&
+    !hamburger.contains(e.target)
+  ) {
+    closeSidebar();
+  }
+
+  // Close avatar dropdown when clicking outside
+  if (!e.target.closest(".avatar-dropdown")) {
+    document.getElementById("dropdownMenu").style.display = "none";
+  }
+
+  // Close notification panels when clicking outside
+  const notificationPanels = document.querySelectorAll(".notification-panel");
+  const rightSection = document.querySelector(".right-section");
+  if (!rightSection || !rightSection.contains(e.target)) {
+    closeAllNotificationPanels();
+  }
+});
+
+// Close sidebar automatically when resizing from mobile to desktop
+window.addEventListener("resize", function () {
+  if (window.innerWidth > 600) {
+    closeSidebar();
+  }
+});
+
+// ESC key closes all panels
+document.addEventListener("keydown", function (e) {
+  if (e.key === "Escape") {
+    closeAllNotificationPanels();
+    document.getElementById("dropdownMenu").style.display = "none";
+  }
+});
+
+// Load theme on page load
+window.onload = function () {
+  if (localStorage.getItem("theme") === "dark") {
+    document.body.classList.add("dark-mode");
+  }
+};
+
+// Your existing functions from the original JavaScript
 document.addEventListener("DOMContentLoaded", function () {
   const cards = document.querySelectorAll(".company-card");
 
@@ -67,7 +181,8 @@ document.addEventListener("DOMContentLoaded", function () {
   revealCards(); // Initial check
 });
 
-const cardsPerPage = 10; // Change this for more/less per page
+// Pagination functionality
+const cardsPerPage = 10;
 const cards = Array.from(document.querySelectorAll(".company-card"));
 const pagination = document.getElementById("pagination");
 let currentPage = 1;
@@ -83,6 +198,7 @@ function showPage(page) {
 }
 
 function renderPagination() {
+  if (!pagination) return; // Check if pagination element exists
   const pageCount = Math.ceil(cards.length / cardsPerPage);
   pagination.innerHTML = "";
   for (let i = 1; i <= pageCount; i++) {
@@ -94,67 +210,11 @@ function renderPagination() {
   }
 }
 
-// Initialize
-showPage(1);
-
-function showInitial(img, initial) {
-  const container = img.parentNode;
-
-  // Remove broken image
-  img.remove();
-
-  // Create a fallback element with the initial
-  const fallback = document.createElement("div");
-  fallback.className = "initial-avatar";
-  fallback.textContent = initial;
-
-  container.appendChild(fallback);
-}
-function toggleDropdown() {
-  var menu = document.getElementById("dropdownMenu");
-  menu.style.display = menu.style.display === "block" ? "none" : "block";
+// Initialize pagination if cards exist
+if (cards.length > 0) {
+  showPage(1);
 }
 
-// Hide dropdown when clicking outside
-window.onclick = function (event) {
-  if (!event.target.closest(".avatar-dropdown")) {
-    document.getElementById("dropdownMenu").style.display = "none";
-  }
-};
-function darkModeToggle() {
-  document.body.classList.toggle("dark-mode");
-  // Save preference
-  if (document.body.classList.contains("dark-mode")) {
-    localStorage.setItem("theme", "dark");
-  } else {
-    localStorage.setItem("theme", "light");
-  }
+function logout() {
+  alert("Logout clicked");
 }
-window.onload = function () {
-  if (localStorage.getItem("theme") === "dark") {
-    document.body.classList.add("dark-mode");
-  }
-};
-
-function toggleNotifDropdown(e) {
-    e.preventDefault();
-    const menu = document.getElementById('notifDropdown');
-    menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
-    // Close if clicked outside
-    document.addEventListener('mousedown', notifOutsideClick);
-}
-function closeNotifDropdown() {
-    document.getElementById('notifDropdown').style.display = 'none';
-    document.removeEventListener('mousedown', notifOutsideClick);
-}
-function notifOutsideClick(e) {
-    const menu = document.getElementById('notifDropdown');
-    const bell = document.querySelector('.notif-dropdown-trigger');
-    if (!menu.contains(e.target) && !bell.contains(e.target)) {
-        closeNotifDropdown();
-    }
-}
-// Optional: ESC key closes dropdown
-document.addEventListener('keydown', function(e) {
-    if (e.key === "Escape") closeNotifDropdown();
-});
