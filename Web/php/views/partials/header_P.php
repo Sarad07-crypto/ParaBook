@@ -41,8 +41,8 @@
                         <input type="text" placeholder="looking for any company today ?" />
                         <button><i class="fas fa-search"></i></button>
                     </div>
-                    <div class="darkmode">
-                        <a href="#"><i class="fas fa-moon" style="color:#007BFF;"></i></a>
+                    <div class="darkmode" onclick="darkModeToggle()">
+                        <button><i class="fas fa-moon" style="color:#007BFF;"></i></button>
                     </div>
                 </div>
                 <div class="right-section">
