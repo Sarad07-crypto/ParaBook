@@ -40,6 +40,8 @@ $routes = [
 
     // for statistics
     '/statistics' => PHP . 'views/statistics.php',
+    '/header' => PHP . 'views/partials/header.php',
+    '/nav' => PHP . 'views/partials/nav_C.php',
 ];
 
 function routeToController($uri, $routes) {

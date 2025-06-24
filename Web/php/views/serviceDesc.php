@@ -1,61 +1,61 @@
 <?php
     session_start();
-  require 'avatar.php';
-  require 'Web/php/connection.php';
+    require 'avatar.php';
+    require 'Web/php/connection.php';
 
-  // Get service_id from URL parameter
-  $serviceId = isset($_GET['service_id']) ? intval($_GET['service_id']) : 0;
-    $_SESSION['service_id'] = $serviceId; // Store in session for booking
-  if (!$serviceId) {
-  header('Location: /error?message=Invalid service ID');
-  exit;
-  }
+    // Get service_id from URL parameter
+    $serviceId = isset($_GET['service_id']) ? intval($_GET['service_id']) : 0;
+        $_SESSION['service_id'] = $serviceId; // Store in session for booking
+    if (!$serviceId) {
+    header('Location: /error?message=Invalid service ID');
+    exit;
+    }
 
-  try {
-  // 1. Fetch service details
-  $stmt = $connect->prepare("SELECT * FROM company_services WHERE id = ?");
-  $stmt->bind_param("i", $serviceId);
-  $stmt->execute();
-  $result = $stmt->get_result();
-  $service = $result->fetch_assoc();
+    try {
+    // 1. Fetch service details
+    $stmt = $connect->prepare("SELECT * FROM company_services WHERE id = ?");
+    $stmt->bind_param("i", $serviceId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $service = $result->fetch_assoc();
 
-  if (!$service) {
-  header('Location: /error?message=Service not found');
-  exit;
-  }
+    if (!$service) {
+    header('Location: /error?message=Service not found');
+    exit;
+    }
 
-  // 2. Fetch flight types and get minimum price
-  $stmt = $connect->prepare("SELECT flight_type_name AS name, price FROM service_flight_types WHERE service_id = ? ORDER
-  BY price ASC");
-  $stmt->bind_param("i", $serviceId);
-  $stmt->execute();
-  $flightTypes = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    // 2. Fetch flight types and get minimum price
+    $stmt = $connect->prepare("SELECT flight_type_name AS name, price FROM service_flight_types WHERE service_id = ? ORDER
+    BY price ASC");
+    $stmt->bind_param("i", $serviceId);
+    $stmt->execute();
+    $flightTypes = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-  $minPrice = !empty($flightTypes) ? $flightTypes[0]['price'] : 0;
+    $minPrice = !empty($flightTypes) ? $flightTypes[0]['price'] : 0;
 
-  // 3. Fetch office photos
-  $stmt = $connect->prepare("SELECT photo_path FROM service_office_photos WHERE service_id = ? ORDER BY photo_order ASC
-  LIMIT 4");
-  $stmt->bind_param("i", $serviceId);
-  $stmt->execute();
-  $result = $stmt->get_result();
+    // 3. Fetch office photos
+    $stmt = $connect->prepare("SELECT photo_path FROM service_office_photos WHERE service_id = ? ORDER BY photo_order ASC
+    LIMIT 4");
+    $stmt->bind_param("i", $serviceId);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-  $officePhotos = [];
-  while ($row = $result->fetch_assoc()) {
-  $officePhotos[] = $row['photo_path'];
-  }
+    $officePhotos = [];
+    while ($row = $result->fetch_assoc()) {
+    $officePhotos[] = $row['photo_path'];
+    }
 
-  // If no photos, use default placeholder
-  if (empty($officePhotos)) {
-  $officePhotos = ['default-service.jpg'];
-  }
+    // If no photos, use default placeholder
+    if (empty($officePhotos)) {
+    $officePhotos = ['default-service.jpg'];
+    }
 
-  } catch (Exception $e) {
-  error_log("Error fetching service data: " . $e->getMessage());
-  header('Location: /error?message=Error loading service');
-  exit;
-  }
-  ?>
+    } catch (Exception $e) {
+    error_log("Error fetching service data: " . $e->getMessage());
+    header('Location: /error?message=Error loading service');
+    exit;
+    }
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -70,11 +70,12 @@
 
 <body>
     <?php
+        require('partials/header.php');
         $accType = $_SESSION['acc_type'] ?? 'passenger';
         if ($accType === 'company') {
-            require('partials/header_C.php');
+            require('partials/nav_C.php');
         } else {
-            require('partials/header_P.php');
+            require('partials/nav_P.php');
         }
     ?>
     <div class="main-wrap">
