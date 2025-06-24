@@ -297,7 +297,7 @@
                 <span></span>
             </div>
             <!-- Desktop ParaBook logo -->
-            <div class="logo">ParaBook</div>
+            <div class="logo"><a href="/home" style="text-decoration: none; color: inherit;">ParaBook</a></div>
             <!-- Responsive ParaBook logo in the center for mobile -->
             <div class="responsive-logo">Parabook</div>
             <div class="search-icon-mobile" onclick="toggleMobileSearch()">
