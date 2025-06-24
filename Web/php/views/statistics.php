@@ -1,6 +1,7 @@
 <?php
   require 'avatar.php';
   require 'partials/header.php';
+  require 'partials/nav_C.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
