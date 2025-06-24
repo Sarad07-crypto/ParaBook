@@ -382,7 +382,7 @@
         <div class="nav-bar">
             <a href="#">Dashboard</a>
             <a href="#">Flight Management</a>
-            <a href="#">Bookings</a>
+            <a href="/bookingcompany">Bookings</a>
             <a href="#">Analytics</a>
             <a href="#">Revenue</a>
         </div>
@@ -782,6 +782,8 @@
 
             if (data.success) {
                 const badge = document.getElementById('notification-badge');
+                if (!badge) return; // Avoid error if element isn't on the page
+                badge.setAttribute('aria-label', `You have ${unreadCount} unread notifications`);
                 const unreadCount = data.unread_count || 0;
 
                 console.log('Unread count from API:', unreadCount); // Debug log
