@@ -21,7 +21,7 @@ body {
   z-index: 100;
   background: #fff;
   border-bottom: 0px solid #007bff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
 }
 
 .top-bar {
@@ -32,7 +32,7 @@ body {
   background-color: #fff;
   border-bottom: 0px solid #ccc;
   outline: 1px solid #f8f8f8;
-    outline-offset: -2px;
+  outline-offset: -2px;
 }
 
 .logo {
@@ -126,8 +126,8 @@ body {
   justify-content: center;
   padding: 10px 0;
   color: white;
-   outline: 2px solid #007bff;
-    outline-offset: -2px;
+  outline: 2px solid #007bff;
+  outline-offset: -2px;
 }
 
 .nav-bar a {
@@ -318,7 +318,7 @@ body.dark-mode .dropdown-menu {
   color: #e0e0e0 !important;
   border: none !important;
   outline: 2px solid #23272a !important;
-    outline-offset: -2px;
+  outline-offset: -2px;
 }
 
 body.dark-mode .nav-bar a,
@@ -466,14 +466,20 @@ avatar-dropdown {
   max-width: 95vw;
   background: #fff;
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
   z-index: 1002;
   flex-direction: column;
   animation: notifSlideIn 0.18s;
 }
 @keyframes notifSlideIn {
-  from { transform: translateY(-10px); opacity: 0; }
-  to   { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 .notif-dropdown-header {
   display: flex;
@@ -492,7 +498,9 @@ avatar-dropdown {
   margin-left: 10px;
   transition: color 0.2s;
 }
-.notif-dropdown-close:hover { color: #0073e6; }
+.notif-dropdown-close:hover {
+  color: #0073e6;
+}
 .notif-dropdown-list {
   max-height: 340px;
   overflow-y: auto;
@@ -508,9 +516,15 @@ avatar-dropdown {
   transition: background 0.2s;
   font-size: 0.98rem;
 }
-.notif-dropdown-item:last-child { border-bottom: none; }
-.notif-dropdown-item:hover { background: #f6faff; }
-.notif-unread { background: #eaf4ff; }
+.notif-dropdown-item:last-child {
+  border-bottom: none;
+}
+.notif-dropdown-item:hover {
+  background: #f6faff;
+}
+.notif-unread {
+  background: #eaf4ff;
+}
 .notif-icon {
   font-size: 1.2rem;
   color: #0073e6;
@@ -523,7 +537,10 @@ avatar-dropdown {
   margin-top: 2px;
 }
 @media (max-width: 500px) {
-  .notif-dropdown-menu { right: -60px; min-width: 90vw; }
+  .notif-dropdown-menu {
+    right: -60px;
+    min-width: 90vw;
+  }
 }
 
 /* Responsive styles */
