@@ -259,19 +259,22 @@ if ($serviceId > 0) {
             }
 
             if (result.success) {
+                
                 document.getElementById('successMessage').textContent =
                     `Booking confirmed! Your booking number is: ${result.booking_no}`;
+                    
                 document.getElementById('mainBookingSuccess').style.display = 'flex';
                 document.getElementById('mainBookingError').style.display = 'none';
+                window.location.href = "Web/php/esewa.php";
 
-                setTimeout(() => {
-                    document.getElementById('mainBookingSuccess').style.display = 'none';
-                    formElement.reset();
-                    formElement.querySelector('.main-submit-btn').style.display = '';
-                    formElement.querySelector('.main-submit-btn').disabled = false;
-                    formElement.querySelector('.main-submit-btn').textContent = 'Book Now';
-                    document.getElementById('priceDisplay').style.display = 'none';
-                }, 3000);
+                // setTimeout(() => {
+                //     document.getElementById('mainBookingSuccess').style.display = 'none';
+                //     formElement.reset();
+                //     formElement.querySelector('.main-submit-btn').style.display = '';
+                //     formElement.querySelector('.main-submit-btn').disabled = false;
+                //     formElement.querySelector('.main-submit-btn').textContent = 'Book Now';
+                //     document.getElementById('priceDisplay').style.display = 'none';
+                // }, 3000);
             } else {
                 document.getElementById('errorMessage').textContent = result.message;
                 document.getElementById('mainBookingError').style.display = 'block';
