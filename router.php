@@ -37,6 +37,9 @@ $routes = [
     // for booking
     '/bookingpassenger' => PHP . 'views/booking_P.php',
     '/bookingcompany' => PHP . 'views/booking_C.php',
+
+    // for statistics
+    '/statistics' => PHP . 'views/statistics.php',
 ];
 
 function routeToController($uri, $routes) {
