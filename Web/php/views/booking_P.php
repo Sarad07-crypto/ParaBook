@@ -236,7 +236,7 @@ if ($serviceId > 0) {
         const formData = new FormData(formElement);
 
         try {
-            const response = await fetch('Web/php/AJAX/submitBooking.php', {
+            const response = await fetch('Web/php/AJAX/bookingSubmit.php', {
                 method: 'POST',
                 body: formData
             });
@@ -266,6 +266,20 @@ if ($serviceId > 0) {
                 document.getElementById('mainBookingSuccess').style.display = 'flex';
                 document.getElementById('mainBookingError').style.display = 'none';
 
+                // Fetch the latest notification for the current user
+                fetch('Web/php/AJAX/bookingNotificationAPI.php?action=recent&limit=1')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success && data.notifications.length > 0) {
+                            const notification = data.notifications[0];
+                            // Display notification as a toast or alert
+                            showToast(notification.title, notification.message);
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Failed to fetch notifications:', err);
+                    });
+
                 setTimeout(() => {
                     document.getElementById('mainBookingSuccess').style.display = 'none';
                     formElement.reset();
@@ -291,6 +305,7 @@ if ($serviceId > 0) {
             formElement.querySelector('.main-submit-btn').disabled = false;
             formElement.querySelector('.main-submit-btn').textContent = 'Book Now';
         }
+
     };
 
     // Booking form validation
@@ -307,7 +322,7 @@ if ($serviceId > 0) {
                         return !/^([^\s@]+)@([^\s@]+)\.[^\s@]{2,}$/.test(input.value);
                     }
                     if (input.type === "tel") {
-                        return !/^(\+977-)?98\d{8}$/.test(input.value); // Updated Nepal phone format
+                        return !/^(\+977-)?9\d{9}$/.test(input.value); // Updated Nepal phone format
                     }
                     if (input.type === "number" && input.name === "mainWeight") {
                         return input.value !== '' && (input.value < 30 || input.value > 120);
@@ -390,6 +405,22 @@ if ($serviceId > 0) {
 
     validateBookingForm("#mainBookingForm");
 
+    function showToast(title, message) {
+        const toast = document.getElementById('toastNotification');
+        toast.innerHTML = `<strong>${title}</strong><br>${message}`;
+        toast.style.display = 'block';
+
+        // Hide toast on click immediately
+        toast.onclick = () => {
+            toast.style.display = 'none';
+        };
+
+        // Auto-hide after 4 seconds
+        setTimeout(() => {
+            toast.style.display = 'none';
+        }, 4000);
+    }
+
     document.getElementById("openTerms").onclick = function(e) {
         e.preventDefault();
         document.getElementById("termsCardOverlay").style.display = "flex";
@@ -408,6 +439,21 @@ if ($serviceId > 0) {
     // Set minimum date to today
     document.getElementById('mainDate').min = new Date().toISOString().split('T')[0];
     </script>
+    <div id="toastNotification" style="
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #0d6efd;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 6px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    font-weight: 600;
+    z-index: 9999;
+    display: none;
+    max-width: 300px;
+    cursor: pointer;
+    "></div>
 
 </body>
 
