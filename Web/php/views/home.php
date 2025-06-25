@@ -1,29 +1,5 @@
 <?php
-    session_start();
-
-    $loginType = '';
-    $avatar = 'default-avatar.png';
-
-    if (isset($_SESSION['user_email'])) {
-        $loginType = 'google';
-        $avatar = htmlspecialchars($_SESSION['avatar'] ?? 'default-avatar.png');
-        
-        $_SESSION['firstName'] = $_SESSION['givenName'];
-        $_SESSION['lastName'] = $_SESSION['familyName'];
-
-    } elseif (isset($_SESSION['access_token']) && isset($_SESSION['userData'])) {
-        $loginType = 'facebook';
-        $avatar = htmlspecialchars($_SESSION['userData']['picture']['url'] ?? 'default-avatar.png');
-        
-
-    } elseif (isset($_SESSION['Email'])) {
-        $loginType = 'form';
-        $avatar = 'default-avatar.png';
-
-    } else {
-        echo "<script>alert('Login Failed!!!'); window.location.href='/login';</script>";
-        exit;
-    }
+    require 'avatar.php';
 ?>
 
 <!DOCTYPE html>
@@ -47,12 +23,13 @@ body {
 <body>
 
     <?php
+        require('partials/header.php');
         $accType = $_SESSION['acc_type'] ?? 'passenger';
         if ($accType === 'company') {
-            require('partials/header_C.php');
+            require('partials/nav_C.php');
             require('addServices.php');
         } else {
-            require('partials/header_P.php');
+            require('partials/nav_P.php');
             require('servicePassenger.php');
         }
     ?>

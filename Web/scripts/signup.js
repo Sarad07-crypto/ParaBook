@@ -22,6 +22,12 @@ showPWDIcons.forEach((icon) => {
 const validateForm = (formSelector) => {
   const formElement = document.querySelector(formSelector);
 
+  // Check if form exists
+  if (!formElement) {
+    console.log(`Form with selector "${formSelector}" not found`);
+    return;
+  }
+
   const validateOptions = [
     {
       attribute: "required",
@@ -29,7 +35,7 @@ const validateForm = (formSelector) => {
     },
     {
       attribute: "text-only",
-      isValid: (input) => !/^[A-Za-z]{2,}$/.test(input.value),
+      isValid: (input) => !/^[A-Za-z\s]{2,}$/.test(input.value), // Allow spaces for names
     },
     {
       attribute: "pattern",
@@ -79,27 +85,46 @@ const validateForm = (formSelector) => {
       errorMessage: "Please select an option",
     },
   ];
+
   const validateRadioGroup = (name) => {
     const group = document.querySelectorAll(`input[name="${name}"]`);
+    if (group.length === 0) return true; // If no radio group exists, consider it valid
+
     const selected = [...group].some((input) => input.checked);
 
     if (!selected) {
-      const container = group[0].closest(".usertype-wrapper");
-      container.style.borderBottom = "1px solid red";
+      const container = group[0].closest(
+        ".usertype-wrapper, .gender-wrapper, .radio-group"
+      );
+      if (container) {
+        container.style.borderBottom = "1px solid red";
+      }
       return false;
     } else {
-      const container = group[0].closest(".usertype-wrapper");
-      container.style.border = "none";
+      const container = group[0].closest(
+        ".usertype-wrapper, .gender-wrapper, .radio-group"
+      );
+      if (container) {
+        container.style.border = "none";
+      }
       return true;
     }
   };
+
   const toggleRequirementClass = (element, isValid) => {
-    element.classList.toggle("pwd-rqm-li-show-valid", isValid);
-    element.classList.toggle("pwd-rqm-li-show", !isValid);
+    if (element) {
+      element.classList.toggle("pwd-rqm-li-show-valid", isValid);
+      element.classList.toggle("pwd-rqm-li-show", !isValid);
+    }
   };
 
   const validatePasswordRequirements = (password) => {
     const requirements = document.querySelectorAll(".pwd-rqm-li");
+
+    if (requirements.length === 0) {
+      // No password requirements UI, just do basic validation
+      return password.length >= 8;
+    }
 
     const hasMinLength = password.length >= 8;
     const hasSpecialChar = /[^A-Za-z0-9]/.test(password);
@@ -113,16 +138,19 @@ const validateForm = (formSelector) => {
       li.style.display = allValid ? "none" : "block";
     });
 
-    toggleRequirementClass(requirements[0], hasMinLength);
-    toggleRequirementClass(requirements[1], hasSpecialChar);
-    toggleRequirementClass(requirements[2], hasNumber);
-    toggleRequirementClass(requirements[3], hasMixedCase);
+    if (requirements[0]) toggleRequirementClass(requirements[0], hasMinLength);
+    if (requirements[1])
+      toggleRequirementClass(requirements[1], hasSpecialChar);
+    if (requirements[2]) toggleRequirementClass(requirements[2], hasNumber);
+    if (requirements[3]) toggleRequirementClass(requirements[3], hasMixedCase);
 
-    return allValid; // Add this line to return the validation status
+    return allValid;
   };
 
   const validateSingleFormInput = (formInput) => {
     const input = formInput.querySelector("input");
+    if (!input) return true;
+
     const error = formInput.querySelector(".error-icon");
     const success = formInput.querySelector(".check-icon");
 
@@ -150,6 +178,7 @@ const validateForm = (formSelector) => {
         }
       }
     }
+
     if (input.name === "password") {
       const passwordValid = validatePasswordRequirements(input.value);
       if (passwordValid) {
@@ -159,6 +188,7 @@ const validateForm = (formSelector) => {
         input.style.borderBottom = "1px solid #0659e7";
       }
     }
+
     if (formInputError) {
       if (error) error.classList.add("error-icon-show");
       if (success) success.classList.remove("check-icon-show");
@@ -185,6 +215,7 @@ const validateForm = (formSelector) => {
 
     formInputs.forEach((formInput) => {
       const input = formInput.querySelector("input");
+      if (!input) return;
 
       input.addEventListener("input", () => {
         const isConfirmPassword = input.hasAttribute("match");
@@ -197,7 +228,9 @@ const validateForm = (formSelector) => {
           const confirmPasswordInput = formElement.querySelector("[match]");
           if (confirmPasswordInput) {
             const confirmFormInput = confirmPasswordInput.closest(".input-box");
-            validateSingleFormInput(confirmFormInput);
+            if (confirmFormInput) {
+              validateSingleFormInput(confirmFormInput);
+            }
           }
         }
       });
@@ -231,7 +264,16 @@ const validateForm = (formSelector) => {
 
     if (isValid && isUserTypeValid && isGenderValid) {
       console.log("Form is valid, submitting...");
-      formElement.submit();
+
+      // Check if this is a profile form with AJAX submission
+      if (
+        formElement.id === "profileForm" &&
+        typeof submitProfileData === "function"
+      ) {
+        submitProfileData(); // Call the AJAX function
+      } else {
+        formElement.submit(); // Regular form submission
+      }
     } else {
       console.log("Form has errors.");
     }
@@ -240,4 +282,16 @@ const validateForm = (formSelector) => {
   setupInputEvents();
 };
 
-validateForm(".form");
+// Initialize validation for different forms
+document.addEventListener("DOMContentLoaded", function () {
+  // Try to validate different possible form selectors
+  const possibleForms = [".form", "#profileForm", "form"];
+
+  possibleForms.forEach((selector) => {
+    const form = document.querySelector(selector);
+    if (form) {
+      console.log(`Initializing validation for form: ${selector}`);
+      validateForm(selector);
+    }
+  });
+});

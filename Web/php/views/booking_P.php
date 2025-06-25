@@ -3,10 +3,8 @@
   require 'partials/header_P.php';
 session_start();
 
-
 $userid = $_SESSION['user_id'];
-$price= $_SESSION['selected_flight_price'] ?? 0; // fallback to 0 if not set
-$serviceId = $_SESSION['service_id'] ;
+$serviceId = $_SESSION['service_id'] ?? 0;
 include "Web/php/connection.php";
 
 // Fetch user info
@@ -23,32 +21,31 @@ $gender = $result['gender'] ?? '';
 $contact = $result['contact'] ?? '';
 $country = $result['country'] ?? '';
 
-
-$fillemail2 = $connect->prepare("SELECT email FROM users WHERE id = ?");
-if (!$fillemail2) {
-    die("Prepare failed: " . $connect->error);
-}
-$fillemail2->bind_param("i", $userid);
-$fillemail2->execute();
-$emailResult = $fillemail2->get_result()->fetch_assoc();
-$email = $emailResult['email'] ?? '';
-
-// Fetch flight types for the service
-$flightTypes = [];
-if ($serviceId > 0) {
-    $servicefetch = $connect->prepare("SELECT id, flight_type_name, price FROM service_flight_types WHERE service_id = ? ORDER BY price ASC");
-    if (!$servicefetch) {
+    $fillemail2 = $connect->prepare("SELECT email FROM users WHERE id = ?");
+    if (!$fillemail2) {
         die("Prepare failed: " . $connect->error);
     }
-    $servicefetch->bind_param("i", $serviceId);
-    $servicefetch->execute();
-    $flightTypesResult = $servicefetch->get_result();
-    while ($row = $flightTypesResult->fetch_assoc()) {
-        $flightTypes[] = $row;
+    $fillemail2->bind_param("i", $userid);
+    $fillemail2->execute();
+    $emailResult = $fillemail2->get_result()->fetch_assoc();
+    $email = $emailResult['email'] ?? '';
+
+    // Fetch flight types for the service
+    $flightTypes = [];
+    if ($serviceId > 0) {
+        $servicefetch = $connect->prepare("SELECT id, flight_type_name, price FROM service_flight_types WHERE service_id = ? ORDER BY price ASC");
+        if (!$servicefetch) {
+            die("Prepare failed: " . $connect->error);
+        }
+        $servicefetch->bind_param("i", $serviceId);
+        $servicefetch->execute();
+        $flightTypesResult = $servicefetch->get_result();
+        while ($row = $flightTypesResult->fetch_assoc()) {
+            $flightTypes[] = $row;
+        }
     }
-}
 ?>
-<link rel="stylesheet" href="Web/css/booking_p.css" />
+<link rel="stylesheet" href="Web/css/booking_P.css?v=1.0" />
 
 <body style="background: #fff; min-height: 100vh">
     <div class="main-wrap">
@@ -230,12 +227,9 @@ if ($serviceId > 0) {
 
             flightNameDisplay.textContent = flightName;
             flightPriceDisplay.textContent = 'Rs. ' + price;
-           // Store in session for later use
-            priceInput.value = price;// NEW: set hidden input value
             priceDisplay.style.display = 'block';
         } else {
             priceDisplay.style.display = 'none';
-              priceInput.value = '';
         }
     });
 
@@ -269,22 +263,11 @@ if ($serviceId > 0) {
             }
 
             if (result.success) {
-                
                 document.getElementById('successMessage').textContent =
                     `Booking confirmed! Your booking number is: ${result.booking_no}`;
-                    
                 document.getElementById('mainBookingSuccess').style.display = 'flex';
                 document.getElementById('mainBookingError').style.display = 'none';
-                window.location.href = "Web/php/esewa.php";
 
-                // setTimeout(() => {
-                //     document.getElementById('mainBookingSuccess').style.display = 'none';
-                //     formElement.reset();
-                //     formElement.querySelector('.main-submit-btn').style.display = '';
-                //     formElement.querySelector('.main-submit-btn').disabled = false;
-                //     formElement.querySelector('.main-submit-btn').textContent = 'Book Now';
-                //     document.getElementById('priceDisplay').style.display = 'none';
-                //  }, 3000);
                 // Fetch the latest notification for the current user
                 fetch('Web/php/AJAX/bookingNotificationAPI.php?action=recent&limit=1')
                     .then(res => res.json())
@@ -474,6 +457,7 @@ if ($serviceId > 0) {
     cursor: pointer;
     "></div>
 
+    <script src="Web/scripts/booking_P.js?v=1.0"></script>
 </body>
 
 <?php
