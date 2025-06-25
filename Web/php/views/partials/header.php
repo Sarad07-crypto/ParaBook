@@ -11,7 +11,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title></title>
-    <link rel="stylesheet" href="Web/css/style.css?v=1.0" />
     <link rel="stylesheet" href="Web/css/notification.css?v=1.0" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 </head>
@@ -84,7 +83,7 @@
                     <a href="#"><i class="fas fa-envelope"></i></a>
                     <a href="#"><i class="fas fa-heart"></i></a>
                     <a href="#"><i class="fas fa-headphones"></i></a>
-                    <a href="">Complete your profile</a>
+                    <a class="complete-profile" href="/completeProfile">Complete your profile</a>
                     <div class="avatar-dropdown">
                         <div class="avatar" onclick="toggleDropdown()">
                             <img src="<?php echo $avatar ?>" alt="image not found"
@@ -100,7 +99,7 @@
                             <a href="/settings"><i class="fa fa-cog"></i> Settings</a>
                             <a href="/help"><i class="fa fa-question-circle"></i> Help & Support</a>
                             <form action="/logout" method="post">
-                                <button type="submit" class="logout-btn"><i class="fa fa-sign-out"></i> Log Out</button>
+                                <button type="submit" class="logout-btn"><i class="fa fa-sign-out"></i> Log out</button>
                             </form>
                         </div>
                     </div>
@@ -108,7 +107,6 @@
             </div>
         </div>
     </header>
-
 
     <!-- <script src="Web/scripts/views.js?v=1.0"></script> -->
     <script src="Web/scripts/notification.js?v=1.0"></script>

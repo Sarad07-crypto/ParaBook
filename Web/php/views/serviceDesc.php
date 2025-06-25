@@ -1,5 +1,4 @@
 <?php
-    session_start();
     require 'avatar.php';
     require 'Web/php/connection.php';
 

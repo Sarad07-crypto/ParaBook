@@ -1,7 +1,12 @@
 <?php
-    require_once ROOT_PATH . '\Parabook\Web\php\google\g-config.php';
-    require_once ROOT_PATH . '\Parabook\Web\php\facebook\f-config.php';
-    require_once ROOT_PATH . '\Parabook\Web\php\google\core\controller.class.php';
+    require 'avatar.php';
+    require('partials/header.php');
+    $accType = $_SESSION['acc_type'] ?? 'passenger';
+    if ($accType === 'company') {
+        require('partials/nav_C.php');
+    } else {
+        require('partials/nav_P.php');
+    }
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -9,18 +14,59 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Signup</title>
+    <title>Complete Profile</title>
     <link rel="stylesheet" href="/Web/css/signup.css" />
     <!-- Boxicons CSS -->
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
+<style>
+body {
+    background-color: white;
+}
+
+.profile-image-wrapper {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.profile-image-preview {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 2px solid #ddd;
+    object-fit: cover;
+    margin-bottom: 10px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.profile-image-input {
+    display: none;
+}
+
+.profile-image-label {
+    cursor: pointer;
+    padding: 8px 16px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 4px;
+    display: inline-block;
+    font-size: 14px;
+}
+
+.profile-image-label:hover {
+    background-color: #0056b3;
+}
+</style>
 
 <body>
     <div class="container">
         <div class="signup-wrapper">
             <div class="signup-form">
-                <p>Create an account</p>
-                <form class="form" method="post" action="/signcheck">
+                <p>Complete your profile</p>
+                <form class="form" id="profileForm" enctype="multipart/form-data">
                     <div class="input-box-wrapper">
                         <div class="input-box">
                             <input type="text" minlength="2" name="firstName" id="firstName" placeholder="First Name"
@@ -45,7 +91,7 @@
                     </div>
                     <div class="input-box-wrapper">
                         <div class="input-box">
-                            <input type="text" name="email" placeholder="Email"
+                            <input type="text" name="email" id="email" placeholder="Email"
                                 pattern="^[^\s@]{3,}@[^\s@]{3,}\.[^\s@]{2,}$" required />
                             <span class="error-icon">
                                 <i class='bx bx-error-circle'></i>
@@ -55,22 +101,8 @@
                             </span>
                         </div>
                         <div class="input-box">
-                            <input type="text" name="contact" placeholder="Contact No." pattern="^9\d9}$" required />
-                            <span class="error-icon">
-                                <i class='bx bx-error-circle'></i>
-                            </span>
-                            <span class="check-icon">
-                                <i class='bx bx-check-circle'></i>
-                            </span>
-                        </div>
-                    </div>
-                    <div class="input-box-wrapper">
-                        <div class="input-box">
-
-                            <input type="password" name="password" placeholder="Password" id="password" class="pwd"
-                                pattern="^(?!.*\\s)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$&!.])[A-Za-z\d@$&!.]{8,}$"
+                            <input type="text" name="contact" id="contact" placeholder="Contact No." pattern="^98\d{8}$"
                                 required />
-
                             <span class="error-icon">
                                 <i class='bx bx-error-circle'></i>
                             </span>
@@ -78,26 +110,10 @@
                                 <i class='bx bx-check-circle'></i>
                             </span>
                         </div>
-                        <div class="input-box">
-                            <input type="password" name="confirmPassword" placeholder="Confirm Password" class="pwd"
-                                match="password" required />
-                            <i class="bx bx-hide eye-icon"></i>
-                        </div>
-                    </div>
-                    <div class="error-message-wrapper">
-                        <span class="password-requirements">
-                            <ul>
-                                <li class="pwd-rqm-li">At least 8 characters</li>
-                                <li class="pwd-rqm-li">At least 1 special character (@$&!.)</li>
-                                <li class="pwd-rqm-li">At least 1 number</li>
-                                <li class="pwd-rqm-li">At least 1 uppercase and 1 lowercase letter</li>
-                            </ul>
-                        </span>
-                        <span class="error-message">Password didn't match</span>
                     </div>
 
                     <div class="input-box">
-                        <input type="date" name="DOB" date-validation required />
+                        <input type="date" name="DOB" id="dob" date-validation required />
 
                         <select id="country" name="country" required>
 
@@ -353,82 +369,54 @@
 
                         </select>
                     </div>
-                    <div class="check-box">
+
+                    <div style="margin-top:20px;" class="check-box">
                         <div class="check-box-col">
-
-                            <div class="usertype-wrapper">
-                                <label>Are you a:</label>
-                            </div>
-                            <div class="usertype-wrapper" style="margin-left:10px;">
-                                <div class="usertype">
-                                    <label class="user-second-margin"><input type="radio" name="userType"
-                                            value="passenger" required radio-group />
-                                        Passenger</label>
-                                </div>
-                                <div class="usertype">
-                                    <label class="user-second-margin"><input type="radio" name="userType"
-                                            value="company" required radio-group />
-
-                                        Company</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="check-box-col">
-
                             <div class="usertype-wrapper">
                                 <label>Gender:</label>
                             </div>
                             <div class="usertype-wrapper" style="margin-left:10px;">
                                 <div class="usertype">
-                                    <label class="user-second-margin"><input type="radio" name="gender" value="Male"
-                                            required radio-group />
-                                        Male</label>
+                                    <label class="user-second-margin">
+                                        <input type="radio" name="gender" id="genderMale" value="Male" required
+                                            radio-group />
+                                        Male
+                                    </label>
                                 </div>
                                 <div class="usertype">
-                                    <label class="user-second-margin"><input type="radio" name="gender" value="Female"
-                                            required radio-group />Female</label>
+                                    <label class="user-second-margin">
+                                        <input type="radio" name="gender" id="genderFemale" value="Female" required
+                                            radio-group />
+                                        Female
+                                    </label>
                                 </div>
                             </div>
-
                         </div>
                     </div>
-                    <div class="submit-box">
-                        <input type="submit" value="Sign up" />
+
+                    <!-- Profile Picture Upload Section -->
+                    <div class="profile-image-wrapper">
+                        <img id="profileImagePreview" class="profile-image-preview" src="/Web/images/default-avatar.png"
+                            alt="Profile Picture" />
+                        <input type="file" id="profileImage" name="profileImage" class="profile-image-input"
+                            accept="image/*" />
+                        <label for="profileImage" class="profile-image-label">
+                            <i class='bx bx-camera'></i> Choose Profile Picture
+                        </label>
+                    </div>
+
+                    <div style="margin-bottom:50px; margin-top:25px;" class="submit-box">
+                        <input type="submit" value="Submit" />
                     </div>
                 </form>
-                <div class="separator">
-                    <span>or continue with</span>
-                </div>
-                <div class="alt-signup">
-                    <a href="/auth/google?provider=google" class="google-btn">Google</a>
-                    <a href="<?php echo $fullURL ?>" class="facebook-btn">Facebook</a>
-                </div>
-                <div class="have-account">
-                    <p>Already have an account?</p>
-                    <a href="/">Log in</a>
-                </div>
             </div>
         </div>
     </div>
-    <footer>
-        <div class="foot-para">
-            <p>
-                ParaBook is a platform that connects paragliding companies with
-                passengers, offering a remote booking experience. It empowers
-                passengers with the flexibility to compare and choose the best
-                paragliding company based on their preferences, while enabling service
-                providers to showcase their offerings and reach a wider audience
-                efficiently.
-            </p>
 
-            <p style="margin-top: 10px">© All copyright reserved by ParaBook</p>
-        </div>
-        <div class="foot-img">
-            <img src="/Assets/Icons/cloud-01.png" />
-        </div>
-    </footer>
+    <script src="Web/scripts/signup.js"></script>
+    <script src="Web/scripts/completeProfile.js"></script>
 
-    <script src="/Web/scripts/signup.js"></script>
+    <?php require 'partials/footer.php'; ?>
 </body>
 
 </html>

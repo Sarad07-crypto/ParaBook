@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once __DIR__ . '/../connection.php';
+require 'Web/php/connection.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
@@ -26,8 +26,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (password_verify($password, $user['password'])) {
             $userId = $user['id'];
+            
+            // Set consistent session variables
             $_SESSION['Email'] = $email;
             $_SESSION['user_id'] = $userId;
+            $_SESSION['login_type'] = 'form'; // Add this to identify login type
 
             $verifyStmt = $connect->prepare("SELECT * FROM users_verify WHERE user_id = ? AND is_verified = 0");
             $verifyStmt->bind_param("i", $userId);
@@ -40,13 +43,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $infoStmt = $connect->prepare("SELECT firstName, lastName, avatar, acc_type FROM users_info WHERE user_id = ?");
                 $infoStmt->bind_param("i", $userId);
                 $infoStmt->execute();
-                $userInfo = $infoStmt->get_result()->fetch_assoc();
-
-                $_SESSION['firstName'] = $userInfo['firstName'];
-                $_SESSION['lastName'] = $userInfo['lastName'];
-                $_SESSION['avatar'] = $userInfo['avatar'];
-                $_SESSION['acc_type'] = $userInfo['acc_type'];
-                $_SESSION['user_id'] = $userId;
+                $userInfoResult = $infoStmt->get_result();
+                
+                if ($userInfoResult->num_rows > 0) {
+                    $userInfo = $userInfoResult->fetch_assoc();
+                    
+                    $_SESSION['firstName'] = $userInfo['firstName'] ?? 'User';
+                    $_SESSION['lastName'] = $userInfo['lastName'] ?? '';
+                    $_SESSION['avatar'] = $userInfo['avatar'] ?? 'default-avatar.png';
+                    $_SESSION['acc_type'] = $userInfo['acc_type'];
+                } else {
+                    // Set default values if no user info found
+                    $_SESSION['firstName'] = 'User';
+                    $_SESSION['lastName'] = '';
+                    $_SESSION['avatar'] = 'default-avatar.png';
+                    $_SESSION['acc_type'] = 'regular';
+                }
         
                 $session = bin2hex(random_bytes(16));
                 // Update session
@@ -66,7 +78,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 setcookie("session", $session, time() + 60 * 60 * 24 * 30, "/", NULL);
 
                 echo "<script>alert('You are already verified 😊'); window.location.href='/home';</script>";
-
             }
         } else {
             echo "<script>alert('Invalid email or password.'); window.location.href='/login';</script>";

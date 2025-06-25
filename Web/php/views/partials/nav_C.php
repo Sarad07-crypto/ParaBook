@@ -42,11 +42,6 @@ body {
             <a href="#">Revenue</a>
         </div>
         <div class="sidebar-section">
-            <a href="#" style="text-decoration: none;">Notifications</a><br>
-            <a href="#" style="text-decoration: none;">Messages</a><br>
-            <a href="#" style="text-decoration: none;">Reports</a><br>
-            <a href="#" style="text-decoration: none;">Support</a>
-            <span class="switch-text">Company Dashboard</span>
             <button class="logout-btn" onclick="window.location.href='/logout'">Log out</button>
         </div>
     </div>
