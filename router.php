@@ -13,7 +13,11 @@ const LOG_SIGN =  'Web/php/login_signup';
 const PHP = 'Web/php/';
 
 $routes = [
+    
+    //admin
+    '/admin' => PHP . 'ADMIN/Admin.php',
 
+    // login and signup
     '/' => LOG_SIGN . '/login.php',
     '/login' => LOG_SIGN . '/login.php',
     '/logincheck' => LOG_SIGN . '/loginCheck.php',
@@ -22,16 +26,15 @@ $routes = [
     '/verify' => LOG_SIGN . '/verify.php',
     '/logout' => LOG_SIGN . '/logout.php',
    
-    
+    // home, google and facebook
     '/home' => PHP . 'views/home.php',
     '/auth/google' => PHP . 'google/auth_provider.php',
     '/google/callback' => PHP . 'google/controller.php',
     '/facebook/callback' => PHP . 'facebook/f-callback.php',
 
+    // service and account selection
     '/servicePost' => PHP . 'formDatabase/serviceForm.data.php',
-
     '/accountSelection' => PHP . 'views/accountSelection.php',
-
     '/serviceDescription' => PHP . 'views/serviceDesc.php',
 
     // for booking
@@ -40,8 +43,9 @@ $routes = [
 
     // for statistics
     '/statistics' => PHP . 'views/statistics.php',
-    '/header' => PHP . 'views/partials/header.php',
-    '/nav' => PHP . 'views/partials/nav_C.php',
+
+    '/completeProfile' => PHP . 'views/complete.profile.php',
+    
 ];
 
 function routeToController($uri, $routes) {
