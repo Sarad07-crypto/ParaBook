@@ -22,11 +22,7 @@ body {
 
 
     <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
-    <div class="hamburger" onclick="openSidebar()">
-        <span></span>
-        <span></span>
-        <span></span>
-    </div>
+   
 
     <div class="sidebar" id="sidebar">
         <button class="close-btn" onclick="closeSidebar()">&times;</button>
