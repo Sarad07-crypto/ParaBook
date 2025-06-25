@@ -27,8 +27,8 @@
                 <div class="control-group">
                     <label for="statusFilter">📊 Filter by Status</label>
                     <select id="statusFilter" onchange="filterBookings()">
-                        <option value="">All Statuses</option>
-                        <option value="confirmed">Confirmed</option>
+                        <option value="">All Status</option>
+                        <option value="confirmed">confirmed</option>
                         <option value="pending">Pending</option>
                         <option value="cancelled">Cancelled</option>
                     </select>
@@ -52,7 +52,7 @@
             </div>
             <div class="stat-card">
                 <div class="stat-number" id="confirmedBookings">0</div>
-                <div class="stat-label">Confirmed</div>
+                <div class="stat-label">confirmed</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number" id="pendingBookings">0</div>
@@ -178,7 +178,7 @@
             // Determine status class and button
             const statusClass = booking.status === 'confirmed' ? 'status-confirmed' : 'status-pending';
             const statusButton = booking.status === 'confirmed' ?
-                '<span style="color: green;">✓ Completed</span>' :
+                '<span style="color: green;">✓ confirmed</span>' :
                 `<button class="complete-btn" onclick="completeBooking(${booking.booking_id})" data-booking-id="${booking.booking_id}">Complete</button>`;
 
             const row = `
@@ -238,7 +238,7 @@
                     fetchData();
 
                     // Show success message
-                    showSuccessMessage("Booking completed successfully!");
+                    showSuccessMessage("Booking confirmed successfully!");
                 } else {
                     console.error("Failed to complete booking:", response.message);
                     showError(response.message || "Failed to complete booking");
@@ -268,7 +268,7 @@
 
         // Update action cell
         const actionCell = row.find('.action-cell');
-        actionCell.html('<span style="color: green;">✓ Completed</span>');
+        actionCell.html('<span style="color: green;">✓ confirmed</span>');
     }
 
     function displayStatistics(stats) {
