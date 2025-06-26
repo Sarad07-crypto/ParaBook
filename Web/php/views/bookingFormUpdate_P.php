@@ -1,19 +1,30 @@
 <?php
+    
+    if (session_status() == PHP_SESSION_NONE) {
+        session_start();
+    }
+    
     require 'avatar.php';
     require 'partials/header.php';
     require 'partials/nav_P.php';
     include "Web/php/connection.php";
-    session_start();
     
-    $userid = $_SESSION['user_id'];
-    $serviceId = $_SESSION['service_id'] ?? 0;
-
-    // Check if user is logged in
+    // Check if user is logged in first
     if (!isset($_SESSION['user_id'])) {
         header('Location: /login');
         exit();
     }
-
+    
+    $userid = $_SESSION['user_id'];
+    $serviceId = $_SESSION['service_id'] ?? 0;
+    
+    // Debug and validate service_id
+    if ($serviceId == 0) {
+        error_log("Error: No service_id found in session for user: " . $userid);
+        // Redirect to service selection or show error
+        header('Location: /services?error=no_service_selected');
+        exit();
+    }
 
     // Get booking No from URL parameter
     $booking_no = isset($_GET['booking_no']) ? $_GET['booking_no'] : '';
@@ -22,7 +33,6 @@
         echo "<script>alert('Invalid booking number.'); window.history.back();</script>";
         exit();
     }
-
 
     // Fetch booking data with ownership verification
     $bookingStmt = $connect->prepare("SELECT * FROM bookings WHERE booking_no = ? AND user_id = ?");
@@ -323,9 +333,14 @@
 
                         // Optionally redirect after a delay
                         setTimeout(function() {
+                            <?php if (isset($serviceId) && !empty($serviceId)): ?>
                             window.location.href =
-                                '/serviceDescription';
-                        }, 2000);
+                                '/serviceDescription?service_id=' +
+                                <?= json_encode($serviceId) ?>;
+                            <?php else: ?>
+                            window.location.href = '/serviceDescription';
+                            <?php endif; ?>
+                        }, 1000);
                     } else {
                         $('#errorMessage').text(response.message ||
                             'An error occurred. Please try again.');

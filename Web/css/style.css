@@ -126,9 +126,6 @@ body {
   padding: 10px 0;
   position: relative;
   color: white;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 8px 0;
 }
 
 .nav-bar a {
@@ -138,6 +135,7 @@ body {
   font-weight: 500;
   font-size: var(--nav-link-font-size);
   margin: 6px 0;
+  padding: 0 20px;
 }
 
 .nav-bar a:hover {

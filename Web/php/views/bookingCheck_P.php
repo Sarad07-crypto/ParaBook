@@ -1,26 +1,32 @@
-    <?php
-        require 'avatar.php';
-        require('partials/header.php');
-        $accType = $_SESSION['acc_type'] ?? 'passenger';
-        if ($accType === 'company') {
-            require('partials/nav_C.php');
-        } else {
-            require('partials/nav_P.php');
-        }
-        
-        $serviceId = $_SESSION['service_id'] ?? 0;
-    ?>
-    <!DOCTYPE html>
-    <html lang="en">
+<?php
+    // Ensure session is started
+    if (session_status() == PHP_SESSION_NONE) {
+        session_start();
+    }
+    
+    require 'avatar.php';
+    require('partials/header.php');
+    
+    $accType = $_SESSION['acc_type'] ?? 'passenger';
+    if ($accType === 'company') {
+        require('partials/nav_C.php');
+    } else {
+        require('partials/nav_P.php');
+    }
+    
+    $serviceId = $_SESSION['service_id'] ?? 0;
+?>
+<!DOCTYPE html>
+<html lang="en">
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Booking Lookup</title>
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    </head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Lookup</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
 
-    <style>
+<style>
 :root {
     --primary-color: #007bff;
     --gradient: linear-gradient(90deg, #1e90ff, #0056b3);
@@ -530,566 +536,565 @@ body {
         gap: 10px;
     }
 }
-    </style>
+</style>
 
-    <body>
-        <div class="container">
-            <div class="booking-lookup-card">
-                <div class="card-header">
-                    <h1>✈️ Find Your Booking</h1>
-                    <p>Enter your details to view and manage your reservation</p>
+<body>
+    <div class="container">
+        <div class="booking-lookup-card">
+            <div class="card-header">
+                <h1>✈️ Find Your Booking</h1>
+                <p>Enter your details to view and manage your reservation</p>
+            </div>
+
+            <div class="card-body">
+                <div class="info-section">
+                    <h3>🔍 How to Find Your Booking</h3>
+                    <p>Enter your booking number exactly as provided during your reservation. Your
+                        booking details will be displayed instantly.</p>
                 </div>
 
-                <div class="card-body">
-                    <div class="info-section">
-                        <h3>🔍 How to Find Your Booking</h3>
-                        <p>Enter your booking number exactly as provided during your reservation. Your
-                            booking details will be displayed instantly.</p>
+                <div id="errorMessage" class="error-message"></div>
+                <div id="successMessage" class="success-message"></div>
+                <div id="debugInfo" class="debug-info">
+                    <h4>Debug Information:</h4>
+                    <pre id="debugContent"></pre>
+                </div>
+
+                <form id="bookingLookupForm">
+                    <div class="form-group">
+                        <label for="bookingNumber">Booking Number *</label>
+                        <input type="text" id="bookingNumber" placeholder="e.g., BK-1234ABCD" maxlength="20" required />
                     </div>
 
-                    <div id="errorMessage" class="error-message"></div>
-                    <div id="successMessage" class="success-message"></div>
-                    <div id="debugInfo" class="debug-info">
-                        <h4>Debug Information:</h4>
-                        <pre id="debugContent"></pre>
+                    <div class="form-group">
+                        <label for="dateOfBirth">Date of Birth *</label>
+                        <input type="date" id="dateOfBirth" required />
                     </div>
 
-                    <form id="bookingLookupForm">
-                        <div class="form-group">
-                            <label for="bookingNumber">Booking Number *</label>
-                            <input type="text" id="bookingNumber" placeholder="e.g., BK-123456789" maxlength="20"
-                                required />
-                        </div>
+                    <button type="submit" class="lookup-btn" id="lookupBtn">
+                        <span id="btnText">🔍 Find My Booking</span>
+                        <div id="loadingSpinner" class="loading-spinner" style="display: none;"></div>
+                    </button>
+                </form>
 
-                        <div class="form-group">
-                            <label for="dateOfBirth">Date of Birth *</label>
-                            <input type="date" id="dateOfBirth" required />
-                        </div>
-
-                        <button type="submit" class="lookup-btn" id="lookupBtn">
-                            <span id="btnText">🔍 Find My Booking</span>
-                            <div id="loadingSpinner" class="loading-spinner" style="display: none;"></div>
-                        </button>
-                    </form>
-
-                    <div id="bookingResult" class="booking-result">
-                        <div class="booking-header">
-                            <h2>Booking Found!</h2>
-                            <div class="booking-id" id="foundBookingId"></div>
-                        </div>
-
-                        <div class="booking-details">
-                            <!-- Personal Information Section -->
-                            <div class="detail-item">
-                                <label>Full Name</label>
-                                <span id="passengerName"></span>
-                            </div>
-                            <div class="detail-item">
-                                <label>Gender</label>
-                                <span id="gender"></span>
-                            </div>
-                            <div class="detail-item">
-                                <label>Contact Number</label>
-                                <span id="contact"></span>
-                            </div>
-                            <div class="detail-item">
-                                <label>Country</label>
-                                <span id="country"></span>
-                            </div>
-                            <div class="detail-item">
-                                <label>Email</label>
-                                <span id="email"></span>
-                            </div>
-
-                            <!-- Flight Information Section -->
-                            <div class="detail-item">
-                                <label>Flight Date</label>
-                                <span id="flightDate"></span>
-                            </div>
-                            <div class="detail-item">
-                                <label>Pickup Location</label>
-                                <span id="pickupLocation"></span>
-                            </div>
-                            <div class="detail-item">
-                                <label>Flight Type</label>
-                                <span id="flightType"></span>
-                            </div>
-                            <div class="detail-item">
-                                <label>Weight (kg)</label>
-                                <span id="weight"></span>
-                            </div>
-                            <div class="detail-item">
-                                <label>Age</label>
-                                <span id="age"></span>
-                            </div>
-                            <div class="detail-item">
-                                <label>Medical Condition</label>
-                                <span id="medicalCondition"></span>
-                            </div>
-                        </div>
-
-                        <div class="status-badge" id="bookingStatus"></div>
-
-                        <div class="action-buttons">
-                            <button class="new-search-btn update-btn" onclick="editBooking()" id="editBtn">✏️ Update
-                                Booking</button>
-                            <button class="new-search-btn" onclick="newSearch()">🔍 Search Another Booking</button>
-                        </div>
-
+                <div id="bookingResult" class="booking-result">
+                    <div class="booking-header">
+                        <h2>Booking Found!</h2>
+                        <div class="booking-id" id="foundBookingId"></div>
                     </div>
+
+                    <div class="booking-details">
+                        <!-- Personal Information Section -->
+                        <div class="detail-item">
+                            <label>Full Name</label>
+                            <span id="passengerName"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Gender</label>
+                            <span id="gender"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Contact Number</label>
+                            <span id="contact"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Country</label>
+                            <span id="country"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Email</label>
+                            <span id="email"></span>
+                        </div>
+
+                        <!-- Flight Information Section -->
+                        <div class="detail-item">
+                            <label>Flight Date</label>
+                            <span id="flightDate"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Pickup Location</label>
+                            <span id="pickupLocation"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Flight Type</label>
+                            <span id="flightType"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Weight (kg)</label>
+                            <span id="weight"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Age</label>
+                            <span id="age"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Medical Condition</label>
+                            <span id="medicalCondition"></span>
+                        </div>
+                    </div>
+
+                    <div class="status-badge" id="bookingStatus"></div>
+
+                    <div class="action-buttons">
+                        <button class="new-search-btn update-btn" onclick="editBooking()" id="editBtn">✏️ Update
+                            Booking</button>
+                        <button class="new-search-btn" onclick="newSearch()">🔍 Search Another Booking</button>
+                    </div>
+
                 </div>
             </div>
         </div>
-        <script>
-        $(document).ready(function() {
-            // Cache jQuery selectors for better performance
-            const $form = $('#bookingLookupForm');
-            const $bookingResult = $('#bookingResult');
-            const $errorMessage = $('#errorMessage');
-            const $successMessage = $('#successMessage');
-            const $debugInfo = $('#debugInfo');
-            const $debugContent = $('#debugContent');
-            const $loadingSpinner = $('#loadingSpinner');
-            const $btnText = $('#btnText');
-            const $lookupBtn = $('#lookupBtn');
+    </div>
+    <script>
+    $(document).ready(function() {
+        // Cache jQuery selectors for better performance
+        const $form = $('#bookingLookupForm');
+        const $bookingResult = $('#bookingResult');
+        const $errorMessage = $('#errorMessage');
+        const $successMessage = $('#successMessage');
+        const $debugInfo = $('#debugInfo');
+        const $debugContent = $('#debugContent');
+        const $loadingSpinner = $('#loadingSpinner');
+        const $btnText = $('#btnText');
+        const $lookupBtn = $('#lookupBtn');
 
-            // Debug mode toggle
-            let debugMode = false;
+        // Debug mode toggle
+        let debugMode = false;
 
-            // Check if user is logged in on page load
-            checkUserAuthentication();
+        // Check if user is logged in on page load
+        checkUserAuthentication();
 
-            // Form submission handler
-            $form.on('submit', function(e) {
-                e.preventDefault();
-                searchBooking();
+        // Form submission handler
+        $form.on('submit', function(e) {
+            e.preventDefault();
+            searchBooking();
+        });
+
+        function checkUserAuthentication() {
+            // Check if user is logged in
+            $.ajax({
+                url: 'Web/php/AJAX/checkAuth.php',
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (!response.authenticated) {
+                        showError('Please log in to view your bookings.');
+                        $form.hide();
+                        // Optionally redirect to login page
+                        // window.location.href = '/login';
+                    }
+                },
+                error: function() {
+                    showError('Unable to verify authentication. Please refresh the page.');
+                }
             });
+        }
 
-            function checkUserAuthentication() {
-                // Check if user is logged in
-                $.ajax({
-                    url: 'Web/php/AJAX/checkAuth.php',
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function(response) {
-                        if (!response.authenticated) {
-                            showError('Please log in to view your bookings.');
-                            $form.hide();
-                            // Optionally redirect to login page
-                            // window.location.href = '/login';
-                        }
-                    },
-                    error: function() {
-                        showError('Unable to verify authentication. Please refresh the page.');
-                    }
+        function searchBooking() {
+            const bookingNumber = $('#bookingNumber').val().trim();
+            const dateOfBirth = $('#dateOfBirth').val();
+
+            // Hide previous messages
+            hideMessages();
+
+            // Validation
+            if (!bookingNumber || !dateOfBirth) {
+                showError('Please fill in all required fields.');
+                return;
+            }
+
+            // Show loading state
+            showLoading(true);
+
+            if (debugMode) {
+                logDebug('Starting booking search', {
+                    bookingNumber: bookingNumber,
+                    dateOfBirth: dateOfBirth,
+                    ajaxUrl: 'Web/php/AJAX/bookingLookup.php'
                 });
             }
 
-            function searchBooking() {
-                const bookingNumber = $('#bookingNumber').val().trim();
-                const dateOfBirth = $('#dateOfBirth').val();
+            // jQuery AJAX request with user authentication
+            $.ajax({
+                url: 'Web/php/AJAX/bookingLookup.php',
+                type: 'POST',
+                data: {
+                    booking_number: bookingNumber,
+                    date_of_birth: dateOfBirth,
+                    // Include a flag to verify user ownership
+                    verify_user_ownership: true
+                },
+                dataType: 'json',
+                timeout: 10000, // 10 second timeout
+                success: function(response, textStatus, xhr) {
+                    showLoading(false);
 
-                // Hide previous messages
-                hideMessages();
+                    if (debugMode) {
+                        logDebug('AJAX Success Response', {
+                            response: response,
+                            textStatus: textStatus,
+                            status: xhr.status
+                        });
+                    }
 
-                // Validation
-                if (!bookingNumber || !dateOfBirth) {
-                    showError('Please fill in all required fields.');
-                    return;
-                }
-
-                // Show loading state
-                showLoading(true);
-
-                if (debugMode) {
-                    logDebug('Starting booking search', {
-                        bookingNumber: bookingNumber,
-                        dateOfBirth: dateOfBirth,
-                        ajaxUrl: 'Web/php/AJAX/bookingLookup.php'
-                    });
-                }
-
-                // jQuery AJAX request with user authentication
-                $.ajax({
-                    url: 'Web/php/AJAX/bookingLookup.php',
-                    type: 'POST',
-                    data: {
-                        booking_number: bookingNumber,
-                        date_of_birth: dateOfBirth,
-                        // Include a flag to verify user ownership
-                        verify_user_ownership: true
-                    },
-                    dataType: 'json',
-                    timeout: 10000, // 10 second timeout
-                    success: function(response, textStatus, xhr) {
-                        showLoading(false);
-
-                        if (debugMode) {
-                            logDebug('AJAX Success Response', {
-                                response: response,
-                                textStatus: textStatus,
-                                status: xhr.status
-                            });
-                        }
-
-                        if (response && response.success) {
-                            if (response.data) {
-                                displayBookingDetails(response.data);
-                                showSuccess('Booking found successfully!');
-                            } else {
-                                showError('Booking data is missing from server response.');
-                                if (debugMode) {
-                                    logDebug('Missing booking data', response);
-                                }
-                            }
+                    if (response && response.success) {
+                        if (response.data) {
+                            displayBookingDetails(response.data);
+                            showSuccess('Booking found successfully!');
                         } else {
-                            // Handle different error scenarios
-                            if (response.error_code === 'UNAUTHORIZED') {
-                                showError('You are not authorized to view this booking.');
-                            } else if (response.error_code === 'NOT_FOUND') {
-                                showError('Booking not found or does not belong to your account.');
-                            } else if (response.error_code === 'NOT_AUTHENTICATED') {
-                                showError('Please log in to view your bookings.');
-                                // Optionally redirect to login
-                                // setTimeout(() => window.location.href = '/login', 2000);
-                            } else {
-                                showError(response.message ||
-                                    'Booking not found. Please check your details.');
-                            }
-
+                            showError('Booking data is missing from server response.');
                             if (debugMode) {
-                                logDebug('Booking lookup failed', response);
+                                logDebug('Missing booking data', response);
                             }
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        showLoading(false);
-
-                        const errorInfo = {
-                            status: status,
-                            error: error,
-                            responseText: xhr.responseText,
-                            statusCode: xhr.status,
-                            readyState: xhr.readyState
-                        };
-
-                        if (debugMode) {
-                            logDebug('AJAX Error', errorInfo);
-                        }
-
-                        console.error('AJAX Error:', errorInfo);
-
-                        // Handle different error types
-                        if (status === 'timeout') {
-                            showError('Request timed out. Please try again.');
-                        } else if (status === 'parsererror') {
-                            showError('Server returned invalid data. Please try again.');
-                            console.error('Response that failed to parse:', xhr.responseText);
-                        } else if (xhr.status === 401) {
-                            showError('Authentication required. Please log in.');
-                        } else if (xhr.status === 403) {
-                            showError('You are not authorized to view this booking.');
-                        } else if (xhr.status === 404) {
-                            showError(
-                                'Service not found. Please check the file path: Web/php/AJAX/bookingLookup.php'
-                            );
-                        } else if (xhr.status === 500) {
-                            showError('Server error. Please check server logs.');
-                        } else if (status === 'error' && xhr.status === 0) {
-                            showError('Network error. Please check your connection and file path.');
-                        } else {
-                            showError(
-                                `An unexpected error occurred. Status: ${status}, Error: ${error}`
-                            );
-                        }
-                    }
-                });
-            }
-
-            function displayBookingDetails(booking) {
-                if (debugMode) {
-                    logDebug('Displaying booking details', booking);
-                }
-
-                // Security check: Verify booking ownership on client side as well
-                if (!booking.user_id || !booking.verified_ownership) {
-                    showError('Security error: Booking ownership could not be verified.');
-                    return;
-                }
-
-                // Check if all required elements exist
-                const requiredElements = [
-                    'foundBookingId', 'passengerName', 'gender', 'contact', 'country', 'email',
-                    'dateOfBirth', 'flightDate', 'pickupLocation', 'flightType', 'weight',
-                    'age', 'medicalCondition', 'bookingStatus', 'editBtn'
-                ];
-
-                const missingElements = requiredElements.filter(id => $(`#${id}`).length === 0);
-
-                if (missingElements.length > 0) {
-                    console.error('Missing HTML elements:', missingElements);
-                    showError(`Page setup error: Missing elements - ${missingElements.join(', ')}`);
-                    return;
-                }
-
-                try {
-                    // Populate booking details using jQuery with safe defaults
-                    $('#foundBookingId').text(booking.booking_no || 'N/A');
-
-                    // Personal Information
-                    $('#passengerName').text(`${booking.firstName || ''} ${booking.lastName || ''}`.trim() ||
-                        'N/A');
-                    $('#gender').text(booking.gender || 'N/A');
-                    $('#contact').text(booking.contact || 'N/A');
-                    $('#country').text(booking.country || 'N/A');
-                    $('#email').text(booking.email || 'N/A');
-
-                    // Flight Information
-                    $('#flightDate').text(booking.date ? formatDate(booking.date) : 'N/A');
-                    $('#pickupLocation').text(booking.pickup || 'N/A');
-                    $('#flightType').text(booking.flight_type || 'N/A');
-                    $('#weight').text(booking.weight ? `${booking.weight} kg` : 'Not specified');
-                    $('#age').text(booking.age || 'N/A');
-                    $('#medicalCondition').text(booking.medical_condition || 'None');
-
-                    // Set status badge
-                    const status = booking.status || 'Unknown';
-                    const $statusBadge = $('#bookingStatus');
-                    $statusBadge.text(status)
-                        .removeClass() // Remove all classes
-                        .addClass(`status-badge status-${status.toLowerCase()}`);
-
-                    // Show/hide/disable action buttons based on status
-                    const $updateBtn = $('.update-btn');
-                    const $cancelBtn = $('#cancelBtn');
-
-                    if (status.toLowerCase() === 'cancelled') {
-                        $updateBtn.hide();
-                        if ($cancelBtn.length) $cancelBtn.hide();
-                    } else if (status.toLowerCase() === 'confirmed') {
-                        // Disable the edit button for confirmed bookings
-                        $updateBtn.prop('disabled', true)
-                            .addClass('disabled')
-                            .attr('title', 'Cannot edit confirmed booking')
-                            .show();
-
-                        // Optionally disable cancel button as well
-                        if ($cancelBtn.length) {
-                            $cancelBtn.prop('disabled', true)
-                                .addClass('disabled')
-                                .attr('title', 'Cannot cancel confirmed booking')
-                                .show();
                         }
                     } else {
-                        // Enable buttons for other statuses (pending, etc.)
-                        $updateBtn.prop('disabled', false)
+                        // Handle different error scenarios
+                        if (response.error_code === 'UNAUTHORIZED') {
+                            showError('You are not authorized to view this booking.');
+                        } else if (response.error_code === 'NOT_FOUND') {
+                            showError('Booking not found or does not belong to your account.');
+                        } else if (response.error_code === 'NOT_AUTHENTICATED') {
+                            showError('Please log in to view your bookings.');
+                            // Optionally redirect to login
+                            // setTimeout(() => window.location.href = '/login', 2000);
+                        } else {
+                            showError(response.message ||
+                                'Booking not found. Please check your details.');
+                        }
+
+                        if (debugMode) {
+                            logDebug('Booking lookup failed', response);
+                        }
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showLoading(false);
+
+                    const errorInfo = {
+                        status: status,
+                        error: error,
+                        responseText: xhr.responseText,
+                        statusCode: xhr.status,
+                        readyState: xhr.readyState
+                    };
+
+                    if (debugMode) {
+                        logDebug('AJAX Error', errorInfo);
+                    }
+
+                    console.error('AJAX Error:', errorInfo);
+
+                    // Handle different error types
+                    if (status === 'timeout') {
+                        showError('Request timed out. Please try again.');
+                    } else if (status === 'parsererror') {
+                        showError('Server returned invalid data. Please try again.');
+                        console.error('Response that failed to parse:', xhr.responseText);
+                    } else if (xhr.status === 401) {
+                        showError('Authentication required. Please log in.');
+                    } else if (xhr.status === 403) {
+                        showError('You are not authorized to view this booking.');
+                    } else if (xhr.status === 404) {
+                        showError(
+                            'Service not found. Please check the file path: Web/php/AJAX/bookingLookup.php'
+                        );
+                    } else if (xhr.status === 500) {
+                        showError('Server error. Please check server logs.');
+                    } else if (status === 'error' && xhr.status === 0) {
+                        showError('Network error. Please check your connection and file path.');
+                    } else {
+                        showError(
+                            `An unexpected error occurred. Status: ${status}, Error: ${error}`
+                        );
+                    }
+                }
+            });
+        }
+
+        function displayBookingDetails(booking) {
+            if (debugMode) {
+                logDebug('Displaying booking details', booking);
+            }
+
+            // Security check: Verify booking ownership on client side as well
+            if (!booking.user_id || !booking.verified_ownership) {
+                showError('Security error: Booking ownership could not be verified.');
+                return;
+            }
+
+            // Check if all required elements exist
+            const requiredElements = [
+                'foundBookingId', 'passengerName', 'gender', 'contact', 'country', 'email',
+                'dateOfBirth', 'flightDate', 'pickupLocation', 'flightType', 'weight',
+                'age', 'medicalCondition', 'bookingStatus', 'editBtn'
+            ];
+
+            const missingElements = requiredElements.filter(id => $(`#${id}`).length === 0);
+
+            if (missingElements.length > 0) {
+                console.error('Missing HTML elements:', missingElements);
+                showError(`Page setup error: Missing elements - ${missingElements.join(', ')}`);
+                return;
+            }
+
+            try {
+                // Populate booking details using jQuery with safe defaults
+                $('#foundBookingId').text(booking.booking_no || 'N/A');
+
+                // Personal Information
+                $('#passengerName').text(`${booking.firstName || ''} ${booking.lastName || ''}`.trim() ||
+                    'N/A');
+                $('#gender').text(booking.gender || 'N/A');
+                $('#contact').text(booking.contact || 'N/A');
+                $('#country').text(booking.country || 'N/A');
+                $('#email').text(booking.email || 'N/A');
+
+                // Flight Information
+                $('#flightDate').text(booking.date ? formatDate(booking.date) : 'N/A');
+                $('#pickupLocation').text(booking.pickup || 'N/A');
+                $('#flightType').text(booking.flight_type || 'N/A');
+                $('#weight').text(booking.weight ? `${booking.weight} kg` : 'Not specified');
+                $('#age').text(booking.age || 'N/A');
+                $('#medicalCondition').text(booking.medical_condition || 'None');
+
+                // Set status badge
+                const status = booking.status || 'Unknown';
+                const $statusBadge = $('#bookingStatus');
+                $statusBadge.text(status)
+                    .removeClass() // Remove all classes
+                    .addClass(`status-badge status-${status.toLowerCase()}`);
+
+                // Show/hide/disable action buttons based on status
+                const $updateBtn = $('.update-btn');
+                const $cancelBtn = $('#cancelBtn');
+
+                if (status.toLowerCase() === 'cancelled') {
+                    $updateBtn.hide();
+                    if ($cancelBtn.length) $cancelBtn.hide();
+                } else if (status.toLowerCase() === 'confirmed') {
+                    // Disable the edit button for confirmed bookings
+                    $updateBtn.prop('disabled', true)
+                        .addClass('disabled')
+                        .attr('title', 'Cannot edit confirmed booking')
+                        .show();
+
+                    // Optionally disable cancel button as well
+                    if ($cancelBtn.length) {
+                        $cancelBtn.prop('disabled', true)
+                            .addClass('disabled')
+                            .attr('title', 'Cannot cancel confirmed booking')
+                            .show();
+                    }
+                } else {
+                    // Enable buttons for other statuses (pending, etc.)
+                    $updateBtn.prop('disabled', false)
+                        .removeClass('disabled')
+                        .removeAttr('title')
+                        .show();
+
+                    if ($cancelBtn.length) {
+                        $cancelBtn.prop('disabled', false)
                             .removeClass('disabled')
                             .removeAttr('title')
                             .show();
+                    }
+                }
 
-                        if ($cancelBtn.length) {
-                            $cancelBtn.prop('disabled', false)
-                                .removeClass('disabled')
-                                .removeAttr('title')
-                                .show();
+                // Show the result with jQuery animation
+                $bookingResult.addClass('show').fadeIn(300);
+
+                // Scroll to result smoothly
+                $('html, body').animate({
+                    scrollTop: $bookingResult.offset().top - 50
+                }, 500);
+
+                if (debugMode) {
+                    logDebug('Booking details displayed successfully');
+                }
+
+            } catch (error) {
+                console.error('Error displaying booking details:', error);
+                showError('Error displaying booking details. Check console for details.');
+                if (debugMode) {
+                    logDebug('Display error', error);
+                }
+            }
+        }
+
+        function showLoading(show) {
+            if (show) {
+                $loadingSpinner.show();
+                $btnText.text('Searching...');
+                $lookupBtn.prop('disabled', true).addClass('loading');
+            } else {
+                $loadingSpinner.hide();
+                $btnText.text('🔍 Find My Booking');
+                $lookupBtn.prop('disabled', false).removeClass('loading');
+            }
+        }
+
+        function showError(message) {
+            $errorMessage.text(message).fadeIn(300);
+            $successMessage.hide();
+            $bookingResult.hide().removeClass('show');
+
+            // Auto-hide error after 15 seconds for better debugging
+            setTimeout(function() {
+                $errorMessage.fadeOut(300);
+            }, 15000);
+        }
+
+        function showSuccess(message) {
+            $successMessage.text(message).fadeIn(300);
+            $errorMessage.hide();
+
+            // Auto-hide success message after 5 seconds
+            setTimeout(function() {
+                $successMessage.fadeOut(300);
+            }, 5000);
+        }
+
+        function hideMessages() {
+            $errorMessage.hide();
+            $successMessage.hide();
+            if (!debugMode) {
+                $debugInfo.hide();
+            }
+        }
+
+        function logDebug(title, data) {
+            if (!debugMode) return;
+
+            const timestamp = new Date().toISOString();
+            const debugText = `[${timestamp}] ${title}\n${JSON.stringify(data, null, 2)}\n\n`;
+
+            $debugContent.text($debugContent.text() + debugText);
+            $debugInfo.show();
+            console.log(title, data);
+        }
+
+        function formatDate(dateString) {
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) {
+                    return dateString; // Return original if invalid
+                }
+                return date.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            } catch (error) {
+                console.error('Date formatting error:', error);
+                return dateString;
+            }
+        }
+
+        // Global functions for action buttons
+        window.editBooking = function() {
+            const bookingNo = $('#foundBookingId')
+                .text();
+            console.log('Editing booking:', bookingNo);
+
+            // Additional security check before editing
+            if (bookingNo && bookingNo !== 'N/A') {
+                // Verify ownership again before editing
+                $.ajax({
+                    url: 'Web/php/AJAX/verifyBookingOwnership.php',
+                    type: 'POST',
+                    data: {
+                        booking_no: bookingNo
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.authorized) {
+                            // Redirect to booking passenger form with booking no
+                            window.location.href = '/bookingpassengerUpdate?booking_no=' +
+                                encodeURIComponent(bookingNo);
+                        } else {
+                            showError('You are not authorized to edit this booking.');
                         }
+                    },
+                    error: function() {
+                        showError('Unable to verify booking ownership.');
                     }
-
-                    // Show the result with jQuery animation
-                    $bookingResult.addClass('show').fadeIn(300);
-
-                    // Scroll to result smoothly
-                    $('html, body').animate({
-                        scrollTop: $bookingResult.offset().top - 50
-                    }, 500);
-
-                    if (debugMode) {
-                        logDebug('Booking details displayed successfully');
-                    }
-
-                } catch (error) {
-                    console.error('Error displaying booking details:', error);
-                    showError('Error displaying booking details. Check console for details.');
-                    if (debugMode) {
-                        logDebug('Display error', error);
-                    }
-                }
+                });
+            } else {
+                showError('Invalid booking number. Cannot edit booking.');
             }
+        };
 
-            function showLoading(show) {
-                if (show) {
-                    $loadingSpinner.show();
-                    $btnText.text('Searching...');
-                    $lookupBtn.prop('disabled', true).addClass('loading');
-                } else {
-                    $loadingSpinner.hide();
-                    $btnText.text('🔍 Find My Booking');
-                    $lookupBtn.prop('disabled', false).removeClass('loading');
-                }
-            }
-
-            function showError(message) {
-                $errorMessage.text(message).fadeIn(300);
-                $successMessage.hide();
-                $bookingResult.hide().removeClass('show');
-
-                // Auto-hide error after 15 seconds for better debugging
-                setTimeout(function() {
-                    $errorMessage.fadeOut(300);
-                }, 15000);
-            }
-
-            function showSuccess(message) {
-                $successMessage.text(message).fadeIn(300);
-                $errorMessage.hide();
-
-                // Auto-hide success message after 5 seconds
-                setTimeout(function() {
-                    $successMessage.fadeOut(300);
-                }, 5000);
-            }
-
-            function hideMessages() {
-                $errorMessage.hide();
-                $successMessage.hide();
-                if (!debugMode) {
-                    $debugInfo.hide();
-                }
-            }
-
-            function logDebug(title, data) {
-                if (!debugMode) return;
-
-                const timestamp = new Date().toISOString();
-                const debugText = `[${timestamp}] ${title}\n${JSON.stringify(data, null, 2)}\n\n`;
-
-                $debugContent.text($debugContent.text() + debugText);
-                $debugInfo.show();
-                console.log(title, data);
-            }
-
-            function formatDate(dateString) {
-                try {
-                    const date = new Date(dateString);
-                    if (isNaN(date.getTime())) {
-                        return dateString; // Return original if invalid
-                    }
-                    return date.toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                    });
-                } catch (error) {
-                    console.error('Date formatting error:', error);
-                    return dateString;
-                }
-            }
-
-            // Global functions for action buttons
-            window.editBooking = function() {
-                const bookingNo = $('#foundBookingId')
-                    .text(); // This should actually be booking_no, not booking_id
-                console.log('Editing booking:', bookingNo);
-
-                // Additional security check before editing
-                if (bookingNo && bookingNo !== 'N/A') {
-                    // Verify ownership again before editing
-                    $.ajax({
-                        url: 'Web/php/AJAX/verifyBookingOwnership.php',
-                        type: 'POST',
-                        data: {
-                            booking_no: bookingNo
-                        },
-                        dataType: 'json',
-                        success: function(response) {
-                            if (response.authorized) {
-                                // Redirect to booking passenger form with booking no
-                                window.location.href = '/bookingpassengerUpdate?booking_no=' +
-                                    encodeURIComponent(bookingNo);
-                            } else {
-                                showError('You are not authorized to edit this booking.');
-                            }
-                        },
-                        error: function() {
-                            showError('Unable to verify booking ownership.');
+        window.cancelBooking = function() {
+            const bookingId = $('#foundBookingId').text();
+            if (confirm('Are you sure you want to cancel this booking?')) {
+                // Verify ownership before cancellation
+                $.ajax({
+                    url: 'Web/php/AJAX/cancelBooking.php',
+                    type: 'POST',
+                    data: {
+                        booking_id: bookingId
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            showSuccess('Booking cancelled successfully.');
+                            // Refresh the booking display
+                            setTimeout(() => {
+                                searchBooking();
+                            }, 2000);
+                        } else {
+                            showError(response.message || 'Unable to cancel booking.');
                         }
-                    });
-                } else {
-                    showError('Invalid booking number. Cannot edit booking.');
-                }
-            };
-
-            window.cancelBooking = function() {
-                const bookingId = $('#foundBookingId').text();
-                if (confirm('Are you sure you want to cancel this booking?')) {
-                    // Verify ownership before cancellation
-                    $.ajax({
-                        url: 'Web/php/AJAX/cancelBooking.php',
-                        type: 'POST',
-                        data: {
-                            booking_id: bookingId
-                        },
-                        dataType: 'json',
-                        success: function(response) {
-                            if (response.success) {
-                                showSuccess('Booking cancelled successfully.');
-                                // Refresh the booking display
-                                setTimeout(() => {
-                                    searchBooking();
-                                }, 2000);
-                            } else {
-                                showError(response.message || 'Unable to cancel booking.');
-                            }
-                        },
-                        error: function() {
-                            showError('Error occurred while cancelling booking.');
-                        }
-                    });
-                }
-            };
-
-            window.newSearch = function() {
-                $form[0].reset();
-                $bookingResult.hide().removeClass('show');
-                hideMessages();
-                $('#bookingNumber').focus();
-            };
-
-            // Additional enhancements
-            $('#bookingNumber').focus();
-
-            $('#dateOfBirth').on('keypress', function(e) {
-                if (e.which === 13) {
-                    $form.submit();
-                }
-            });
-
-            $('#bookingNumber').on('input', function() {
-                const value = $(this).val().trim();
-                if (value.length > 0) {
-                    $(this).removeClass('error');
-                }
-            });
-
-            $('#dateOfBirth').on('change', function() {
-                const value = $(this).val();
-                if (value) {
-                    $(this).removeClass('error');
-                }
-            });
-
-            // Initialize debug info
-            if (debugMode) {
-                logDebug('Page initialized', {
-                    jQueryVersion: $.fn.jquery,
-                    debugMode: debugMode,
-                    timestamp: new Date().toISOString()
+                    },
+                    error: function() {
+                        showError('Error occurred while cancelling booking.');
+                    }
                 });
             }
-        });
-        </script>
-    </body>
+        };
 
-    </html>
-    <?php require 'partials/footer.php'; ?>
+        window.newSearch = function() {
+            $form[0].reset();
+            $bookingResult.hide().removeClass('show');
+            hideMessages();
+            $('#bookingNumber').focus();
+        };
+
+        // Additional enhancements
+        $('#bookingNumber').focus();
+
+        $('#dateOfBirth').on('keypress', function(e) {
+            if (e.which === 13) {
+                $form.submit();
+            }
+        });
+
+        $('#bookingNumber').on('input', function() {
+            const value = $(this).val().trim();
+            if (value.length > 0) {
+                $(this).removeClass('error');
+            }
+        });
+
+        $('#dateOfBirth').on('change', function() {
+            const value = $(this).val();
+            if (value) {
+                $(this).removeClass('error');
+            }
+        });
+
+        // Initialize debug info
+        if (debugMode) {
+            logDebug('Page initialized', {
+                jQueryVersion: $.fn.jquery,
+                debugMode: debugMode,
+                timestamp: new Date().toISOString()
+            });
+        }
+    });
+    </script>
+</body>
+
+</html>
+<?php require 'partials/footer.php'; ?>

@@ -1,15 +1,26 @@
 <?php
+    
+    // Start session first before any output
+    if (session_status() == PHP_SESSION_NONE) {
+        session_start();
+    }
+    
     require 'avatar.php';
     require 'Web/php/connection.php';
+    
     // Get service_id from URL parameter
-    $serviceId = $_SESSION['service_id'] ?? 0;
-    // $serviceId = isset($_GET['service_id']) ? intval($_GET['service_id']) : 0;
-    // $_SESSION['service_id'] = $serviceId;
+    $serviceId = isset($_GET['service_id']) ? intval($_GET['service_id']) : 0;
+    
+    // Debug: Check if service_id is being received
+    error_log("Service ID from URL: " . $serviceId);
     
     if (!$serviceId) {
-    header('Location: /error?message=Invalid service ID');
-    exit;
+        header('Location: /error?message=Invalid service ID');
+        exit();
     }
+    
+    // Store in session
+    $_SESSION['service_id'] = $serviceId;
 
     try {
     // 1. Fetch service details
@@ -155,7 +166,7 @@
                 </div>
                 <!-- Replace the existing book-btn line with this corrected version -->
                 <button class="book-btn"
-                    onclick="window.location.href='/bookingpassenger?service_id=<?php echo $serviceId; ?>'">Book
+                    onclick="window.location.href='/bookingpassenger?service_id=<?php echo $_SESSION['service_id']; ?>'">Book
                     Now</button>
             </div>
         </div>
