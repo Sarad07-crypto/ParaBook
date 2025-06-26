@@ -1,4 +1,4 @@
-<?php 
+<?php
     require 'avatar.php';
     require 'partials/header.php';
     require 'partials/nav_P.php';
