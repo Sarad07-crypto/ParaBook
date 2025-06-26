@@ -2,6 +2,11 @@
     require 'avatar.php';
     require 'partials/header.php';
     require 'partials/nav_P.php';
+    include "Web/php/connection.php";
+    session_start();
+    
+    $userid = $_SESSION['user_id'];
+    $serviceId = $_SESSION['service_id'] ?? 0;
 
     // Check if user is logged in
     if (!isset($_SESSION['user_id'])) {
@@ -9,8 +14,7 @@
         exit();
     }
 
-    $userid = $_SESSION['user_id'];
-    
+
     // Get booking No from URL parameter
     $booking_no = isset($_GET['booking_no']) ? $_GET['booking_no'] : '';
 
@@ -19,7 +23,6 @@
         exit();
     }
 
-    include "Web/php/connection.php";
 
     // Fetch booking data with ownership verification
     $bookingStmt = $connect->prepare("SELECT * FROM bookings WHERE booking_no = ? AND user_id = ?");
@@ -35,9 +38,6 @@
         exit();
     }
 
-    // Get service ID from session or set a default
-    $serviceId = $_SESSION['service_id'] ?? 0;
-    
     // Find the matching flight type based on the stored flight_type string
     $currentFlightTypeId = 0;
     $currentFlightTypePrice = 0;
@@ -95,13 +95,18 @@
             $flightTypes[] = $row;
         }
     }
+    
+    // remove later
+    // echo '<pre>';
+    // print_r($flightTypes);
+    // echo '</pre>';
 ?>
 <link rel="stylesheet" href="Web/css/booking_P.css?v=1.0" />
 
 <body style="background: #fff; min-height: 100vh">
     <div class="main-wrap">
         <div class="booking-form-section">
-            <h1 class="booking-title">Update Your Paragliding Booking
+            <h1 class="booking-title">Update Your Booking
                 #<?php echo htmlspecialchars($bookingResult['booking_no']); ?></h1>
             <form class="styled-booking-form" id="mainBookingForm" autocomplete="off">
                 <!-- Hidden field for booking ID -->
@@ -227,6 +232,7 @@
                     style="display: none; background: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin: 10px 0;">
                     <span id="errorMessage">An error occurred. Please try again.</span>
                 </div>
+                <input type="hidden" name="booking_no" value="<?php echo htmlspecialchars($booking_no); ?>">
             </form>
         </div>
     </div>
@@ -318,7 +324,7 @@
                         // Optionally redirect after a delay
                         setTimeout(function() {
                             window.location.href =
-                                '/serviceDescription'; // Redirect to bookings list
+                                '/serviceDescription';
                         }, 2000);
                     } else {
                         $('#errorMessage').text(response.message ||

@@ -1,5 +1,5 @@
 <?php
-    session_start();
+    // session_start();
     $firstName = $_SESSION['firstName'];
     $firstInitial = strtoupper(substr($firstName, 0, 1));
 ?>

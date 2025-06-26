@@ -7,6 +7,8 @@
         } else {
             require('partials/nav_P.php');
         }
+        
+        $serviceId = $_SESSION['service_id'] ?? 0;
     ?>
     <!DOCTYPE html>
     <html lang="en">
@@ -485,6 +487,22 @@ body {
     overflow-x: auto;
 }
 
+/* update button disbled */
+.new-search-btn.disabled,
+.new-search-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+    color: black;
+}
+
+.new-search-btn.disabled:hover,
+.new-search-btn:disabled:hover {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+}
+
 @media (max-width: 768px) {
     .container {
         width: 95%;
@@ -539,7 +557,7 @@ body {
                     <form id="bookingLookupForm">
                         <div class="form-group">
                             <label for="bookingNumber">Booking Number *</label>
-                            <input type="text" id="bookingNumber" placeholder="e.g., BK123456789" maxlength="20"
+                            <input type="text" id="bookingNumber" placeholder="e.g., BK-123456789" maxlength="20"
                                 required />
                         </div>
 
@@ -613,7 +631,7 @@ body {
                         <div class="status-badge" id="bookingStatus"></div>
 
                         <div class="action-buttons">
-                            <button class="new-search-btn" onclick="editBooking()" id="editBtn">✏️ Update
+                            <button class="new-search-btn update-btn" onclick="editBooking()" id="editBtn">✏️ Update
                                 Booking</button>
                             <button class="new-search-btn" onclick="newSearch()">🔍 Search Another Booking</button>
                         </div>
@@ -841,16 +859,40 @@ body {
                         .removeClass() // Remove all classes
                         .addClass(`status-badge status-${status.toLowerCase()}`);
 
-                    // Show/hide action buttons based on status
-                    const $editBtn = $('#editBtn');
+                    // Show/hide/disable action buttons based on status
+                    const $updateBtn = $('.update-btn');
                     const $cancelBtn = $('#cancelBtn');
 
                     if (status.toLowerCase() === 'cancelled') {
-                        $editBtn.hide();
+                        $updateBtn.hide();
                         if ($cancelBtn.length) $cancelBtn.hide();
+                    } else if (status.toLowerCase() === 'confirmed') {
+                        // Disable the edit button for confirmed bookings
+                        $updateBtn.prop('disabled', true)
+                            .addClass('disabled')
+                            .attr('title', 'Cannot edit confirmed booking')
+                            .show();
+
+                        // Optionally disable cancel button as well
+                        if ($cancelBtn.length) {
+                            $cancelBtn.prop('disabled', true)
+                                .addClass('disabled')
+                                .attr('title', 'Cannot cancel confirmed booking')
+                                .show();
+                        }
                     } else {
-                        $editBtn.show();
-                        if ($cancelBtn.length) $cancelBtn.show();
+                        // Enable buttons for other statuses (pending, etc.)
+                        $updateBtn.prop('disabled', false)
+                            .removeClass('disabled')
+                            .removeAttr('title')
+                            .show();
+
+                        if ($cancelBtn.length) {
+                            $cancelBtn.prop('disabled', false)
+                                .removeClass('disabled')
+                                .removeAttr('title')
+                                .show();
+                        }
                     }
 
                     // Show the result with jQuery animation
@@ -957,7 +999,7 @@ body {
                         url: 'Web/php/AJAX/verifyBookingOwnership.php',
                         type: 'POST',
                         data: {
-                            booking_no: bookingNo // Changed from booking_id to booking_no
+                            booking_no: bookingNo
                         },
                         dataType: 'json',
                         success: function(response) {

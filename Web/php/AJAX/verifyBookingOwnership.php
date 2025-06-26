@@ -12,7 +12,7 @@ if (!isset($_SESSION['user_id'])) {
 
 // Get booking_no from POST data
 $booking_no = isset($_POST['booking_no']) ? trim($_POST['booking_no']) : '';
-echo $booking_no;
+
 if (empty($booking_no)) {
     echo json_encode(['authorized' => false, 'message' => 'Invalid booking number']);
     exit();

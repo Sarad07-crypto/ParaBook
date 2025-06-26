@@ -6,6 +6,7 @@
 
     $userid = $_SESSION['user_id'];
     $serviceId = $_SESSION['service_id'] ?? 0;
+    
     include "Web/php/connection.php";
 
     // Fetch user info

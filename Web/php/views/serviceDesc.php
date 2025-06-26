@@ -1,10 +1,11 @@
 <?php
     require 'avatar.php';
     require 'Web/php/connection.php';
-
     // Get service_id from URL parameter
-    $serviceId = isset($_GET['service_id']) ? intval($_GET['service_id']) : 0;
-        $_SESSION['service_id'] = $serviceId; // Store in session for booking
+    $serviceId = $_SESSION['service_id'] ?? 0;
+    // $serviceId = isset($_GET['service_id']) ? intval($_GET['service_id']) : 0;
+    // $_SESSION['service_id'] = $serviceId;
+    
     if (!$serviceId) {
     header('Location: /error?message=Invalid service ID');
     exit;
