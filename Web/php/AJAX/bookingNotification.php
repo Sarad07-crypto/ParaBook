@@ -49,6 +49,78 @@ class BookingNotificationSystem {
         }
     }
     
+    /* Send notifications for booking updates */
+    public function sendBookingUpdateNotifications($bookingId, $userId, $bookingNo, $userName = null, $updateType = 'updated') {
+        try {
+            // Get user info if name not provided
+            if (!$userName) {
+                $userInfo = $this->getUserInfo($userId);
+                $userName = trim($userInfo['firstName'] . ' ' . $userInfo['lastName']);
+            }
+            
+            // Determine messages based on update type
+            $userTitle = '';
+            $userMessage = '';
+            $companyTitle = '';
+            $companyMessage = '';
+            $icon = 'fas fa-edit';
+            
+            switch ($updateType) {
+                case 'updated':
+                    $userTitle = 'Booking Updated Successfully';
+                    $userMessage = "Your booking {$bookingNo} has been updated successfully.";
+                    $companyTitle = 'Booking Updated';
+                    $companyMessage = "{$userName} has updated their booking. Please review the changes.";
+                    break;
+                case 'cancelled':
+                    $userTitle = 'Booking Cancelled';
+                    $userMessage = "Your booking {$bookingNo} has been cancelled successfully.";
+                    $companyTitle = 'Booking Cancelled';
+                    $companyMessage = "{$userName} has cancelled their booking {$bookingNo}.";
+                    $icon = 'fas fa-times-circle';
+                    break;
+                case 'rescheduled':
+                    $userTitle = 'Booking Rescheduled';
+                    $userMessage = "Your booking {$bookingNo} has been rescheduled successfully.";
+                    $companyTitle = 'Booking Rescheduled';
+                    $companyMessage = "{$userName} has rescheduled their booking {$bookingNo}.";
+                    $icon = 'fas fa-calendar-alt';
+                    break;
+            }
+            
+            // Send notification to the user
+            $this->createNotification([
+                'recipient_id' => $userId,
+                'recipient_type' => 'user',
+                'title' => $userTitle,
+                'message' => $userMessage,
+                'type' => 'booking',
+                'icon' => $icon,
+                'booking_id' => $bookingId
+            ]);
+            
+            // Send notifications to company users
+            $companyUsers = $this->getCompanyUsers();
+            foreach ($companyUsers as $companyUser) {
+                $this->createNotification([
+                    'recipient_id' => $companyUser['user_id'],
+                    'recipient_type' => 'company',
+                    'title' => $companyTitle,
+                    'message' => $companyMessage,
+                    'type' => 'booking',
+                    'icon' => $icon,
+                    'booking_id' => $bookingId
+                ]);
+            }
+            
+            return true;
+            
+        } catch (Exception $e) {
+            error_log("Booking update notification error: " . $e->getMessage());
+            return false;
+        }
+    }
+    
     /**
      * Create a notification record using MySQLi
      */
@@ -227,7 +299,7 @@ class BookingNotificationSystem {
     /**
      * Get user info using MySQLi
      */
-    private function getUserInfo($userId) {
+    public function getUserInfo($userId) {
         try {
             // First try users_info table
             $stmt = $this->db->prepare("
@@ -281,8 +353,9 @@ class BookingNotificationSystem {
     
     /**
      * Get company users who should receive booking notifications using MySQLi
+     * Made public so it can be called from update scripts
      */
-    private function getCompanyUsers() {
+    public function getCompanyUsers() {
         try {
             // Try to get company users from users_info table
             $stmt = $this->db->prepare("
@@ -389,7 +462,7 @@ class BookingNotificationSystem {
     /**
      * Get booking info using MySQLi
      */
-    private function getBookingInfo($bookingId) {
+    public function getBookingInfo($bookingId) {
         try {
             $stmt = $this->db->prepare("SELECT * FROM bookings WHERE booking_id = ?");
             if (!$stmt) {
@@ -426,7 +499,9 @@ class BookingNotificationSystem {
             'pending' => 'fas fa-clock',
             'completed' => 'fas fa-flag-checkered',
             'approved' => 'fas fa-thumbs-up',
-            'rejected' => 'fas fa-thumbs-down'
+            'rejected' => 'fas fa-thumbs-down',
+            'updated' => 'fas fa-edit',
+            'rescheduled' => 'fas fa-calendar-alt'
         ];
         
         return $icons[$status] ?? 'fas fa-info-circle';

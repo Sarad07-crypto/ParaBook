@@ -1,232 +1,373 @@
-// Flight type selection handler
-document
-  .getElementById("mainFlightType")
-  .addEventListener("change", function () {
-    const selectedOption = this.options[this.selectedIndex];
-    const priceDisplay = document.getElementById("priceDisplay");
-    const flightNameDisplay = document.getElementById("selectedFlightName");
-    const flightPriceDisplay = document.getElementById("selectedFlightPrice");
+$(document).ready(function () {
+  // Flight type selection handler
+  $("#mainFlightType").change(function () {
+    const selectedOption = $(this).find("option:selected");
+    const priceDisplay = $("#priceDisplay");
+    const flightNameDisplay = $("#selectedFlightName");
+    const flightPriceDisplay = $("#selectedFlightPrice");
 
-    if (selectedOption.value && selectedOption.dataset.price) {
-      const flightName = selectedOption.textContent.split(" (Rs.")[0]; // Get name without price
-      const price = selectedOption.dataset.price;
+    if (selectedOption.val() && selectedOption.data("price")) {
+      const flightName = selectedOption.text().split(" (Rs.")[0];
+      const price = selectedOption.data("price");
 
-      flightNameDisplay.textContent = flightName;
-      flightPriceDisplay.textContent = "Rs. " + price;
-      priceDisplay.style.display = "block";
+      flightNameDisplay.text(flightName);
+      flightPriceDisplay.text("Rs. " + price);
+      priceDisplay.show();
     } else {
-      priceDisplay.style.display = "none";
+      priceDisplay.hide();
     }
   });
 
-// Function to submit booking data
-const submitBookingData = async (formElement) => {
-  const formData = new FormData(formElement);
+  // Set minimum date to today
+  const today = new Date().toISOString().split("T")[0];
+  $("#mainDate").attr("min", today);
 
-  try {
-    const response = await fetch("Web/php/AJAX/bookingSubmit.php", {
-      method: "POST",
-      body: formData,
-    });
+  // Form validation setup
+  setupFormValidation();
 
-    // Check if response is ok
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+  // Terms and conditions modal handlers
+  $("#openTerms").click(function (e) {
+    e.preventDefault();
+    $("#termsCardOverlay").show();
+  });
 
-    // Get response text first to debug
-    const responseText = await response.text();
-    console.log("Raw response:", responseText);
-
-    // Try to parse as JSON
-    let result;
-    try {
-      result = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error("JSON parse error:", parseError);
-      console.error("Response was:", responseText);
-      throw new Error("Invalid JSON response from server");
-    }
-
-    if (result.success) {
-      document.getElementById(
-        "successMessage"
-      ).textContent = `Booking confirmed! Your booking number is: ${result.booking_no}`;
-      document.getElementById("mainBookingSuccess").style.display = "flex";
-      document.getElementById("mainBookingError").style.display = "none";
-
-      // Fetch the latest notification for the current user
-      fetch("Web/php/AJAX/bookingNotificationAPI.php?action=recent&limit=1")
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success && data.notifications.length > 0) {
-            const notification = data.notifications[0];
-            // Display notification as a toast or alert
-            showToast(notification.title, notification.message);
-          }
-        })
-        .catch((err) => {
-          console.error("Failed to fetch notifications:", err);
-        });
-
-      setTimeout(() => {
-        document.getElementById("mainBookingSuccess").style.display = "none";
-        formElement.reset();
-        formElement.querySelector(".main-submit-btn").style.display = "";
-        formElement.querySelector(".main-submit-btn").disabled = false;
-        formElement.querySelector(".main-submit-btn").textContent = "Book Now";
-        document.getElementById("priceDisplay").style.display = "none";
-      }, 3000);
-    } else {
-      document.getElementById("errorMessage").textContent = result.message;
-      document.getElementById("mainBookingError").style.display = "block";
-      document.getElementById("mainBookingSuccess").style.display = "none";
-      formElement.querySelector(".main-submit-btn").style.display = "";
-      formElement.querySelector(".main-submit-btn").disabled = false;
-      formElement.querySelector(".main-submit-btn").textContent = "Book Now";
-    }
-  } catch (error) {
-    console.error("Error:", error);
-    document.getElementById("errorMessage").textContent =
-      "Network error: " + error.message;
-    document.getElementById("mainBookingError").style.display = "block";
-    document.getElementById("mainBookingSuccess").style.display = "none";
-    formElement.querySelector(".main-submit-btn").style.display = "";
-    formElement.querySelector(".main-submit-btn").disabled = false;
-    formElement.querySelector(".main-submit-btn").textContent = "Book Now";
-  }
-};
-
-// Booking form validation
-const validateBookingForm = (formSelector) => {
-  const formElement = document.querySelector(formSelector);
-  const validateOptions = [
-    {
-      attribute: "required",
-      isValid: (input) => input.value.trim() === "",
-    },
-    {
-      attribute: "type",
-      isValid: (input) => {
-        if (input.type === "email") {
-          return !/^([^\s@]+)@([^\s@]+)\.[^\s@]{2,}$/.test(input.value);
-        }
-        if (input.type === "tel") {
-          return !/^(\+977-)?9\d{9}$/.test(input.value); // Updated Nepal phone format
-        }
-        if (input.type === "number" && input.name === "mainWeight") {
-          return input.value !== "" && (input.value < 30 || input.value > 120);
-        }
-        if (input.type === "number" && input.name === "mainAge") {
-          return input.value < 10 || input.value > 80;
-        }
-        return false;
-      },
-    },
-    {
-      attribute: "date",
-      isValid: (input) => {
-        if (input.type === "date") {
-          const enteredDate = new Date(input.value);
-          const today = new Date();
-          today.setHours(0, 0, 0, 0); // Reset time to compare dates only
-          return isNaN(enteredDate.getTime()) || enteredDate < today;
-        }
-        return false;
-      },
-    },
-  ];
-
-  const validateSingleInput = (input) => {
-    let error = false;
-    for (const option of validateOptions) {
-      if (
-        input.hasAttribute(option.attribute) ||
-        option.attribute === "type" ||
-        option.attribute === "date"
-      ) {
-        if (option.isValid(input)) {
-          error = true;
-          break;
-        }
-      }
-    }
-    if (error) {
-      input.style.borderColor = "red";
-    } else {
-      input.style.borderColor = "#0d6efd";
-    }
-    return !error;
-  };
-
-  const setupInputEvents = () => {
-    const inputs = Array.from(
-      formElement.querySelectorAll("input, textarea, select")
-    );
-    inputs.forEach((input) => {
-      input.addEventListener("input", () => validateSingleInput(input));
-      input.addEventListener("blur", () => validateSingleInput(input));
-    });
-  };
-
-  formElement.setAttribute("novalidate", "");
-  formElement.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const inputs = Array.from(
-      formElement.querySelectorAll("input, textarea, select")
-    );
-    const isValid = inputs.every((input) => validateSingleInput(input));
-
-    if (isValid) {
-      // Disable submit button to prevent double submission
-      const submitBtn = formElement.querySelector(".main-submit-btn");
-      submitBtn.disabled = true;
-      submitBtn.textContent = "Processing...";
-
-      // Hide any previous error messages
-      document.getElementById("mainBookingError").style.display = "none";
-
-      // Submit the booking data
-      submitBookingData(formElement);
+  // Close terms modal
+  $(document).on("click", "#termsCardOverlay", function (e) {
+    if (e.target === this) {
+      closeTermsCard();
     }
   });
-  setupInputEvents();
-};
 
-validateBookingForm("#mainBookingForm");
+  $(document).keydown(function (e) {
+    if (e.key === "Escape") {
+      closeTermsCard();
+    }
+  });
 
-function showToast(title, message) {
-  const toast = document.getElementById("toastNotification");
-  toast.innerHTML = `<strong>${title}</strong><br>${message}`;
-  toast.style.display = "block";
-
-  // Hide toast on click immediately
-  toast.onclick = () => {
-    toast.style.display = "none";
-  };
-
-  // Auto-hide after 4 seconds
-  setTimeout(() => {
-    toast.style.display = "none";
-  }, 4000);
-}
-
-document.getElementById("openTerms").onclick = function (e) {
-  e.preventDefault();
-  document.getElementById("termsCardOverlay").style.display = "flex";
-};
-
-function closeTermsCard() {
-  document.getElementById("termsCardOverlay").style.display = "none";
-}
-document.getElementById("termsCardOverlay").onclick = function (e) {
-  if (e.target === this) closeTermsCard();
-};
-document.addEventListener("keydown", function (e) {
-  if (e.key === "Escape") closeTermsCard();
+  // Cleanup expired bookings every 30 minutes
+  setInterval(cleanupExpiredBookings, 30 * 60 * 1000);
 });
 
-// Set minimum date to today
-document.getElementById("mainDate").min = new Date()
-  .toISOString()
-  .split("T")[0];
+// Function to setup form validation
+function setupFormValidation() {
+  const form = $("#mainBookingForm");
+
+  // Set form action and method for direct submission
+  form.attr("action", "Web/php/AJAX/bookingSubmit.php");
+  form.attr("method", "POST");
+
+  // Real-time validation for inputs
+  form.find("input, textarea, select").on("input blur", function () {
+    validateSingleInput($(this));
+  });
+
+  // Form submission handler - Validate before allowing submission
+  form.on("submit", function (e) {
+    console.log("=== FORM SUBMISSION STARTED ===");
+
+    // Validate all inputs
+    const inputs = form.find("input, textarea, select");
+    let isValid = true;
+
+    inputs.each(function () {
+      if (!validateSingleInput($(this))) {
+        isValid = false;
+      }
+    });
+
+    console.log("Form validation result:", isValid);
+
+    if (!isValid) {
+      e.preventDefault(); // Prevent submission if validation fails
+      console.log("Form validation failed - submission prevented");
+      showErrorMessage("Please fill in all required fields correctly.");
+      return false;
+    }
+
+    // If validation passes, show processing state and allow normal form submission
+    const submitBtn = form.find(".main-submit-btn");
+    submitBtn.prop("disabled", true).text("Processing...");
+
+    // Hide previous error messages
+    $("#mainBookingError").hide();
+
+    console.log("Form validation passed - proceeding with submission");
+
+    // Show loading message
+    showLoadingMessage("Processing your booking request...");
+
+    // Form will submit normally to bookingSubmit.php
+    return true;
+  });
+
+  // Handle submit button click
+  form.find(".main-submit-btn").on("click", function (e) {
+    // Let the form handle the submission naturally
+    // The form's submit event handler will validate first
+  });
+}
+
+// Function to validate single input
+function validateSingleInput($input) {
+  const input = $input[0];
+  let isValid = true;
+  let errorMessage = "";
+
+  // Required field validation
+  if ($input.prop("required") && $input.val().trim() === "") {
+    isValid = false;
+    errorMessage = "This field is required";
+  }
+
+  // Email validation
+  else if (input.type === "email" && $input.val()) {
+    const emailRegex = /^([^\s@]+)@([^\s@]+)\.[^\s@]{2,}$/;
+    if (!emailRegex.test($input.val())) {
+      isValid = false;
+      errorMessage = "Please enter a valid email address";
+    }
+  }
+
+  // Phone validation
+  else if (input.type === "tel" && $input.val()) {
+    const phoneRegex = /^(\+977-)?9\d{9}$/;
+    if (!phoneRegex.test($input.val())) {
+      isValid = false;
+      errorMessage =
+        "Please enter a valid phone number (e.g., +977-9XXXXXXXXX)";
+    }
+  }
+
+  // Weight validation
+  else if (
+    input.type === "number" &&
+    input.name === "mainWeight" &&
+    $input.val()
+  ) {
+    const weight = parseFloat($input.val());
+    if (weight < 30 || weight > 120) {
+      isValid = false;
+      errorMessage = "Weight must be between 30 and 120 kg";
+    }
+  }
+
+  // Age validation
+  else if (
+    input.type === "number" &&
+    input.name === "mainAge" &&
+    $input.val()
+  ) {
+    const age = parseInt($input.val());
+    if (age < 10 || age > 80) {
+      isValid = false;
+      errorMessage = "Age must be between 10 and 80 years";
+    }
+  }
+
+  // Date validation
+  else if (input.type === "date" && $input.val()) {
+    const enteredDate = new Date($input.val());
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (isNaN(enteredDate.getTime()) || enteredDate < today) {
+      isValid = false;
+      errorMessage = "Please select a valid future date";
+    }
+  }
+
+  // Update input styling
+  if (isValid) {
+    $input.css("border-color", "#0d6efd");
+    $input.removeClass("is-invalid");
+  } else {
+    $input.css("border-color", "red");
+    $input.addClass("is-invalid");
+  }
+
+  return isValid;
+}
+
+// Helper function to show loading message
+function showLoadingMessage(message) {
+  console.log("Showing loading message:", message);
+  const $loadingElement = $("#mainBookingLoading");
+  const $messageElement = $("#loadingMessage");
+
+  if ($loadingElement.length && $messageElement.length) {
+    $messageElement.text(message);
+    $loadingElement.show();
+    $("#mainBookingError").hide();
+    $("#mainBookingSuccess").hide();
+  } else {
+    // Fallback to toast
+    showToast("Processing", message);
+  }
+}
+
+// Helper function to show error message
+function showErrorMessage(message) {
+  console.log("Showing error message:", message);
+  const $errorElement = $("#mainBookingError");
+  const $messageElement = $("#errorMessage");
+
+  if ($errorElement.length && $messageElement.length) {
+    $messageElement.text(message);
+    $errorElement.show();
+    $("#mainBookingSuccess").hide();
+    $("#mainBookingLoading").hide();
+  } else {
+    // Fallback to toast
+    showToast("Error", message);
+  }
+}
+
+// Helper function to show success message
+function showSuccessMessage(message, autoHide = true) {
+  console.log("Showing success message:", message);
+  const $successElement = $("#mainBookingSuccess");
+  const $messageElement = $("#successMessage");
+
+  if ($successElement.length && $messageElement.length) {
+    $messageElement.text(message);
+    $successElement.show();
+    $("#mainBookingError").hide();
+    $("#mainBookingLoading").hide();
+
+    if (autoHide) {
+      setTimeout(function () {
+        $successElement.hide();
+      }, 5000);
+    }
+  } else {
+    // Fallback to toast
+    showToast("Success", message);
+  }
+}
+
+// Function to show toast notifications
+function showToast(title, message) {
+  const $toast = $(`
+        <div class="toast-notification" style="
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${
+              title === "Error"
+                ? "#dc3545"
+                : title === "Processing"
+                ? "#ffc107"
+                : "#28a745"
+            };
+            color: ${title === "Processing" ? "#000" : "white"};
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            max-width: 300px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        ">
+            <div class="toast-content">
+                <strong>${title}</strong>
+                <p style="margin: 5px 0 0 0;">${message}</p>
+            </div>
+            <button class="toast-close" style="
+                background: none;
+                border: none;
+                color: ${title === "Processing" ? "#000" : "white"};
+                font-size: 18px;
+                cursor: pointer;
+                padding: 0;
+                margin-left: 10px;
+            ">×</button>
+        </div>
+    `);
+
+  // Add click handler for close button
+  $toast.find(".toast-close").click(function () {
+    $toast.remove();
+  });
+
+  // Add to document
+  $("body").append($toast);
+
+  // Auto remove after 7 seconds
+  setTimeout(function () {
+    $toast.remove();
+  }, 7000);
+}
+
+// Function to cleanup expired bookings
+function cleanupExpiredBookings() {
+  $.ajax({
+    url: "Web/php/eSewa/cleanupTempBookings.php",
+    type: "POST",
+    success: function (result) {
+      console.log("Cleanup completed:", result);
+    },
+    error: function (jqXHR, textStatus, errorThrown) {
+      console.error("Cleanup error:", textStatus, errorThrown);
+    },
+  });
+}
+
+// Function to close terms modal
+function closeTermsCard() {
+  $("#termsCardOverlay").hide();
+}
+
+// Display session messages on page load
+$(document).ready(function () {
+  // Check for session success message
+  if (typeof bookingSuccess !== "undefined" && bookingSuccess) {
+    showSuccessMessage(
+      "Booking saved successfully! Redirecting to payment...",
+      false
+    );
+  }
+
+  // Check for session error message
+  if (typeof bookingError !== "undefined" && bookingError) {
+    showErrorMessage(bookingError);
+  }
+
+  // Check for validation errors
+  if (typeof validationErrors !== "undefined" && validationErrors) {
+    Object.keys(validationErrors).forEach(function (field) {
+      const $input = $(
+        'input[name="' +
+          field +
+          '"], select[name="' +
+          field +
+          '"], textarea[name="' +
+          field +
+          '"]'
+      );
+      if ($input.length) {
+        $input.css("border-color", "red").addClass("is-invalid");
+      }
+    });
+  }
+
+  // Restore form data if available
+  if (typeof formData !== "undefined" && formData) {
+    Object.keys(formData).forEach(function (field) {
+      const $input = $(
+        'input[name="' +
+          field +
+          '"], select[name="' +
+          field +
+          '"], textarea[name="' +
+          field +
+          '"]'
+      );
+      if ($input.length && formData[field]) {
+        $input.val(formData[field]);
+        if (field === "mainFlightType") {
+          $input.trigger("change"); // Trigger price display update
+        }
+      }
+    });
+  }
+});
