@@ -1,0 +1,238 @@
+body {
+  background: #fff;
+  min-height: 100vh;
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.main-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+}
+
+.booking-form-section {
+  max-width: 1000px;
+  margin: 64px auto 0 auto;
+  background: linear-gradient(135deg, #e0e7ff 0%, #f0f4ff 60%, #e0f7fa 100%);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.13),
+    0 1.5px 8px rgba(13, 110, 253, 0.08);
+  padding: 48px 80px 40px 80px;
+  border: 1.5px solid #e3e8f7;
+  position: relative;
+  overflow: hidden;
+}
+
+.booking-form-section::before {
+  content: "";
+  position: absolute;
+  top: -60px;
+  left: -60px;
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(
+    circle,
+    #b6e0fe 0%,
+    #e0e7ff 80%,
+    transparent 100%
+  );
+  opacity: 0.35;
+  z-index: 0;
+}
+
+.booking-form-section::after {
+  content: "";
+  position: absolute;
+  bottom: -60px;
+  right: -60px;
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(
+    circle,
+    #a5f3fc 0%,
+    #f0f4ff 80%,
+    transparent 100%
+  );
+  opacity: 0.25;
+  z-index: 0;
+}
+
+.booking-title {
+  text-align: center;
+  color: #0073e6;
+  font-size: 2.2rem;
+  margin-bottom: 32px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.styled-booking-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.form-row {
+  display: flex;
+  gap: 28px;
+  margin-bottom: 24px;
+}
+
+.form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+}
+
+.form-group label {
+  margin-bottom: 10px;
+  color: #333;
+  font-weight: 500;
+  font-size: 1.05rem;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  padding: 14px 16px;
+  border: 1.5px solid #dbeafe;
+  border-radius: 8px;
+  font-size: 1.08rem;
+  background: #f6fafd;
+  transition: border 0.2s;
+  outline: none;
+  resize: none;
+  margin-bottom: 0;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  border-color: #0d6efd;
+  background: #fff;
+}
+
+.form-group textarea {
+  width: 100%;
+  margin-top: 0;
+}
+
+.main-submit-btn {
+  width: 100%;
+  background: #0d6efd;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 15px 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 18px;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(13, 110, 253, 0.08);
+}
+
+.main-submit-btn:hover,
+.main-submit-btn:focus {
+  background: #0a58ca;
+  box-shadow: 0 4px 16px rgba(13, 110, 253, 0.13);
+}
+
+.main-success-message {
+  margin-top: 28px;
+  color: #007c3c;
+  font-size: 1.15rem;
+  text-align: center;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+#termsModal .modal-content {
+  max-width: 600px;
+  width: 96vw;
+}
+
+.terms-card-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(30, 40, 60, 0.18);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s;
+}
+
+.terms-card {
+  background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  padding: 38px 32px 28px 32px;
+  max-width: 540px;
+  width: 96vw;
+  position: relative;
+  animation: slideDown 0.25s;
+}
+
+.close-terms-card {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #888;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.close-terms-card:hover {
+  color: #0073e6;
+}
+
+.terms-title {
+  margin-top: 0;
+  color: #0073e6;
+  font-size: 1.4rem;
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+.terms-content {
+  max-height: 340px;
+  overflow-y: auto;
+  color: #222;
+  font-size: 1.08rem;
+  padding-right: 4px;
+}
+
+.terms-content ol {
+  padding-left: 18px;
+}
+
+@media (max-width: 900px) {
+  .booking-form-section {
+    padding: 24px 8px;
+    max-width: 98vw;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .terms-card {
+    padding: 16px 4px;
+  }
+}

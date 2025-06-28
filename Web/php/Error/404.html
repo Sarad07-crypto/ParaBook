@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ParaBook - Error Page</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #fff;
+        color: #333;
+        overflow-x: hidden;
+        position: relative;
+      }
+
+      .container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 60px 20px;
+        text-align: center;
+        position: relative;
+        z-index: 1;
+      }
+
+      .error-box {
+        max-width: 600px;
+      }
+
+      .illustration {
+        width: 100%;
+        max-width: 400px;
+        margin-bottom: 20px;
+      }
+
+      .error-message {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+
+      .sub-message {
+        font-size: 16px;
+        margin-bottom: 30px;
+        color: #555;
+      }
+
+      .btn {
+        display: inline-block;
+        background-color: #007bff;
+        color: white;
+        padding: 12px 25px;
+        text-decoration: none;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: background-color 0.3s;
+      }
+
+      .btn:hover {
+        background-color: #0056b3;
+      }
+
+      .background-circle {
+        position: absolute;
+        width: 200px;
+        height: 200px;
+        background: linear-gradient(145deg, #7ab6ff, #4385ff);
+        border-radius: 50%;
+        z-index: 0;
+        opacity: 0.2;
+      }
+
+      .top-left {
+        top: 100px;
+        left: -100px;
+      }
+
+      .bottom-right {
+        bottom: 50px;
+        right: -100px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <div class="error-box">
+        <img
+          src="/Assets/Images/404.jpg"
+          alt="404 illustration"
+          class="illustration"
+        />
+        <p class="error-message">Something went wrong.</p>
+        <p class="sub-message">
+          Sorry, we can't find the page you're looking for.
+        </p>
+        <a href="/home" class="btn">Go Back</a>
+      </div>
+    </main>
+
+    <!-- Decorative background circles -->
+    <div class="background-circle top-left"></div>
+    <div class="background-circle bottom-right"></div>
+  </body>
+</html>
