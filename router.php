@@ -13,6 +13,10 @@
     const PHP = 'Web/php/';
 
     $routes = [
+        // error log
+        '/logs' => 'testlog.php',
+        '/bookingSubmit' => PHP. 'AJAX/bookingSubmit.php',
+        '/eSewaPayment' => PHP . 'eSewa/eSewaPayment.php',
         
         //admin
         '/admin' => PHP . 'ADMIN/Admin.php',
@@ -47,6 +51,10 @@
         '/statistics' => PHP . 'views/statistics.php',
 
         '/completeProfile' => PHP . 'views/complete.profile.php',
+
+        // eSewa
+        '/booking-success' => PHP . 'eSewa/pageSuccess.php',
+        '/booking-error' => PHP . 'eSewa/pageError.php',
         
     ];
 

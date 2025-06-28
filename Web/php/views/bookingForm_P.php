@@ -2,7 +2,9 @@
     require 'avatar.php';
     require 'partials/header.php';
     require 'partials/nav_P.php';
-    session_start();
+    if (session_status() == PHP_SESSION_NONE) {
+        session_start();
+    }
 
     $userid = $_SESSION['user_id'];
     $serviceId = $_SESSION['service_id'] ?? 0;
@@ -229,7 +231,30 @@
     cursor: pointer;
     "></div>
 
-    <script src="Web/scripts/booking_P.js?v=1.0"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="Web/scripts/booking_P.js"></script>
+    <script>
+    // Define session variables from PHP
+    <?php if (isset($_SESSION['booking_error'])): ?>
+    var bookingError = <?php echo json_encode($_SESSION['booking_error']); ?>;
+    <?php unset($_SESSION['booking_error']); ?>
+    <?php endif; ?>
+
+    <?php if (isset($_SESSION['booking_success'])): ?>
+    var bookingSuccess = true;
+    <?php unset($_SESSION['booking_success']); ?>
+    <?php endif; ?>
+
+    <?php if (isset($_SESSION['validation_errors'])): ?>
+    var validationErrors = <?php echo json_encode($_SESSION['validation_errors']); ?>;
+    <?php unset($_SESSION['validation_errors']); ?>
+    <?php endif; ?>
+
+    <?php if (isset($_SESSION['form_data'])): ?>
+    var formData = <?php echo json_encode($_SESSION['form_data']); ?>;
+    <?php unset($_SESSION['form_data']); ?>
+    <?php endif; ?>
+    </script>
 </body>
 
 <?php

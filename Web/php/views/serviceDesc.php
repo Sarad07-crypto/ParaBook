@@ -75,7 +75,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?php echo htmlspecialchars($service['service_title'] ?? 'Service Details'); ?></title>
-    <link rel="stylesheet" href="Web/css/serviceDesc.css?v=2.0" />
+    <link rel="stylesheet" href="Web/css/serviceDesc.css?v=1.0" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
@@ -101,6 +101,7 @@
                 <div class="profile-info">
                     <span class="profile-name"><?php echo htmlspecialchars($service['company_name'] ?? ''); ?></span>
                     <span class="profile-address"><?php echo htmlspecialchars($service['address'] ?? ''); ?></span>
+                    <span class="profile-address"><?php echo htmlspecialchars($service['contact'] ?? ''); ?></span>
                 </div>
             </div>
             <div class="rating-row">
@@ -168,6 +169,30 @@
                 <button class="book-btn"
                     onclick="window.location.href='/bookingpassenger?service_id=<?php echo $_SESSION['service_id']; ?>'">Book
                     Now</button>
+                <!-- New Chat Button -->
+                <button class="chat-btn" onclick="openChatModal()">
+                    <i class="fas fa-comments"></i> Send Message
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Modal -->
+    <div id="chatModal" class="chat-modal">
+        <div class="chat-container">
+            <div class="chat-header">
+                <h3>Chat with <?php echo htmlspecialchars($service['company_name'] ?? 'Company'); ?></h3>
+                <button class="close-chat" onclick="closeChatModal()">&times;</button>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <!-- Messages will be loaded here -->
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="messageInput" placeholder="Type your message..."
+                    onkeypress="handleKeyPress(event)">
+                <button onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
             </div>
         </div>
     </div>
@@ -273,9 +298,120 @@
 
     // Trigger resize event on load
     window.dispatchEvent(new Event('resize'));
-    </script>
-</body>
 
-<?php require('partials/footer.php'); ?>
+    let chatInterval;
+    const serviceId = <?php echo json_encode($_SESSION['service_id'] ?? 0); ?>;
+    const userId = <?php echo json_encode($_SESSION['user_id'] ?? 0); ?>;
+
+    function openChatModal() {
+        document.getElementById('chatModal').style.display = 'block';
+        loadMessages();
+        startMessagePolling();
+    }
+
+    function closeChatModal() {
+        document.getElementById('chatModal').style.display = 'none';
+        stopMessagePolling();
+    }
+
+    function handleKeyPress(event) {
+        if (event.key === 'Enter') {
+            sendMessage();
+        }
+    }
+
+    function sendMessage() {
+        const messageInput = document.getElementById('messageInput');
+        const message = messageInput.value.trim();
+
+        if (!message) return;
+
+        // Add message to UI immediately
+        addMessageToUI(message, 'sent', new Date());
+        messageInput.value = '';
+
+        // Send to server
+        fetch('/api/send_message.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    service_id: serviceId,
+                    message: message
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    console.error('Failed to send message:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error sending message:', error);
+            });
+    }
+
+    function loadMessages() {
+        fetch(`/api/get_messages.php?service_id=${serviceId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const messagesContainer = document.getElementById('chatMessages');
+                    messagesContainer.innerHTML = '';
+
+                    data.messages.forEach(message => {
+                        addMessageToUI(
+                            message.message,
+                            message.sender_type === 'passenger' ? 'sent' : 'received',
+                            new Date(message.created_at)
+                        );
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error loading messages:', error);
+            });
+    }
+
+    function addMessageToUI(message, type, timestamp) {
+        const messagesContainer = document.getElementById('chatMessages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${type}`;
+
+        const timeString = timestamp.toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        messageDiv.innerHTML = `
+                <div class="message-bubble">${message}</div>
+                <div class="message-time">${timeString}</div>
+            `;
+
+        messagesContainer.appendChild(messageDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function startMessagePolling() {
+        chatInterval = setInterval(loadMessages, 3000); // Poll every 3 seconds
+    }
+
+    function stopMessagePolling() {
+        if (chatInterval) {
+            clearInterval(chatInterval);
+        }
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('chatModal');
+        if (event.target === modal) {
+            closeChatModal();
+        }
+    }
+    </script>
+    <?php require('partials/footer.php'); ?>
+</body>
 
 </html>
