@@ -57,32 +57,10 @@ $bookingData = $_SESSION['booking_success'];
         background: #218838;
     }
 
-    .payment-btn:disabled {
-        background: #6c757d;
-        cursor: not-allowed;
-    }
-
     .loading {
         text-align: center;
         color: #666;
         margin-top: 20px;
-    }
-
-    .error {
-        background: #f8d7da;
-        color: #721c24;
-        padding: 15px;
-        border-radius: 5px;
-        margin-bottom: 20px;
-    }
-
-    .debug-info {
-        background: #d1ecf1;
-        padding: 15px;
-        border-radius: 5px;
-        margin-bottom: 20px;
-        font-size: 12px;
-        font-family: monospace;
     }
     </style>
 </head>
@@ -101,11 +79,12 @@ $bookingData = $_SESSION['booking_success'];
         </div>
 
         <?php
-        // Validation
+        // Validation and debugging
         $errors = [];
         $required_fields = [
             'total_amount' => 'Total Amount',
             'amount' => 'Amount',
+            'merchant_id' => 'Merchant ID',
             'transaction_uuid' => 'Transaction ID',
             'success_url' => 'Success URL',
             'failure_url' => 'Failure URL'
@@ -126,17 +105,9 @@ $bookingData = $_SESSION['booking_success'];
         }
 
         // Validate amounts
-        if(!empty($esewaData['total_amount']) && (!is_numeric($esewaData['total_amount']) || $esewaData['total_amount'] <= 0)) {
-            $errors[] = "Total amount must be a positive number";
+        if(!empty($esewaData['total_amount']) && !is_numeric($esewaData['total_amount'])) {
+            $errors[] = "Total amount must be numeric";
         }
-        if(!empty($esewaData['amount']) && (!is_numeric($esewaData['amount']) || $esewaData['amount'] <= 0)) {
-            $errors[] = "Amount must be a positive number";
-        }
-
-        // Set default values for optional fields
-        $esewaData['tax_amount'] = $esewaData['tax_amount'] ?? 0;
-        $esewaData['product_service_charge'] = $esewaData['product_service_charge'] ?? 0;
-        $esewaData['product_delivery_charge'] = $esewaData['product_delivery_charge'] ?? 0;
 
         if(!empty($errors)): ?>
         <div class="error">
@@ -149,64 +120,44 @@ $bookingData = $_SESSION['booking_success'];
         </div>
         <?php endif; ?>
 
-        <?php
-        // eSewa Configuration - CRITICAL: These must match your eSewa merchant account
-        $product_code = "EPAYTEST"; // Replace with your actual product service code
-        $merchant_id = $esewaData['merchant_id'] ?? ""; // Your eSewa merchant ID
-        
-        // IMPORTANT: Replace with your actual secret key from eSewa merchant dashboard
-        $secret_key = "8gBm/:&EnhH.1/q"; // This MUST be your real secret key
-        
-        // Format amounts properly - eSewa requires specific decimal format
-        $total_amount = number_format((float)$esewaData['total_amount'], 2, '.', '');
-        $amount = number_format((float)$esewaData['amount'], 2, '.', '');
-        $tax_amount = number_format((float)$esewaData['tax_amount'], 2, '.', '');
-        $service_charge = number_format((float)$esewaData['product_service_charge'], 2, '.', '');
-        $delivery_charge = number_format((float)$esewaData['product_delivery_charge'], 2, '.', '');
-        
-        // Create the data string for signature - ORDER IS CRITICAL
-        $data_to_sign = "total_amount={$total_amount},transaction_uuid={$esewaData['transaction_uuid']},product_code={$product_code}";
-        
-        // Generate HMAC-SHA256 signature
-        $signature = base64_encode(hash_hmac('sha256', $data_to_sign, $secret_key, true));
-        ?>
-
-        <!-- Debug Information (REMOVE IN PRODUCTION) -->
-        <!-- <div class="debug-info">
-            <strong>Debug Information:</strong><br>
-            <strong>Merchant ID:</strong> <?php echo htmlspecialchars($merchant_id); ?><br>
-            <strong>Product Code:</strong> <?php echo htmlspecialchars($product_code); ?><br>
-            <strong>Transaction UUID:</strong> <?php echo htmlspecialchars($esewaData['transaction_uuid']); ?><br>
-            <strong>Total Amount:</strong> <?php echo htmlspecialchars($total_amount); ?><br>
-            <strong>Amount:</strong> <?php echo htmlspecialchars($amount); ?><br>
-            <strong>Tax Amount:</strong> <?php echo htmlspecialchars($tax_amount); ?><br>
-            <strong>Service Charge:</strong> <?php echo htmlspecialchars($service_charge); ?><br>
-            <strong>Delivery Charge:</strong> <?php echo htmlspecialchars($delivery_charge); ?><br>
-            <strong>Success URL:</strong> <?php echo htmlspecialchars($esewaData['success_url']); ?><br>
-            <strong>Failure URL:</strong> <?php echo htmlspecialchars($esewaData['failure_url']); ?><br>
-            <strong>Data to Sign:</strong> <?php echo htmlspecialchars($data_to_sign); ?><br>
-            <strong>Generated Signature:</strong> <?php echo htmlspecialchars($signature); ?><br>
-        </div> -->
+        <!-- Debug Information (remove in production) -->
+        <div class="debug-info">
+            <strong>Debug Info:</strong><br>
+            Merchant ID: <?php echo htmlspecialchars($esewaData['merchant_id'] ?? 'NOT SET'); ?><br>
+            Transaction UUID: <?php echo htmlspecialchars($esewaData['transaction_uuid'] ?? 'NOT SET'); ?><br>
+            Total Amount: <?php echo htmlspecialchars($esewaData['total_amount'] ?? 'NOT SET'); ?><br>
+            Success URL: <?php echo htmlspecialchars($esewaData['success_url'] ?? 'NOT SET'); ?><br>
+            Failure URL: <?php echo htmlspecialchars($esewaData['failure_url'] ?? 'NOT SET'); ?>
+        </div>
 
         <p>Click the button below to proceed to eSewa payment gateway:</p>
-
-        <!-- eSewa Payment Form - Using correct API endpoint and parameters -->
+        <?php
+        $total_amount = $esewaData['total_amount'] ?? 0;
+        $transaction_uuid = $esewaData['transaction_uuid'] ?? uniqid('txn_');
+        $product_code = "EPAYTEST";
+        $signed_field_names = "tAmt,amt,txAmt,psc,pdc,scd,pid,su,fu";
+        $data = "tAmt={$esewaData['total_amount']},amt={$esewaData['amount']},txAmt={$esewaData['tax_amount']},psc={$esewaData['product_service_charge']},pdc={$esewaData['product_delivery_charge']},scd=$product_code,pid={$esewaData['transaction_uuid']},su={$esewaData['success_url']},fu={$esewaData['failure_url']}";
+        $secret_key = "8gBm/:&EnhH.1/q";
+        $signature = base64_encode(hash_hmac('sha256', $data, $secret_key, true));
+        ?>
+        <!-- eSewa Payment Form -->
         <form method="POST" action="https://rc-epay.esewa.com.np/api/epay/main/v2/form" id="esewaForm">
-            <!-- Core required fields -->
-            <input type="hidden" name="amount" value="<?php echo $amount; ?>">
-            <input type="hidden" name="total_amount" value="<?php echo $total_amount; ?>">
-            <input type="hidden" name="transaction_uuid" value="<?php echo htmlspecialchars($esewaData['transaction_uuid']); ?>">
-            <input type="hidden" name="product_code" value="<?php echo $product_code; ?>">
-            <input type="hidden" name="tax_amount" value="<?php echo $tax_amount; ?>">
-            <input type="hidden" name="product_service_charge" value="<?php echo $service_charge; ?>">
-            <input type="hidden" name="product_delivery_charge" value="<?php echo $delivery_charge; ?>">
-            <input type="hidden" name="success_url" value="<?php echo htmlspecialchars($esewaData['success_url']); ?>">
-            <input type="hidden" name="failure_url" value="<?php echo htmlspecialchars($esewaData['failure_url']); ?>">
-            <input type="hidden" name="signed_field_names" value="total_amount,transaction_uuid,product_code">
+            <input type="hidden" name="tAmt" value="<?php echo htmlspecialchars($esewaData['total_amount']); ?>">
+            <input type="hidden" name="amt" value="<?php echo htmlspecialchars($esewaData['amount']); ?>">
+            <input type="hidden" name="txAmt" value="<?php echo htmlspecialchars($esewaData['tax_amount']); ?>">
+            <input type="hidden" name="psc"
+                value="<?php echo htmlspecialchars($esewaData['product_service_charge']); ?>">
+            <input type="hidden" name="pdc"
+                value="<?php echo htmlspecialchars($esewaData['product_delivery_charge']); ?>">
+            <input type="hidden" name="scd" value="<?php echo $product_code; ?>">
+            <input type="hidden" name="pid" value="<?php echo htmlspecialchars($esewaData['transaction_uuid']); ?>">
+            <input type="hidden" name="su" value="<?php echo htmlspecialchars($esewaData['success_url']); ?>">
+            <input type="hidden" name="fu" value="<?php echo htmlspecialchars($esewaData['failure_url']); ?>">
+            <input type="hidden" name="signed_field_names" value="<?php echo $signed_field_names; ?>">
             <input type="hidden" name="signature" value="<?php echo $signature; ?>">
 
             <?php if(empty($errors)): ?>
-            <button type="submit" class="payment-btn" id="payBtn">
+            <button type="submit" class="payment-btn" onclick="showLoading()">
                 Pay with eSewa - Rs. <?php echo number_format($bookingData['total_amount'], 2); ?>
             </button>
             <?php else: ?>
@@ -222,54 +173,26 @@ $bookingData = $_SESSION['booking_success'];
         </div>
 
         <div style="margin-top: 20px; font-size: 14px; color: #666;">
-            <p><strong>Important Notes:</strong></p>
-            <ul>
-                <li>You will be redirected to eSewa's secure payment gateway</li>
-                <li>Please complete your payment within 1 hour to confirm your booking</li>
-                <li>Ensure you have sufficient balance in your eSewa account</li>
-                <li>Keep your transaction ID safe for reference</li>
-            </ul>
+            <p><strong>Note:</strong> You will be redirected to eSewa's secure payment gateway. Please complete your
+                payment within 1 hour to confirm your booking.</p>
         </div>
     </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('esewaForm');
-        const payBtn = document.getElementById('payBtn');
-        const loading = document.getElementById('loading');
-        
-        if (payBtn && form) {
-            // Add form submission handler
-            form.addEventListener('submit', function(e) {
-                // Show loading state
-                loading.style.display = 'block';
-                payBtn.disabled = true;
-                payBtn.innerHTML = 'Processing...';
-                
-                // Log form submission for debugging
-                console.log('Form submitting to:', form.action);
-                console.log('Form method:', form.method);
-                
-                // Log all form data for debugging
-                const formData = new FormData(form);
-                console.log('Form data:');
-                for (let [key, value] of formData.entries()) {
-                    console.log(`${key}: ${value}`);
-                }
-            });
+    function showLoading() {
+        document.getElementById('loading').style.display = 'block';
+        document.querySelector('.payment-btn').disabled = true;
+        document.querySelector('.payment-btn').innerHTML = 'Processing...';
+    }
+
+    // Auto-submit after 3 seconds for better user experience
+    setTimeout(function() {
+        if (confirm(
+                'Ready to proceed to eSewa payment? Click OK to continue or Cancel to review your booking.')) {
+            showLoading();
+            document.getElementById('esewaForm').submit();
         }
-        
-        // Timeout handler - if redirect doesn't happen in 15 seconds
-        setTimeout(function() {
-            if (loading && loading.style.display === 'block') {
-                loading.innerHTML = '<div style="color: red;"><p><strong>Redirect Failed!</strong></p><p>If you are not redirected to eSewa, please:</p><ul><li>Check your internet connection</li><li>Verify your eSewa merchant credentials</li><li>Contact support if the problem persists</li></ul></div>';
-                if (payBtn) {
-                    payBtn.disabled = false;
-                    payBtn.innerHTML = 'Try Again';
-                }
-            }
-        }, 15000);
-    });
+    }, 2000);
     </script>
 </body>
 
