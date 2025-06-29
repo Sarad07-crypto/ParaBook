@@ -171,8 +171,8 @@ $bookingData = $_SESSION['booking_success'];
         $signature = base64_encode(hash_hmac('sha256', $data_to_sign, $secret_key, true));
         ?>
 
-        <!-- Debug Information (REMOVE IN PRODUCTION) -->
-        <!-- <div class="debug-info">
+        <!-- Debug Information (REMOVE IN PRODUCTION) --> -->
+     <!-- <div class="debug-info">
             <strong>Debug Information:</strong><br>
             <strong>Merchant ID:</strong> <?php echo htmlspecialchars($merchant_id); ?><br>
             <strong>Product Code:</strong> <?php echo htmlspecialchars($product_code); ?><br>
