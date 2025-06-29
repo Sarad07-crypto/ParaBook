@@ -40,6 +40,12 @@ $routes = [
     // for booking
     '/bookingpassenger' => PHP . 'views/booking_P.php',
     '/bookingcompany' => PHP . 'views/booking_C.php',
+    '/statistics' => PHP . 'views/statistics.php',
+    '/profile' => PHP . 'views/profile.php',
+    '/completeProfile' => PHP . 'views/completeProfile.php',
+
+    
+
 ];
 
 function routeToController($uri, $routes) {
