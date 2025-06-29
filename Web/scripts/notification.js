@@ -1,70 +1,464 @@
 // Notification System Variables
 let notifications = [];
+let messages = [];
+let favorites = [];
 
-// Toggle notification panels and icon states
-function toggleNotificationPanel(event, type) {
+// ENVELOPE (MESSAGES) FUNCTIONS
+function toggleEnvelopeNotifications(event) {
   event.preventDefault();
   event.stopPropagation();
 
-  const panel = document.getElementById(`${type}-panel`);
-  const icon = document.getElementById(`${type}-icon`);
+  const dropdown = document.getElementById("envelope-dropdown");
+  const envelopeIcon = document.getElementById("envelope-icon");
+  const envelope = document.getElementById("envelope-bell");
+  const isVisible = dropdown && dropdown.classList.contains("show");
 
-  // Close all other panels first
-  closeAllNotificationPanels(type);
+  // Close other notification panels first
+  closeAllNotificationPanels();
+  closeNotifications();
+  closeHeartNotifications();
 
-  // Toggle current panel
-  if (panel.classList.contains("show")) {
-    panel.classList.remove("show");
-    // Switch back to outline icon
-    icon.className = `far fa-${type}`;
-    icon.classList.remove("icon-active");
+  if (isVisible) {
+    closeEnvelopeNotifications();
   } else {
-    panel.classList.add("show");
-    // Switch to filled icon
-    icon.className = `fas fa-${type}`;
-    icon.classList.add("icon-active");
+    openEnvelopeNotifications();
   }
 }
 
-// Close specific notification panel
-function closeNotificationPanel(type) {
-  const panel = document.getElementById(`${type}-panel`);
-  const icon = document.getElementById(`${type}-icon`);
+function openEnvelopeNotifications() {
+  const dropdown = document.getElementById("envelope-dropdown");
+  const envelopeIcon = document.getElementById("envelope-icon");
+  const envelope = document.getElementById("envelope-bell");
 
-  if (panel) panel.classList.remove("show");
-  if (icon) {
-    // Switch back to outline icon
-    icon.className = `far fa-${type}`;
-    icon.classList.remove("icon-active");
-  }
+  if (dropdown) dropdown.classList.add("show");
+  if (envelopeIcon) envelopeIcon.className = "fas fa-envelope"; // Switch to filled envelope
+  if (envelope) envelope.classList.add("active");
+
+  // Load messages when opening
+  loadEnvelopeNotifications();
 }
 
-// Close all notification panels except the specified one
-function closeAllNotificationPanels(except = null) {
-  const types = ["bell", "envelope", "heart"];
-  types.forEach((type) => {
-    if (type !== except) {
-      closeNotificationPanel(type);
+function closeEnvelopeNotifications() {
+  const dropdown = document.getElementById("envelope-dropdown");
+  const envelopeIcon = document.getElementById("envelope-icon");
+  const envelope = document.getElementById("envelope-bell");
+
+  if (dropdown) dropdown.classList.remove("show");
+  if (envelopeIcon) envelopeIcon.className = "far fa-envelope"; // Switch back to outline envelope
+  if (envelope) envelope.classList.remove("active");
+}
+
+// Load messages from API
+async function loadEnvelopeNotifications() {
+  const loadingElement = document.getElementById("loading-envelope");
+  const listElement = document.getElementById("envelope-list");
+
+  try {
+    if (loadingElement) loadingElement.style.display = "block";
+
+    // Replace with your actual API endpoint for messages
+    const response = await fetch(
+      "Web/php/AJAX/messageAPI.php?action=get&limit=20"
+    );
+    const data = await response.json();
+
+    if (loadingElement) loadingElement.style.display = "none";
+
+    if (data.success) {
+      messages = data.messages || [];
+      renderEnvelopeNotifications();
+      updateEnvelopeBadge();
+    } else {
+      showEnvelopeError("Failed to load messages");
     }
-  });
-}
-
-// Toggle icon function for headphones
-function toggleIcon(element, iconName) {
-  if (element.classList.contains("fa-solid")) {
-    // Switch to outline version
-    element.classList.remove("fa-solid");
-    element.classList.add("far");
-    element.classList.remove("icon-active");
-  } else {
-    // Switch to filled version
-    element.classList.remove("far");
-    element.classList.add("fa-solid");
-    element.classList.add("icon-active");
+  } catch (error) {
+    if (loadingElement) loadingElement.style.display = "none";
+    console.error("Error loading messages:", error);
+    showEnvelopeError("Error loading messages");
   }
 }
 
-// Main notification system functions
+// Render messages in the dropdown
+function renderEnvelopeNotifications() {
+  const listElement = document.getElementById("envelope-list");
+  const markAllBtn = document.getElementById("envelope-mark-all-btn");
+
+  if (!listElement) return;
+
+  if (messages.length === 0) {
+    listElement.innerHTML = `
+      <div class="no-notifications">
+        <i class="far fa-envelope"></i>
+        <p>No messages yet</p>
+      </div>
+    `;
+    if (markAllBtn) markAllBtn.style.display = "none";
+    return;
+  }
+
+  const hasUnread = messages.some((m) => m.is_read == 0);
+  if (markAllBtn)
+    markAllBtn.style.display = hasUnread ? "inline-block" : "none";
+
+  const messageHTML = messages
+    .map((message) => {
+      const isUnread = message.is_read == 0;
+      const timeAgo = formatRelativeTime(message.created_at);
+
+      return `
+      <div class="notification-item ${isUnread ? "unread" : ""}" 
+           data-message-id="${message.id}"
+           onclick="markEnvelopeAsRead(${message.id})">
+        <div class="notification-content">
+          <div class="notification-icon message">
+            <i class="fas fa-envelope"></i>
+          </div>
+          <div class="notification-text">
+            <p class="notification-message">${
+              message.message || message.content
+            }</p>
+            <span class="notification-time">${timeAgo}</span>
+          </div>
+        </div>
+      </div>
+    `;
+    })
+    .join("");
+
+  listElement.innerHTML = messageHTML;
+}
+
+// Mark message as read
+async function markEnvelopeAsRead(messageId) {
+  try {
+    const response = await fetch(
+      "Web/php/AJAX/messageAPI.php?action=mark_read",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: `message_id=${messageId}`,
+      }
+    );
+
+    const data = await response.json();
+
+    if (data.success) {
+      // Update message in local array
+      const message = messages.find((m) => m.id == messageId);
+      if (message) {
+        message.is_read = 1;
+      }
+
+      // Update UI
+      const messageElement = document.querySelector(
+        `[data-message-id="${messageId}"]`
+      );
+      if (messageElement) {
+        messageElement.classList.remove("unread");
+      }
+
+      updateEnvelopeBadge();
+
+      // Hide mark all button if no unread messages
+      const hasUnread = messages.some((m) => m.is_read == 0);
+      const markAllBtn = document.getElementById("envelope-mark-all-btn");
+      if (markAllBtn)
+        markAllBtn.style.display = hasUnread ? "inline-block" : "none";
+    }
+  } catch (error) {
+    console.error("Error marking message as read:", error);
+  }
+}
+
+// Mark all messages as read
+async function markAllEnvelopeAsRead() {
+  try {
+    const response = await fetch(
+      "Web/php/AJAX/messageAPI.php?action=mark_all_read",
+      {
+        method: "POST",
+      }
+    );
+
+    const data = await response.json();
+
+    if (data.success) {
+      // Update all messages in local array
+      messages.forEach((m) => (m.is_read = 1));
+
+      // Update UI
+      document.querySelectorAll(".notification-item.unread").forEach((item) => {
+        item.classList.remove("unread");
+      });
+
+      updateEnvelopeBadge();
+      const markAllBtn = document.getElementById("envelope-mark-all-btn");
+      if (markAllBtn) markAllBtn.style.display = "none";
+
+      showToast("All messages marked as read", "success");
+    }
+  } catch (error) {
+    console.error("Error marking all messages as read:", error);
+    showToast("Error updating messages", "error");
+  }
+}
+
+// Refresh messages
+async function refreshEnvelopeNotifications() {
+  await loadEnvelopeNotifications();
+  showToast("Messages refreshed", "success");
+}
+
+// Update envelope badge
+function updateEnvelopeBadge() {
+  const badge = document.getElementById("envelope-badge");
+  if (!badge) return;
+
+  const unreadCount = messages.filter((m) => m.is_read == 0).length;
+
+  if (unreadCount > 0) {
+    badge.textContent = unreadCount > 99 ? "99+" : unreadCount;
+    badge.classList.add("show");
+  } else {
+    badge.classList.remove("show");
+  }
+}
+
+// Show envelope error message
+function showEnvelopeError(message) {
+  const listElement = document.getElementById("envelope-list");
+  if (!listElement) return;
+
+  listElement.innerHTML = `
+    <div class="no-notifications">
+      <i class="fas fa-exclamation-triangle"></i>
+      <p>${message}</p>
+      <button onclick="loadEnvelopeNotifications()" style="margin-top: 10px; padding: 8px 16px; background: #007BFF; color: white; border: none; border-radius: 4px; cursor: pointer;">
+        Try Again
+      </button>
+    </div>
+  `;
+}
+
+// HEART (FAVORITES) FUNCTIONS
+function toggleHeartNotifications(event) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  const dropdown = document.getElementById("heart-dropdown");
+  const heartIcon = document.getElementById("heart-icon");
+  const heart = document.getElementById("heart-bell");
+  const isVisible = dropdown && dropdown.classList.contains("show");
+
+  // Close other notification panels first
+  closeAllNotificationPanels();
+  closeNotifications();
+  closeEnvelopeNotifications();
+
+  if (isVisible) {
+    closeHeartNotifications();
+  } else {
+    openHeartNotifications();
+  }
+}
+
+function openHeartNotifications() {
+  const dropdown = document.getElementById("heart-dropdown");
+  const heartIcon = document.getElementById("heart-icon");
+  const heart = document.getElementById("heart-bell");
+
+  if (dropdown) dropdown.classList.add("show");
+  if (heartIcon) heartIcon.className = "fas fa-heart"; // Switch to filled heart
+  if (heart) heart.classList.add("active");
+
+  // Load favorites when opening
+  loadHeartNotifications();
+}
+
+function closeHeartNotifications() {
+  const dropdown = document.getElementById("heart-dropdown");
+  const heartIcon = document.getElementById("heart-icon");
+  const heart = document.getElementById("heart-bell");
+
+  if (dropdown) dropdown.classList.remove("show");
+  if (heartIcon) heartIcon.className = "far fa-heart"; // Switch back to outline heart
+  if (heart) heart.classList.remove("active");
+}
+
+// Load favorites from API
+async function loadHeartNotifications() {
+  const loadingElement = document.getElementById("loading-heart");
+  const listElement = document.getElementById("heart-list");
+
+  try {
+    if (loadingElement) loadingElement.style.display = "block";
+
+    // Replace with your actual API endpoint for favorites
+    const response = await fetch(
+      "Web/php/AJAX/favoritesAPI.php?action=get&limit=20"
+    );
+    const data = await response.json();
+
+    if (loadingElement) loadingElement.style.display = "none";
+
+    if (data.success) {
+      favorites = data.favorites || [];
+      renderHeartNotifications();
+      updateHeartBadge();
+    } else {
+      showHeartError("Failed to load favorites");
+    }
+  } catch (error) {
+    if (loadingElement) loadingElement.style.display = "none";
+    console.error("Error loading favorites:", error);
+    showHeartError("Error loading favorites");
+  }
+}
+
+// Render favorites in the dropdown
+function renderHeartNotifications() {
+  const listElement = document.getElementById("heart-list");
+  const clearAllBtn = document.getElementById("heart-clear-btn");
+
+  if (!listElement) return;
+
+  if (favorites.length === 0) {
+    listElement.innerHTML = `
+      <div class="no-notifications">
+        <i class="far fa-heart"></i>
+        <p>No favorites yet</p>
+      </div>
+    `;
+    if (clearAllBtn) clearAllBtn.style.display = "none";
+    return;
+  }
+
+  if (clearAllBtn) clearAllBtn.style.display = "inline-block";
+
+  const favoriteHTML = favorites
+    .map((favorite) => {
+      const timeAgo = formatRelativeTime(favorite.created_at);
+
+      return `
+      <div class="notification-item" 
+           data-favorite-id="${favorite.id}"
+           onclick="removeFavorite(${favorite.id})">
+        <div class="notification-content">
+          <div class="notification-icon favorite">
+            <i class="fas fa-heart"></i>
+          </div>
+          <div class="notification-text">
+            <p class="notification-message">${
+              favorite.title || favorite.name
+            }</p>
+            <span class="notification-time">${timeAgo}</span>
+          </div>
+        </div>
+      </div>
+    `;
+    })
+    .join("");
+
+  listElement.innerHTML = favoriteHTML;
+}
+
+// Remove favorite
+async function removeFavorite(favoriteId) {
+  try {
+    const response = await fetch(
+      "Web/php/AJAX/favoritesAPI.php?action=remove",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: `favorite_id=${favoriteId}`,
+      }
+    );
+
+    const data = await response.json();
+
+    if (data.success) {
+      // Remove favorite from local array
+      favorites = favorites.filter((f) => f.id != favoriteId);
+
+      // Update UI
+      renderHeartNotifications();
+      updateHeartBadge();
+
+      showToast("Removed from favorites", "success");
+    }
+  } catch (error) {
+    console.error("Error removing favorite:", error);
+    showToast("Error removing favorite", "error");
+  }
+}
+
+// Clear all favorites
+async function clearAllFavorites() {
+  try {
+    const response = await fetch(
+      "Web/php/AJAX/favoritesAPI.php?action=clear_all",
+      {
+        method: "POST",
+      }
+    );
+
+    const data = await response.json();
+
+    if (data.success) {
+      favorites = [];
+      renderHeartNotifications();
+      updateHeartBadge();
+
+      showToast("All favorites cleared", "success");
+    }
+  } catch (error) {
+    console.error("Error clearing favorites:", error);
+    showToast("Error clearing favorites", "error");
+  }
+}
+
+// Refresh favorites
+async function refreshHeartNotifications() {
+  await loadHeartNotifications();
+  showToast("Favorites refreshed", "success");
+}
+
+// Update heart badge
+function updateHeartBadge() {
+  const badge = document.getElementById("heart-badge");
+  if (!badge) return;
+
+  const favoriteCount = favorites.length;
+
+  if (favoriteCount > 0) {
+    badge.textContent = favoriteCount > 99 ? "99+" : favoriteCount;
+    badge.classList.add("show");
+  } else {
+    badge.classList.remove("show");
+  }
+}
+
+// Show heart error message
+function showHeartError(message) {
+  const listElement = document.getElementById("heart-list");
+  if (!listElement) return;
+
+  listElement.innerHTML = `
+    <div class="no-notifications">
+      <i class="fas fa-exclamation-triangle"></i>
+      <p>${message}</p>
+      <button onclick="loadHeartNotifications()" style="margin-top: 10px; padding: 8px 16px; background: #e91e63; color: white; border: none; border-radius: 4px; cursor: pointer;">
+        Try Again
+      </button>
+    </div>
+  `;
+}
+
+// ORIGINAL NOTIFICATION FUNCTIONS (Keep existing)
 function toggleNotifications(event) {
   event.preventDefault();
   event.stopPropagation();
@@ -74,6 +468,8 @@ function toggleNotifications(event) {
 
   // Close other notification panels first
   closeAllNotificationPanels();
+  closeEnvelopeNotifications();
+  closeHeartNotifications();
 
   if (isVisible) {
     closeNotifications();
@@ -308,6 +704,13 @@ function updateNotificationBadge() {
   }
 }
 
+// UTILITY FUNCTIONS
+function closeAllNotificationPanels() {
+  closeNotifications();
+  closeEnvelopeNotifications();
+  closeHeartNotifications();
+}
+
 // Format relative time
 function formatRelativeTime(dateString) {
   const date = new Date(dateString);
@@ -388,27 +791,75 @@ function showError(message) {
   `;
 }
 
-// Load initial notification count
-async function loadNotificationCount() {
+// Load initial notification counts
+async function loadAllNotificationCounts() {
   try {
-    const response = await fetch(
+    // Load notification count
+    const notificationResponse = await fetch(
       "Web/php/AJAX/bookingNotificationAPI.php?action=unread_count"
     );
-    const data = await response.json();
+    const notificationData = await notificationResponse.json();
 
-    if (data.success) {
+    if (notificationData.success) {
       const badge = document.getElementById("notification-badge");
-      const unreadCount = data.unread_count || 0;
+      const unreadCount = notificationData.unread_count || 0;
 
       if (badge && unreadCount > 0) {
         badge.textContent = unreadCount > 99 ? "99+" : unreadCount;
         badge.classList.add("show");
       }
     }
+
+    // Load message count
+    const messageResponse = await fetch(
+      "Web/php/AJAX/messageAPI.php?action=unread_count"
+    );
+    const messageData = await messageResponse.json();
+
+    if (messageData.success) {
+      const badge = document.getElementById("envelope-badge");
+      const unreadCount = messageData.unread_count || 0;
+
+      if (badge && unreadCount > 0) {
+        badge.textContent = unreadCount > 99 ? "99+" : unreadCount;
+        badge.classList.add("show");
+      }
+    }
+
+    // Load favorites count
+    const favoritesResponse = await fetch(
+      "Web/php/AJAX/favoritesAPI.php?action=count"
+    );
+    const favoritesData = await favoritesResponse.json();
+
+    if (favoritesData.success) {
+      const badge = document.getElementById("heart-badge");
+      const favoriteCount = favoritesData.count || 0;
+
+      if (badge && favoriteCount > 0) {
+        badge.textContent = favoriteCount > 99 ? "99+" : favoriteCount;
+        badge.classList.add("show");
+      }
+    }
   } catch (error) {
-    console.error("Error loading notification count:", error);
+    console.error("Error loading notification counts:", error);
   }
 }
+
+// Toggle icon function for headphones
+// function toggleIcon(element, iconName) {
+//   if (element.classList.contains("fa-solid")) {
+//     // Switch to outline version
+//     element.classList.remove("fa-solid");
+//     element.classList.add("far");
+//     element.classList.remove("icon-active");
+//   } else {
+//     // Switch to filled version
+//     element.classList.remove("far");
+//     element.classList.add("fa-solid");
+//     element.classList.add("icon-active");
+//   }
+// }
 
 // Avatar dropdown functionality
 function toggleDropdown() {
@@ -419,7 +870,6 @@ function toggleDropdown() {
     menu.style.display = "block";
     // Close notification panels when opening avatar dropdown
     closeAllNotificationPanels();
-    closeNotifications();
   }
 }
 
@@ -465,16 +915,25 @@ document.addEventListener("click", function (e) {
     }
   }
 
-  // Close notification dropdown when clicking outside
+  // Close notification dropdowns when clicking outside
   if (!e.target.closest(".notification-container")) {
     if (isNotificationDropdownOpen()) {
       closeNotifications();
     }
   }
 
-  // Close notification panels when clicking outside right section
-  if (!e.target.closest(".right-section")) {
-    closeAllNotificationPanels();
+  if (!e.target.closest(".envelope-container")) {
+    const envelopeDropdown = document.getElementById("envelope-dropdown");
+    if (envelopeDropdown && envelopeDropdown.classList.contains("show")) {
+      closeEnvelopeNotifications();
+    }
+  }
+
+  if (!e.target.closest(".heart-container")) {
+    const heartDropdown = document.getElementById("heart-dropdown");
+    if (heartDropdown && heartDropdown.classList.contains("show")) {
+      closeHeartNotifications();
+    }
   }
 
   // Close mobile search when clicking outside
@@ -491,8 +950,8 @@ document.addEventListener("click", function (e) {
 
 // Initialize when DOM is loaded
 document.addEventListener("DOMContentLoaded", function () {
-  // Load notification count on page load
-  loadNotificationCount();
+  // Load all notification counts on page load
+  loadAllNotificationCounts();
 
   // Auto-refresh notification count every 30 seconds
   setInterval(loadNotificationCount, 30000);
