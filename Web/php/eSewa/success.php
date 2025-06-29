@@ -60,12 +60,8 @@ try {
 
     $tempBooking = $tempBookingResult->fetch_assoc();
     $tempBookingStmt->close();
-<<<<<<< HEAD
-$droptempBookingStmt =     // Start transaction
-=======
 
     // Start transaction
->>>>>>> Karun
     $connect->begin_transaction();
 
     try {
@@ -122,20 +118,6 @@ $droptempBookingStmt =     // Start transaction
 
         // Commit transaction
         $connect->commit();
-<<<<<<< HEAD
-        $droptempBookingStmt = $connect->prepare("DELETE FROM temp_bookings WHERE booking_no = ?");
-        if (!$droptempBookingStmt) {
-            throw new Exception('Database prepare error: ' . $connect->error);
-        }
-        $droptempBookingStmt->bind_param("s", $tempBooking['booking_no']);
-        // Delete temporary booking
-        $droptempBookingStmt->execute();
-        if (!$droptempBookingStmt->execute()) {
-            throw new Exception('Failed to delete temporary booking: ' . $droptempBookingStmt->error);
-        }
-        $droptempBookingStmt->close();
-=======
->>>>>>> Karun
 
         // Redirect to success page with booking details
         $successMessage = urlencode("Payment successful! Your booking has been confirmed. Booking Number: " . $tempBooking['booking_no']);
