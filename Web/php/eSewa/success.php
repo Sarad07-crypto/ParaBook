@@ -83,14 +83,8 @@ try {
     $tempBooking = $tempBookingResult->fetch_assoc();
     $tempBookingStmt->close();
 
-    // Verify amounts match (allowing small floating point differences)
-    // if (abs(floatval($tempBooking['total_amount']) - floatval($total_amount)) > 0.01) {
-    //     throw new Exception('Amount mismatch. Expected: ' . $tempBooking['total_amount'] . 
-    //                       ', Received: ' . $total_amount);
-    // }
-
     // Check if booking already exists (prevent duplicate processing)
-    $existingBookingStmt = $connect->prepare("SELECT user_id FROM bookings WHERE booking_no = ?");
+    $existingBookingStmt = $connect->prepare("SELECT booking_id FROM bookings WHERE booking_no = ?");
     $existingBookingStmt->bind_param("s", $tempBooking['booking_no']);
     $existingBookingStmt->execute();
     $existingResult = $existingBookingStmt->get_result();
@@ -107,29 +101,45 @@ try {
     }
     $existingBookingStmt->close();
 
+    
+    $userStmt = $connect->prepare("
+        SELECT 
+            u.email,
+            ui.firstName, 
+            ui.lastName, 
+            ui.contact as phone 
+        FROM users u 
+        INNER JOIN users_info ui ON u.id = ui.user_id 
+        WHERE u.id = ?
+    ");
+    $userStmt->bind_param("i", $tempBooking['user_id']);
+    $userStmt->execute();
+    $userResult = $userStmt->get_result();
+    $userDetails = $userResult->fetch_assoc();
+    $userStmt->close();
+
     // Start database transaction
     $connect->begin_transaction();
-$tempbookingno= $tempBooking['booking_no'];
-    // Insert confirmed booking
+
+    // Insert confirmed booking into bookings table
     $insertBooking = $connect->prepare("
-        INSERT INTO esewainfo (
-           esewaid,booking_no,amount,transaction_code,transaction_date,status,pickup,flight_type
-        ) VALUES (?, ?, ?, ?, NOW(),'completed', ?, ?)
+        INSERT INTO bookings (
+            booking_no, user_id, date, pickup, flight_type, weight, age, 
+            medical_condition, total_amount, status, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())
     ");
 
     $insertBooking->bind_param(
-        "isssss", 
-        
-        $tempBooking['user_id'],
-$tempbookingno,
-        
-              $tempBooking['total_amount'],
-               $transaction_code,
-       
-        $tempBooking['pickup'],
-        $tempBooking['flight_type_name'],
-  
-       
+        "sisssdisd", 
+        $tempBooking['booking_no'],      // s - string
+        $tempBooking['user_id'],         // i - integer
+        $tempBooking['date'],            // s - string
+        $tempBooking['pickup'],          // s - string
+        $tempBooking['flight_type_name'], // s - string
+        $tempBooking['weight'],          // d - decimal
+        $tempBooking['age'],             // i - integer
+        $tempBooking['notes'],           // s - string (medical_condition)
+        $tempBooking['total_amount']     // d - decimal
     );
 
     if (!$insertBooking->execute()) {
@@ -138,6 +148,77 @@ $tempbookingno,
 
     $bookingId = $connect->insert_id;
     $insertBooking->close();
+
+    // Insert eSewa payment information
+    $insertEsewaInfo = $connect->prepare("
+        INSERT INTO esewainfo (
+            esewaid, booking_no, amount, transaction_code, transaction_date, 
+            status, pickup, flight_type
+        ) VALUES (?, ?, ?, ?, NOW(), 'completed', ?, ?)
+    ");
+
+    $insertEsewaInfo->bind_param(
+        "isssss", 
+        $tempBooking['user_id'],
+        $tempBooking['booking_no'],
+        $tempBooking['total_amount'],
+        $transaction_code,
+        $tempBooking['pickup'],
+        $tempBooking['flight_type_name']
+    );
+
+    if (!$insertEsewaInfo->execute()) {
+        throw new Exception('Failed to save payment info: ' . $insertEsewaInfo->error);
+    }
+
+    $insertEsewaInfo->close();
+
+    // CREATE NOTIFICATION FOR USER (Successful Booking)
+    $userNotificationTitle = "Booking Confirmed Successfully";
+    $userNotificationMessage = "Your booking #{$tempBooking['booking_no']} has been confirmed and payment of Rs. " . number_format($tempBooking['total_amount'], 2) . " has been processed successfully.";
+    
+    createNotification(
+        $connect,
+        $tempBooking['user_id'],
+        'passenger',
+        $userNotificationTitle,
+        $userNotificationMessage,
+        'booking_confirmed',
+        'fas fa-plane',
+        $bookingId
+    );
+
+    // CREATE NOTIFICATION FOR COMPANY (New Booking Alert)
+    $customerName = ($userDetails['firstName'] ?? '') . ' ' . ($userDetails['lastName'] ?? '');
+    $customerEmail = $userDetails['email'] ?? 'N/A';
+    $customerPhone = $userDetails['phone'] ?? 'N/A';
+    
+    $companyNotificationTitle = "New Booking Received";
+    $companyNotificationMessage = "New booking received from {$customerName}. Amount: Rs. " . number_format($tempBooking['total_amount'], 2);
+    
+    // Get all company users to notify based on your actual database schema
+    $companyUsersStmt = $connect->prepare("
+        SELECT u.id 
+        FROM users u 
+        INNER JOIN users_info ui ON u.id = ui.user_id 
+        WHERE ui.acc_type = 'company'
+    ");
+    $companyUsersStmt->execute();
+    $companyUsersResult = $companyUsersStmt->get_result();
+
+    while ($companyUser = $companyUsersResult->fetch_assoc()) {
+        createNotification(
+            $connect,
+            $companyUser['id'],
+            'company',
+            $companyNotificationTitle,
+            $companyNotificationMessage,
+            'new_booking',
+            'fas fa-plane',
+            $bookingId
+        );
+    }
+    $companyUsersStmt->close();
 
     // Delete temporary booking
     $deleteTempStmt = $connect->prepare("DELETE FROM temp_bookings WHERE booking_no = ?");
@@ -153,70 +234,150 @@ $tempbookingno,
 
     // Success page with better styling
     ?>
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Payment Successful - Parabook</title>
-        <style>
-            body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
-            .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-            .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-            .booking-details { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
-            .btn { background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 20px; }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="success">
-                <h1>✅ Payment Successful!</h1>
-                <p>Your booking has been confirmed successfully.</p>
-            </div>
-            
-            <div class="booking-details">
-                <h3>Booking Details</h3>
+<!DOCTYPE html>
+<html lang="en">
 
-                <p><strong>Booking Number:</strong> <?php echo htmlspecialchars($tempBooking['booking_no']); ?></p>
-                <!-- <p><strong>Booking ID:</strong> <?php echo $bookingId; ?></p> -->
-                <p><strong>Transaction Code:</strong> <?php echo htmlspecialchars($transaction_code); ?></p>
-                <p><strong>Amount Paid:</strong> Rs. <?php echo number_format($tempBooking['total_amount'], 2); ?></p>
-                <p><strong>Date:</strong> <?php echo htmlspecialchars($tempBooking['date']); ?></p>
-                <p><strong>Pickup Location:</strong> <?php echo htmlspecialchars($tempBooking['pickup']); ?></p>
-                <p><strong>Flight Type:</strong> <?php echo htmlspecialchars($tempBooking['flight_type_name']); ?></p>
-                <p><strong>Payment Method:</strong> eSewa</p>
-                     <p>✅ Booking confirmed! Redirecting to email confirmation in <span id="countdown">5</span> seconds...</p>
-            </div>
-            <script>
-let countdown = 5;
-const countdownElement = document.getElementById('countdown');
-
-const timer = setInterval(function() {
-    countdown--;
-    countdownElement.textContent = countdown;
-    
-    if (countdown <= 0) {
-        clearInterval(timer);
-        window.location.href = 'email.php';
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Successful - Parabook</title>
+    <style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f5f5f5;
+        margin: 0;
+        padding: 20px;
     }
-}, 1000);
-</script>
-            <div style="background: #e7f3ff; padding: 15px; border-radius: 5px;">
-                <h4>📋 Next Steps:</h4>
-                <ul>
-                    <li>You will receive a confirmation email shortly</li>
-                    <li>Please save your booking number for future reference</li>
-                    <li>Arrive at the pickup location 15 minutes before your scheduled time</li>
-                    <li>Bring a valid ID for verification</li>
-                </ul>
-            </div>
-            
-            <a href="/dashboard" class="btn">Go to Dashboard</a>
-            <a href="/bookings" class="btn" style="background: #28a745;">View My Bookings</a>
+
+    .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .success {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .booking-details {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+    }
+
+    .btn {
+        background: #007bff;
+        color: white;
+        padding: 12px 24px;
+        text-decoration: none;
+        border-radius: 5px;
+        display: inline-block;
+        margin-top: 20px;
+    }
+
+    .notification-info {
+        background: #e7f3ff;
+        border: 1px solid #b3d9ff;
+        color: #0056b3;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px 0;
+    }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="success">
+            <h1>✅ Payment Successful!</h1>
+            <p>Your booking has been confirmed successfully.</p>
         </div>
-    </body>
-    </html>
-    <?php
+
+        <div class="notification-info">
+            <h4>🔔 Notifications Sent</h4>
+            <p>Confirmation notifications have been sent to both you and our company team. You can view your
+                notification in your notification panel.</p>
+        </div>
+
+        <div class="booking-details">
+            <h3>Booking Details</h3>
+            <p><strong>Booking Number:</strong> <?php echo htmlspecialchars($tempBooking['booking_no']); ?></p>
+            <p><strong>Booking ID:</strong> <?php echo $bookingId; ?></p>
+            <p><strong>Transaction Code:</strong> <?php echo htmlspecialchars($transaction_code); ?></p>
+            <p><strong>Amount Paid:</strong> Rs. <?php echo number_format($tempBooking['total_amount'], 2); ?></p>
+            <p><strong>Date:</strong> <?php echo htmlspecialchars($tempBooking['date']); ?></p>
+            <p><strong>Pickup Location:</strong> <?php echo htmlspecialchars($tempBooking['pickup']); ?></p>
+            <p><strong>Flight Type:</strong> <?php echo htmlspecialchars($tempBooking['flight_type_name']); ?></p>
+            <p><strong>Weight:</strong>
+                <?php echo $tempBooking['weight'] ? htmlspecialchars($tempBooking['weight']) . ' kg' : 'Not specified'; ?>
+            </p>
+            <p><strong>Age:</strong> <?php echo htmlspecialchars($tempBooking['age']); ?> years</p>
+            <?php if (!empty($tempBooking['notes'])): ?>
+            <p><strong>Medical/Special Notes:</strong> <?php echo htmlspecialchars($tempBooking['notes']); ?></p>
+            <?php endif; ?>
+            <p><strong>Payment Method:</strong> eSewa</p>
+            <p><strong>Status:</strong> ✅ Confirmed</p>
+        </div>
+
+        <div style="background: #e7f3ff; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h4>📋 Next Steps:</h4>
+            <ul>
+                <li>You will receive a confirmation email shortly</li>
+                <li>Please save your booking number for future reference</li>
+                <li>Arrive at the pickup location 15 minutes before your scheduled time</li>
+                <li>Bring a valid ID for verification</li>
+                <li>Check your notifications for updates on your booking</li>
+                <li>Our team has been notified and will contact you if needed</li>
+            </ul>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <p>✅ Booking confirmed! Redirecting to dashboard in <span id="countdown">5</span> seconds...</p>
+        </div>
+
+        <script>
+        // Notification update - trigger a refresh of notification count
+        if (typeof loadAllNotificationCounts === 'function') {
+            loadAllNotificationCounts();
+        }
+
+        // Optional: Show a browser notification if supported
+        if ("Notification" in window && Notification.permission === "granted") {
+            new Notification("Booking Confirmed", {
+                body: "Your booking #<?php echo htmlspecialchars($tempBooking['booking_no']); ?> has been confirmed successfully!",
+                icon: "/path/to/your/icon.png"
+            });
+        }
+
+        // Countdown redirect
+        let countdown = 5;
+        const countdownElement = document.getElementById('countdown');
+        const timer = setInterval(function() {
+            countdown--;
+            countdownElement.textContent = countdown;
+            if (countdown <= 0) {
+                clearInterval(timer);
+                window.location.href = '/home';
+            }
+        }, 1000);
+        </script>
+
+        <a href="/dashboard" class="btn">Go to Dashboard</a>
+        <a href="/serviceDescription" class="btn" style="background: #28a745;">View My Bookings</a>
+    </div>
+</body>
+
+</html>
+<?php
 
 } catch (Exception $e) {
     if (isset($connect)) {
@@ -224,46 +385,77 @@ const timer = setInterval(function() {
     }
     
     ?>
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Payment Error - Parabook</title>
-        <style>
-            body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
-            .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-            .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-            .debug { background: #f8f9fa; padding: 15px; border-radius: 5px; font-family: monospace; font-size: 12px; }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="error">
-                <h1>❌ Payment Processing Error</h1>
-                <p><strong>Error:</strong> <?php echo htmlspecialchars($e->getMessage()); ?></p>
-            </div>
-            
-            <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0;">
-                <h4>🔧 What to do:</h4>
-                <ul>
-                    <li>If payment was deducted, please contact support immediately</li>
-                    <li>Do not attempt payment again until this issue is resolved</li>
-                    <li>Keep a screenshot of this page for reference</li>
-                    <li>Contact support with your transaction details</li>
-                </ul>
-            </div>
-            
-            <?php if (isset($encoded_data)): ?>
-            <div class="debug">
-                <strong>Raw eSewa Data:</strong><br>
-                <?php echo htmlspecialchars($encoded_data); ?>
-            </div>
-            <?php endif; ?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Error - Parabook</title>
+    <style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f5f5f5;
+        margin: 0;
+        padding: 20px;
+    }
+
+    .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .error {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .debug {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        font-family: monospace;
+        font-size: 12px;
+    }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="error">
+            <h1>❌ Payment Processing Error</h1>
+            <p><strong>Error:</strong> <?php echo htmlspecialchars($e->getMessage()); ?></p>
         </div>
-    </body>
-    </html>
-    <?php
+
+        <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h4>🔧 What to do:</h4>
+            <ul>
+                <li>If payment was deducted, please contact support immediately</li>
+                <li>Do not attempt payment again until this issue is resolved</li>
+                <li>Keep a screenshot of this page for reference</li>
+                <li>Contact support with your transaction details</li>
+            </ul>
+        </div>
+
+        <?php if (isset($encoded_data)): ?>
+        <div class="debug">
+            <strong>Raw eSewa Data:</strong><br>
+            <?php echo htmlspecialchars($encoded_data); ?>
+        </div>
+        <?php endif; ?>
+    </div>
+</body>
+
+</html>
+<?php
     
     error_log("eSewa payment error: " . $e->getMessage());
     error_log("eSewa data: " . ($encoded_data ?? 'No data'));
@@ -295,5 +487,26 @@ function verifyEsewaSignature($payment_data, $secret_key) {
     
     // Compare signatures
     return hash_equals($payment_data['signature'], $generated_signature);
+}
+
+/**
+ * Enhanced helper function to create notifications
+ */
+function createNotification($connect, $recipient_id, $recipient_type, $title, $message, $type = 'general', $icon = 'fas fa-plane', $booking_id = null) {
+    $stmt = $connect->prepare("
+        INSERT INTO notifications (
+            recipient_id, recipient_type, title, message, type, icon, booking_id, is_read, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, NOW())
+    ");
+    
+    $stmt->bind_param("isssssi", $recipient_id, $recipient_type, $title, $message, $type, $icon, $booking_id);
+    
+    if (!$stmt->execute()) {
+        error_log('Failed to create notification: ' . $stmt->error);
+        return false;
+    }
+    
+    $stmt->close();
+    return true;
 }
 ?>

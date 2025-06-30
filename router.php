@@ -15,8 +15,9 @@
     $routes = [
         // error log
         '/logs' => 'testlog.php',
-       
-       
+        '/bookingSubmit' => PHP. 'AJAX/bookingSubmit.php',
+        '/eSewaPayment' => PHP . 'eSewa/eSewaPayment.php',
+        '/chat' => PHP . 'chat/ChatServer.php',
         
         //admin
         '/admin' => PHP . 'ADMIN/Admin.php',
@@ -46,7 +47,6 @@
         '/bookingpassengerUpdate' => PHP . 'views/bookingFormUpdate_P.php',
         '/bookingcompany' => PHP . 'views/booking_C.php',
         '/bookingcheck' => PHP . 'views/bookingCheck_P.php',
-         '/bookingSubmit' => PHP. 'AJAX/bookingSubmit.php',
 
         // for statistics
         '/statistics' => PHP . 'views/statistics.php',
@@ -56,7 +56,7 @@
         // eSewa
         '/booking-success' => PHP . 'eSewa/pageSuccess.php',
         '/booking-error' => PHP . 'eSewa/pageError.php',
-         '/eSewaPayment' => PHP . 'eSewa/eSewaPayment.php',
+        
     ];
 
     function routeToController($uri, $routes) {
