@@ -145,7 +145,6 @@
         </div>
     </div>
 
-    <script src="Web/scripts/admin.js"></script>
 
     <script>
         let currentTab = 'pending';

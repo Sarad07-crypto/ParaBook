@@ -17,6 +17,7 @@
         '/logs' => 'testlog.php',
         '/bookingSubmit' => PHP. 'AJAX/bookingSubmit.php',
         '/eSewaPayment' => PHP . 'eSewa/eSewaPayment.php',
+        '/chat' => PHP . 'chat/ChatServer.php',
         
         //admin
         '/admin' => PHP . 'ADMIN/Admin.php',
