@@ -226,24 +226,158 @@ try {
     $deleteTempStmt->execute();
     $deleteTempStmt->close();
 
-        // Commit transaction
-        $connect->commit();
-        $droptempBookingStmt = $connect->prepare("DELETE FROM temp_bookings WHERE booking_no = ?");
-        if (!$droptempBookingStmt) {
-            throw new Exception('Database prepare error: ' . $connect->error);
-        }
-        $droptempBookingStmt->bind_param("s", $tempBooking['booking_no']);
-        // Delete temporary booking
-        $droptempBookingStmt->execute();
-        if (!$droptempBookingStmt->execute()) {
-            throw new Exception('Failed to delete temporary booking: ' . $droptempBookingStmt->error);
-        }
-        $droptempBookingStmt->close();
+    // Commit transaction
+    $connect->commit();
 
-        // Redirect to success page with booking details
-        $successMessage = urlencode("Payment successful! Your booking has been confirmed. Booking Number: " . $tempBooking['booking_no']);
-        header("Location: /booking-success?message=$successMessage&booking_no=" . $tempBooking['booking_no']);
-        exit;
+    // Clear session
+    session_unset();
+
+    // Success page with better styling
+    ?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Successful - Parabook</title>
+    <style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f5f5f5;
+        margin: 0;
+        padding: 20px;
+    }
+
+    .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .success {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .booking-details {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+    }
+
+    .btn {
+        background: #007bff;
+        color: white;
+        padding: 12px 24px;
+        text-decoration: none;
+        border-radius: 5px;
+        display: inline-block;
+        margin-top: 20px;
+    }
+
+    .notification-info {
+        background: #e7f3ff;
+        border: 1px solid #b3d9ff;
+        color: #0056b3;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px 0;
+    }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="success">
+            <h1>✅ Payment Successful!</h1>
+            <p>Your booking has been confirmed successfully.</p>
+        </div>
+
+        <div class="notification-info">
+            <h4>🔔 Notifications Sent</h4>
+            <p>Confirmation notifications have been sent to both you and our company team. You can view your
+                notification in your notification panel.</p>
+        </div>
+
+        <div class="booking-details">
+            <h3>Booking Details</h3>
+            <p><strong>Booking Number:</strong> <?php echo htmlspecialchars($tempBooking['booking_no']); ?></p>
+            <p><strong>Booking ID:</strong> <?php echo $bookingId; ?></p>
+            <p><strong>Transaction Code:</strong> <?php echo htmlspecialchars($transaction_code); ?></p>
+            <p><strong>Amount Paid:</strong> Rs. <?php echo number_format($tempBooking['total_amount'], 2); ?></p>
+            <p><strong>Date:</strong> <?php echo htmlspecialchars($tempBooking['date']); ?></p>
+            <p><strong>Pickup Location:</strong> <?php echo htmlspecialchars($tempBooking['pickup']); ?></p>
+            <p><strong>Flight Type:</strong> <?php echo htmlspecialchars($tempBooking['flight_type_name']); ?></p>
+            <p><strong>Weight:</strong>
+                <?php echo $tempBooking['weight'] ? htmlspecialchars($tempBooking['weight']) . ' kg' : 'Not specified'; ?>
+            </p>
+            <p><strong>Age:</strong> <?php echo htmlspecialchars($tempBooking['age']); ?> years</p>
+            <?php if (!empty($tempBooking['notes'])): ?>
+            <p><strong>Medical/Special Notes:</strong> <?php echo htmlspecialchars($tempBooking['notes']); ?></p>
+            <?php endif; ?>
+            <p><strong>Payment Method:</strong> eSewa</p>
+            <p><strong>Status:</strong> ✅ Confirmed</p>
+        </div>
+
+        <div style="background: #e7f3ff; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h4>📋 Next Steps:</h4>
+            <ul>
+                <li>You will receive a confirmation email shortly</li>
+                <li>Please save your booking number for future reference</li>
+                <li>Arrive at the pickup location 15 minutes before your scheduled time</li>
+                <li>Bring a valid ID for verification</li>
+                <li>Check your notifications for updates on your booking</li>
+                <li>Our team has been notified and will contact you if needed</li>
+            </ul>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <p>✅ Booking confirmed! Redirecting to dashboard in <span id="countdown">5</span> seconds...</p>
+        </div>
+
+        <script>
+        // Notification update - trigger a refresh of notification count
+        if (typeof loadAllNotificationCounts === 'function') {
+            loadAllNotificationCounts();
+        }
+
+        // Optional: Show a browser notification if supported
+        if ("Notification" in window && Notification.permission === "granted") {
+            new Notification("Booking Confirmed", {
+                body: "Your booking #<?php echo htmlspecialchars($tempBooking['booking_no']); ?> has been confirmed successfully!",
+                icon: "/path/to/your/icon.png"
+            });
+        }
+
+        // Countdown redirect
+        let countdown = 5;
+        const countdownElement = document.getElementById('countdown');
+        const timer = setInterval(function() {
+            countdown--;
+            countdownElement.textContent = countdown;
+            if (countdown <= 0) {
+                clearInterval(timer);
+                window.location.href = '/home';
+            }
+        }, 1000);
+        </script>
+
+        <a href="/dashboard" class="btn">Go to Dashboard</a>
+        <a href="/serviceDescription" class="btn" style="background: #28a745;">View My Bookings</a>
+    </div>
+</body>
+
+</html>
+<?php
 
 } catch (Exception $e) {
     if (isset($connect)) {
