@@ -441,7 +441,7 @@
   <div class="profile-sidebar">
     <div class="profile-avatar-circle">
       <img src="<?php echo $avatar ?>" alt="image not found"
-                                onerror="showInitial(this, '<?php echo $firstInitial ?>')">
+      onerror="showInitial(this, '<?php echo $firstInitial ?>')">
     </div>
     <h2>Sabin Pandey</h2>
     <p class="username">@sabinpandey657</p>
