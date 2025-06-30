@@ -1,14 +1,11 @@
-<?php
+<?php 
     require 'avatar.php';
     require 'partials/header.php';
     require 'partials/nav_P.php';
-    if (session_status() == PHP_SESSION_NONE) {
-        session_start();
-    }
+    session_start();
 
     $userid = $_SESSION['user_id'];
     $serviceId = $_SESSION['service_id'] ?? 0;
-    
     include "Web/php/connection.php";
 
     // Fetch user info
@@ -73,7 +70,8 @@
                     <div class="form-group">
                         <label for="mainPhone">Contact Number</label>
                         <input type="tel" id="mainPhone" name="mainPhone"
-                            value="<?php echo htmlspecialchars($contact); ?>" required placeholder="e.g. 98XXXXXXXX" />
+                            value="<?php echo htmlspecialchars($contact); ?>" required
+                            placeholder="e.g. +977-98XXXXXXXX" />
                     </div>
                     <div class="form-group">
                         <label for="mainNationality">Nationality</label>
@@ -230,30 +228,7 @@
     cursor: pointer;
     "></div>
 
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="Web/scripts/booking_P.js"></script>
-    <script>
-    // Define session variables from PHP
-    <?php if (isset($_SESSION['booking_error'])): ?>
-    var bookingError = <?php echo json_encode($_SESSION['booking_error']); ?>;
-    <?php unset($_SESSION['booking_error']); ?>
-    <?php endif; ?>
-
-    <?php if (isset($_SESSION['booking_success'])): ?>
-    var bookingSuccess = true;
-    <?php unset($_SESSION['booking_success']); ?>
-    <?php endif; ?>
-
-    <?php if (isset($_SESSION['validation_errors'])): ?>
-    var validationErrors = <?php echo json_encode($_SESSION['validation_errors']); ?>;
-    <?php unset($_SESSION['validation_errors']); ?>
-    <?php endif; ?>
-
-    <?php if (isset($_SESSION['form_data'])): ?>
-    var formData = <?php echo json_encode($_SESSION['form_data']); ?>;
-    <?php unset($_SESSION['form_data']); ?>
-    <?php endif; ?>
-    </script>
+    <script src="Web/scripts/booking_P.js?v=1.0"></script>
 </body>
 
 <?php

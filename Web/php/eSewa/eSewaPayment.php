@@ -171,7 +171,7 @@ $bookingData = $_SESSION['booking_success'];
         $signature = base64_encode(hash_hmac('sha256', $data_to_sign, $secret_key, true));
         ?>
 
-        <!-- Debug Information (REMOVE IN PRODUCTION) -->
+        <!-- Debug Information (REMOVE IN PRODUCTION) --> -->
         <!-- <div class="debug-info">
             <strong>Debug Information:</strong><br>
             <strong>Merchant ID:</strong> <?php echo htmlspecialchars($merchant_id); ?><br>
@@ -195,7 +195,8 @@ $bookingData = $_SESSION['booking_success'];
             <!-- Core required fields -->
             <input type="hidden" name="amount" value="<?php echo $amount; ?>">
             <input type="hidden" name="total_amount" value="<?php echo $total_amount; ?>">
-            <input type="hidden" name="transaction_uuid" value="<?php echo htmlspecialchars($esewaData['transaction_uuid']); ?>">
+            <input type="hidden" name="transaction_uuid"
+                value="<?php echo htmlspecialchars($esewaData['transaction_uuid']); ?>">
             <input type="hidden" name="product_code" value="<?php echo $product_code; ?>">
             <input type="hidden" name="tax_amount" value="<?php echo $tax_amount; ?>">
             <input type="hidden" name="product_service_charge" value="<?php echo $service_charge; ?>">
@@ -237,7 +238,7 @@ $bookingData = $_SESSION['booking_success'];
         const form = document.getElementById('esewaForm');
         const payBtn = document.getElementById('payBtn');
         const loading = document.getElementById('loading');
-        
+
         if (payBtn && form) {
             // Add form submission handler
             form.addEventListener('submit', function(e) {
@@ -245,11 +246,11 @@ $bookingData = $_SESSION['booking_success'];
                 loading.style.display = 'block';
                 payBtn.disabled = true;
                 payBtn.innerHTML = 'Processing...';
-                
+
                 // Log form submission for debugging
                 console.log('Form submitting to:', form.action);
                 console.log('Form method:', form.method);
-                
+
                 // Log all form data for debugging
                 const formData = new FormData(form);
                 console.log('Form data:');
@@ -258,11 +259,12 @@ $bookingData = $_SESSION['booking_success'];
                 }
             });
         }
-        
+
         // Timeout handler - if redirect doesn't happen in 15 seconds
         setTimeout(function() {
             if (loading && loading.style.display === 'block') {
-                loading.innerHTML = '<div style="color: red;"><p><strong>Redirect Failed!</strong></p><p>If you are not redirected to eSewa, please:</p><ul><li>Check your internet connection</li><li>Verify your eSewa merchant credentials</li><li>Contact support if the problem persists</li></ul></div>';
+                loading.innerHTML =
+                    '<div style="color: red;"><p><strong>Redirect Failed!</strong></p><p>If you are not redirected to eSewa, please:</p><ul><li>Check your internet connection</li><li>Verify your eSewa merchant credentials</li><li>Contact support if the problem persists</li></ul></div>';
                 if (payBtn) {
                     payBtn.disabled = false;
                     payBtn.innerHTML = 'Try Again';
