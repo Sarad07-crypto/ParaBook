@@ -22,9 +22,11 @@ body {
             src="<?php echo $avatar ?>">
     </div>
     <div class="sidebar-section sidebar-links">
-        <a href="/home">Home</a>
-        <a href="/bookingcheck">Bookings</a>
-        <a href="#">Statistics</a>
+        <a href="#">Dashboard</a>
+        <a href="#">Flight Management</a>
+        <a href="#">Bookings</a>
+        <a href="#">Analytics</a>
+        <a href="#">Revenue</a>
     </div>
     <div class="sidebar-section">
         <a href="#" style="text-decoration: none;">Notifications</a><br>
@@ -37,7 +39,7 @@ body {
 </div>
 <!-- Navigation Bar -->
 <div class="nav-bar">
-    <a href="/home">Home</a>
+    <a href="#">Dashboard</a>
     <a href="/bookingcheck">Bookings</a>
     <a href="#">Statistics</a>
 </div>
