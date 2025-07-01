@@ -11,22 +11,24 @@
 </head>
 
 <body>
+    <div class="btn-wrapper">
+        <button class="fixed-add-btn" id="loadServiceForm">
+            <i class="fas fa-plus"></i>
+            <span>Add Service</span>
+        </button>
+    </div>
 
     <div class="company-grid">
         <div class="add-company-wrapper">
-            <div class="add-company-card" id="loadServiceForm">
-                <div class="add-company-icon">+</div>
-                <div class="add-company-text">Add Service</div>
-            </div>
-        </div>
 
-        <div id="serviceModal" class="modal">
-            <div class="modal-content">
-                <span class="close-btn" id="closeModal">&times;</span>
-                <div id="serviceFormContainer">Loading...</div>
-            </div>
         </div>
+    </div>
 
+    <div id="serviceModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeModal">&times;</span>
+            <div id="serviceFormContainer">Loading...</div>
+        </div>
     </div>
 
     <script src="Web/scripts/addServices.js?v=1.0"></script>

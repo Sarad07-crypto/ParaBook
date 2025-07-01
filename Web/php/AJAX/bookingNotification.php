@@ -23,7 +23,7 @@ class BookingNotificationSystem {
                 'title' => 'Booking Confirmed',
                 'message' => "Your booking {$bookingNo} has been confirmed, you can check your booking with this number.",
                 'type' => 'booking',
-                'icon' => 'fas fa-plane', // Changed to check icon for confirmed booking
+                'icon' => 'fas fa-plane', // Consistent plane icon for confirmed booking
                 'booking_id' => $bookingId
             ]);
             
@@ -63,7 +63,8 @@ class BookingNotificationSystem {
             $userMessage = '';
             $companyTitle = '';
             $companyMessage = '';
-            $icon = 'fas fa-plane'; // Default to check icon for updates
+            $icon = 'fas fa-plane'; // Default to plane icon for consistency
+            $notificationType = 'update'; // Changed from 'booking' to 'update'
             
             switch ($updateType) {
                 case 'updated':
@@ -71,7 +72,8 @@ class BookingNotificationSystem {
                     $userMessage = "Your booking {$bookingNo} has been updated successfully.";
                     $companyTitle = 'Booking Updated';
                     $companyMessage = "{$userName} has updated their booking. Please review the changes.";
-                    $icon = 'fas fa-plane'; // Check icon for successful update
+                    $icon = 'fas fa-plane'; // Same plane icon as booking confirmation
+                    $notificationType = 'update';
                     break;
                 case 'cancelled':
                     $userTitle = 'Booking Cancelled';
@@ -79,13 +81,15 @@ class BookingNotificationSystem {
                     $companyTitle = 'Booking Cancelled';
                     $companyMessage = "{$userName} has cancelled their booking {$bookingNo}.";
                     $icon = 'fas fa-times-circle';
+                    $notificationType = 'cancelled';
                     break;
                 case 'rescheduled':
                     $userTitle = 'Booking Rescheduled';
                     $userMessage = "Your booking {$bookingNo} has been rescheduled successfully.";
                     $companyTitle = 'Booking Rescheduled';
                     $companyMessage = "{$userName} has rescheduled their booking {$bookingNo}.";
-                    $icon = 'fas fa-plane'; // Check icon for successful reschedule
+                    $icon = 'fas fa-plane'; // Same plane icon as booking confirmation
+                    $notificationType = 'rescheduled';
                     break;
             }
             
@@ -95,7 +99,7 @@ class BookingNotificationSystem {
                 'recipient_type' => 'passenger',
                 'title' => $userTitle,
                 'message' => $userMessage,
-                'type' => 'booking',
+                'type' => $notificationType, // Now uses specific type instead of 'booking'
                 'icon' => $icon,
                 'booking_id' => $bookingId
             ]);
@@ -108,7 +112,7 @@ class BookingNotificationSystem {
                     'recipient_type' => 'company',
                     'title' => $companyTitle,
                     'message' => $companyMessage,
-                    'type' => 'booking',
+                    'type' => $notificationType, // Now uses specific type instead of 'booking'
                     'icon' => $icon,
                     'booking_id' => $bookingId
                 ]);
@@ -498,11 +502,11 @@ class BookingNotificationSystem {
             'confirmed' => 'fas fa-plane',
             'cancelled' => 'fas fa-times-circle',
             'pending' => 'fas fa-clock',
-            'completed' => 'fas fa-plane', // Changed to check icon
-            'approved' => 'fas fa-plane', // Changed to check icon
+            'completed' => 'fas fa-plane',
+            'approved' => 'fas fa-plane',
             'rejected' => 'fas fa-thumbs-down',
-            'updated' => 'fas fa-plane', // Changed to check icon
-            'rescheduled' => 'fas fa-plane' // Changed to check icon
+            'updated' => 'fas fa-plane',
+            'rescheduled' => 'fas fa-plane'
         ];
         
         return $icons[$status] ?? 'fas fa-info-circle';
