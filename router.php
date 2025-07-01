@@ -13,15 +13,11 @@
     const PHP = 'Web/php/';
 
     $routes = [
-        // error log
-        '/logs' => 'testlog.php',
-        '/bookingSubmit' => PHP. 'AJAX/bookingSubmit.php',
-        '/eSewaPayment' => PHP . 'eSewa/eSewaPayment.php',
-        '/chat' => PHP . 'chat/ChatServer.php',
         
         //admin
         '/admin' => PHP . 'ADMIN/Admin.php',
-
+        '/chat' => PHP . 'chat/ChatServer.php',
+        
         // login and signup
         '/' => LOG_SIGN . '/login.php',
         '/login' => LOG_SIGN . '/login.php',
@@ -30,30 +26,32 @@
         '/signcheck' => LOG_SIGN . '/signCheck.php',
         '/verify' => LOG_SIGN . '/verify.php',
         '/logout' => LOG_SIGN . '/logout.php',
-    
+        
         // home, google and facebook
         '/home' => PHP . 'views/home.php',
         '/auth/google' => PHP . 'google/auth_provider.php',
         '/google/callback' => PHP . 'google/controller.php',
         '/facebook/callback' => PHP . 'facebook/f-callback.php',
-
+        
         // service and account selection
         '/servicePost' => PHP . 'formDatabase/serviceForm.data.php',
         '/accountSelection' => PHP . 'views/accountSelection.php',
         '/serviceDescription' => PHP . 'views/serviceDesc.php',
-
+        
         // for booking
         '/bookingpassenger' => PHP . 'views/bookingForm_P.php',
         '/bookingpassengerUpdate' => PHP . 'views/bookingFormUpdate_P.php',
         '/bookingcompany' => PHP . 'views/booking_C.php',
+        '/bookingSubmit' => PHP. 'AJAX/bookingSubmit.php',
         '/bookingcheck' => PHP . 'views/bookingCheck_P.php',
-
+        
         // for statistics
         '/statistics' => PHP . 'views/statistics.php',
-
+        
         '/completeProfile' => PHP . 'views/complete.profile.php',
-
+        
         // eSewa
+        '/eSewaPayment' => PHP . 'eSewa/eSewaPayment.php',
         '/booking-success' => PHP . 'eSewa/pageSuccess.php',
         '/booking-error' => PHP . 'eSewa/pageError.php',
         

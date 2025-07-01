@@ -2,6 +2,12 @@
     // session_start();
     $firstName = $_SESSION['firstName'];
     $firstInitial = strtoupper(substr($firstName, 0, 1));
+
+    $accType = $_SESSION['acc_type'] ?? 'passenger';
+    if ($accType === 'company') {
+    } else {
+    }
+    
 ?>
 
 <!DOCTYPE html>
@@ -121,7 +127,8 @@
                         </div>
                     </div>
 
-                    <!-- Favorite/Heart Icon -->
+                    <!-- Favorite/Heart Icon - Only show for passengers -->
+                    <?php if ($accType === 'passenger'): ?>
                     <div class="heart-container">
                         <a href="#" class="heart-bell" id="heart-bell" onclick="toggleHeartNotifications(event)">
                             <i class="far fa-heart" id="heart-icon"></i>
@@ -157,7 +164,7 @@
                             </div>
                         </div>
                     </div>
-
+                    <?php endif; ?>
 
                     <!-- Headphones Icon -->
                     <a href="" onclick="toggleIcon(this.querySelector('i'), 'headphones')">
@@ -190,6 +197,9 @@
     </header>
 
     <script src="Web/scripts/notification.js?v=1.0"></script>
+    <?php if ($accType === 'passenger'): ?>
+    <script src="Web/scripts/favorite.js?v=1.0"></script>
+    <?php endif; ?>
 
 </body>
 

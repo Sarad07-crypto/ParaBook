@@ -631,6 +631,10 @@ body {
                             <label>Medical Condition</label>
                             <span id="medicalCondition"></span>
                         </div>
+                        <div class="detail-item">
+                            <label>Price</label>
+                            <span id="price"></span>
+                        </div>
                     </div>
 
                     <div class="status-badge" id="bookingStatus"></div>
@@ -796,7 +800,7 @@ body {
                         showError('You are not authorized to view this booking.');
                     } else if (xhr.status === 404) {
                         showError(
-                            'Service not found. Please check the file path: Web/php/AJAX/bookingLookup.php'
+                            'No Bookings found!'
                         );
                     } else if (xhr.status === 500) {
                         showError('Server error. Please check server logs.');
@@ -826,7 +830,7 @@ body {
             const requiredElements = [
                 'foundBookingId', 'passengerName', 'gender', 'contact', 'country', 'email',
                 'dateOfBirth', 'flightDate', 'pickupLocation', 'flightType', 'weight',
-                'age', 'medicalCondition', 'bookingStatus', 'editBtn'
+                'age', 'medicalCondition', 'price', 'bookingStatus', 'editBtn'
             ];
 
             const missingElements = requiredElements.filter(id => $(`#${id}`).length === 0);
@@ -856,6 +860,7 @@ body {
                 $('#weight').text(booking.weight ? `${booking.weight} kg` : 'Not specified');
                 $('#age').text(booking.age || 'N/A');
                 $('#medicalCondition').text(booking.medical_condition || 'None');
+                $('#price').text(booking.total_amount ?? 'None');
 
                 // Set status badge
                 const status = booking.status || 'Unknown';
