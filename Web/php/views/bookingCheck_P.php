@@ -13,8 +13,7 @@
     } else {
         require('partials/nav_P.php');
     }
-    
-    $serviceId = $_SESSION['service_id'] ?? 0;
+
 ?>
 <!DOCTYPE html>
 <html lang="en">

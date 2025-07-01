@@ -8,13 +8,7 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-// Include database connection
-$_servername = "localhost:3307";
-$_username = "root";
-$_password = "";
-$_database = "parabook";
-
-$connect = mysqli_connect($_servername, $_username, $_password, $_database);
+require '../connection.php';
 
 if ($connect->connect_error) {
     die("Connection failed: " . $connect->connect_error);

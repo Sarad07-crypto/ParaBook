@@ -53,7 +53,7 @@ function setupFormValidation() {
   const form = $("#mainBookingForm");
 
   // Set form action and method for direct submission
-  form.attr("action", "Web/php/AJAX/bookingSubmit.php");
+  form.attr("action", "/bookingSubmit");
   form.attr("method", "POST");
 
   // Real-time validation for inputs

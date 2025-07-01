@@ -25,7 +25,7 @@
     $mainNationality = isset($_POST['mainNationality']) ? trim($_POST['mainNationality']) : '';
     $mainDate = isset($_POST['mainDate']) ? trim($_POST['mainDate']) : '';
     $mainPickup = isset($_POST['mainPickup']) ? trim($_POST['mainPickup']) : '';
-    $mainFlightType = isset($_POST['mainFlightType']) ? (int)$_POST['mainFlightType'] : 0;
+    // $mainFlightType = isset($_POST['mainFlightType']) ? (int)$_POST['mainFlightType'] : 0;
     $mainWeight = isset($_POST['mainWeight']) && $_POST['mainWeight'] !== '' ? (float)$_POST['mainWeight'] : null;
     $mainAge = isset($_POST['mainAge']) ? (int)$_POST['mainAge'] : 0;
     $gender = isset($_POST['gender']) ? trim($_POST['gender']) : '';
@@ -38,7 +38,7 @@
     }
 
     if (empty($mainName) || empty($mainEmail) || empty($mainPhone) || empty($mainNationality) || 
-        empty($mainDate) || empty($mainPickup) || !$mainFlightType || !$mainAge || empty($gender)) {
+        empty($mainDate) || empty($mainPickup) || !$mainAge || empty($gender)) {
         echo json_encode(['success' => false, 'message' => 'Please fill in all required fields']);
         exit();
     }
@@ -80,8 +80,13 @@
         // Start transaction
         $connect->autocommit(FALSE);
         
-        // First verify booking ownership
-        $verifyStmt = $connect->prepare("SELECT booking_id FROM bookings WHERE booking_no = ? AND user_id = ?");
+        // First verify booking ownership and get current price
+        $verifyStmt = $connect->prepare("
+            SELECT b.booking_id, sft.price 
+            FROM bookings b 
+            LEFT JOIN service_flight_types sft ON b.flight_type = sft.flight_type_name
+            WHERE b.booking_no = ? AND b.user_id = ?
+        ");
         if (!$verifyStmt) {
             throw new Exception("Prepare failed: " . $connect->error);
         }
@@ -93,24 +98,10 @@
             throw new Exception('Booking not found or you are not authorized to edit it');
         }
         
-        // Get the booking_id for internal use
+        // Get the booking_id and price for response
         $bookingData = $verifyResult->fetch_assoc();
         $booking_id = $bookingData['booking_id'];
-        
-        // Validate flight type exists and get flight type name
-        $flightTypeStmt = $connect->prepare("SELECT id, flight_type_name, price FROM service_flight_types WHERE id = ?");
-        if (!$flightTypeStmt) {
-            throw new Exception("Prepare failed: " . $connect->error);
-        }
-        $flightTypeStmt->bind_param("i", $mainFlightType);
-        $flightTypeStmt->execute();
-        $flightTypeResult = $flightTypeStmt->get_result()->fetch_assoc();
-        
-        if (!$flightTypeResult) {
-            throw new Exception('Invalid flight type selected');
-        }
-        
-        $flightTypeName = $flightTypeResult['flight_type_name'];
+        $currentPrice = $bookingData['price'];
         
         // Update user info (users_info table)
         $nameParts = explode(' ', $mainName, 2);
@@ -142,14 +133,13 @@
             throw new Exception("Failed to update email: " . $updateEmailStmt->error);
         }
         
-        // Update booking details - Handle NULL weight properly
+        // Update booking details - Handle NULL weight properly, but DON'T update flight_type
         if ($mainWeight === null) {
             // When weight is NULL, use a query that sets it to NULL explicitly
             $updateBookingStmt = $connect->prepare("
                 UPDATE bookings 
                 SET date = ?, 
                     pickup = ?, 
-                    flight_type = ?, 
                     weight = NULL, 
                     age = ?, 
                     medical_condition = ?,
@@ -159,15 +149,14 @@
             if (!$updateBookingStmt) {
                 throw new Exception("Prepare failed: " . $connect->error);
             }
-            // Parameters: date(s), pickup(s), flight_type(s), age(i), medical_condition(s), booking_no(s), user_id(i)
-            $updateBookingStmt->bind_param("ssisssi", $mainDate, $mainPickup, $flightTypeName, $mainAge, $mainNotes, $booking_no, $_SESSION['user_id']);
+            // Parameters: date(s), pickup(s), age(i), medical_condition(s), booking_no(s), user_id(i)
+            $updateBookingStmt->bind_param("ssissi", $mainDate, $mainPickup, $mainAge, $mainNotes, $booking_no, $_SESSION['user_id']);
         } else {
             // When weight has a value
             $updateBookingStmt = $connect->prepare("
                 UPDATE bookings 
                 SET date = ?, 
                     pickup = ?, 
-                    flight_type = ?, 
                     weight = ?, 
                     age = ?, 
                     medical_condition = ?,
@@ -177,8 +166,8 @@
             if (!$updateBookingStmt) {
                 throw new Exception("Prepare failed: " . $connect->error);
             }
-            // Parameters: date(s), pickup(s), flight_type(s), weight(d), age(i), medical_condition(s), booking_no(s), user_id(i)
-            $updateBookingStmt->bind_param("sssdissi", $mainDate, $mainPickup, $flightTypeName, $mainWeight, $mainAge, $mainNotes, $booking_no, $_SESSION['user_id']);
+            // Parameters: date(s), pickup(s), weight(d), age(i), medical_condition(s), booking_no(s), user_id(i)
+            $updateBookingStmt->bind_param("ssdissi", $mainDate, $mainPickup, $mainWeight, $mainAge, $mainNotes, $booking_no, $_SESSION['user_id']);
         }
         
         if (!$updateBookingStmt->execute()) {
@@ -211,7 +200,7 @@
             'success' => true, 
             'message' => 'Booking updated successfully!',
             'booking_no' => $booking_no,
-            'price' => $flightTypeResult['price']
+            'price' => $currentPrice
         ]);
         
     } catch (Exception $e) {
@@ -229,7 +218,6 @@
         
         // Close prepared statements if they exist
         if (isset($verifyStmt)) $verifyStmt->close();
-        if (isset($flightTypeStmt)) $flightTypeStmt->close();
         if (isset($updateUserInfoStmt)) $updateUserInfoStmt->close();
         if (isset($updateEmailStmt)) $updateEmailStmt->close();
         if (isset($updateBookingStmt)) $updateBookingStmt->close();
