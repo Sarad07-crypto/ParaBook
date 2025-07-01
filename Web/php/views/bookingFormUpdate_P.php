@@ -7,7 +7,7 @@
     require 'avatar.php';
     require 'partials/header.php';
     require 'partials/nav_P.php';
-    require '../connection.php';
+    require 'Web/php/connection.php';
     
     // Check if user is logged in first
     if (!isset($_SESSION['user_id'])) {
@@ -16,15 +16,6 @@
     }
     
     $userid = $_SESSION['user_id'];
-    $serviceId = $_SESSION['service_id'] ?? 0;
-    
-    // Debug and validate service_id
-    if ($serviceId == 0) {
-        error_log("Error: No service_id found in session for user: " . $userid);
-        // Redirect to service selection or show error
-        header('Location: /serviceDescription');
-        exit();
-    }
 
     // Get booking No from URL parameter
     $booking_no = isset($_GET['booking_no']) ? $_GET['booking_no'] : '';
@@ -48,22 +39,19 @@
         exit();
     }
 
-    // Find the matching flight type based on the stored flight_type string
-    $currentFlightTypeId = 0;
-    $currentFlightTypePrice = 0;
-    
-    if (!empty($bookingResult['flight_type']) && $serviceId > 0) {
-        $findFlightTypeStmt = $connect->prepare("
-            SELECT id, price FROM service_flight_types 
+    // Get flight type price from the booking's service and flight type
+    $flightTypePrice = 0;
+    if (!empty($bookingResult['flight_type']) && !empty($bookingResult['service_id'])) {
+        $flightPriceStmt = $connect->prepare("
+            SELECT price FROM service_flight_types 
             WHERE service_id = ? AND flight_type_name = ?
         ");
-        if ($findFlightTypeStmt) {
-            $findFlightTypeStmt->bind_param("is", $serviceId, $bookingResult['flight_type']);
-            $findFlightTypeStmt->execute();
-            $flightTypeMatch = $findFlightTypeStmt->get_result()->fetch_assoc();
-            if ($flightTypeMatch) {
-                $currentFlightTypeId = $flightTypeMatch['id'];
-                $currentFlightTypePrice = $flightTypeMatch['price'];
+        if ($flightPriceStmt) {
+            $flightPriceStmt->bind_param("is", $bookingResult['service_id'], $bookingResult['flight_type']);
+            $flightPriceStmt->execute();
+            $priceResult = $flightPriceStmt->get_result()->fetch_assoc();
+            if ($priceResult) {
+                $flightTypePrice = $priceResult['price'];
             }
         }
     }
@@ -90,29 +78,9 @@
     $fillemail2->execute();
     $emailResult = $fillemail2->get_result()->fetch_assoc();
     $email = $emailResult['email'] ?? '';
-
-    // Fetch flight types for the service
-    $flightTypes = [];
-    if ($serviceId > 0) {
-        $servicefetch = $connect->prepare("SELECT id, flight_type_name, price FROM service_flight_types WHERE service_id = ? ORDER BY price ASC");
-        if (!$servicefetch) {
-            die("Prepare failed: " . $connect->error);
-        }
-        $servicefetch->bind_param("i", $serviceId);
-        $servicefetch->execute();
-        $flightTypesResult = $servicefetch->get_result();
-        while ($row = $flightTypesResult->fetch_assoc()) {
-            $flightTypes[] = $row;
-        }
-    }
-    
-    // remove later
-    // echo '<pre>';
-    // print_r($flightTypes);
-    // echo '</pre>';
 ?>
 
-<link rel="stylesheet" href="/Web/css/booking_P.css?v=1.0" />
+<link rel="stylesheet" href="Web/css/booking_P.css" />
 
 <body style="background: #fff; min-height: 100vh">
     <div class="main-wrap">
@@ -160,7 +128,7 @@
                             value="<?php echo htmlspecialchars($bookingResult['pickup']); ?>" required
                             placeholder="e.g. Lakeside, Pokhara" />
                     </div>
-                    <div class="form-group">
+                    <!-- <div class="form-group">
                         <label for="mainFlightType">Flight Type</label>
                         <select id="mainFlightType" name="mainFlightType" required>
                             <option value="">Select Flight Type</option>
@@ -177,7 +145,7 @@
                             <option value="" disabled>No flight types available</option>
                             <?php endif; ?>
                         </select>
-                    </div>
+                    </div> -->
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -318,7 +286,7 @@
             $('#mainBookingSuccess, #mainBookingError').hide();
 
             $.ajax({
-                url: 'Web/php/AJAX/updateBooking.php',
+                url: 'Web/php/AJAX/bookingUpdate.php',
                 type: 'POST',
                 data: $(this).serialize(),
                 dataType: 'json',
@@ -331,15 +299,9 @@
                         // Show toast notification
                         showToast('Booking updated successfully!', 'success');
 
-                        // Optionally redirect after a delay
+                        // Redirect to home page after successful update
                         setTimeout(function() {
-                            <?php if (isset($serviceId) && !empty($serviceId)): ?>
-                            window.location.href =
-                                '/serviceDescription?service_id=' +
-                                <?= json_encode($serviceId) ?>;
-                            <?php else: ?>
-                            window.location.href = '/serviceDescription';
-                            <?php endif; ?>
+                            window.location.href = '/home';
                         }, 1000);
                     } else {
                         $('#errorMessage').text(response.message ||

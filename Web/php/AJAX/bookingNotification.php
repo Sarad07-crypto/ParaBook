@@ -23,7 +23,7 @@ class BookingNotificationSystem {
                 'title' => 'Booking Confirmed',
                 'message' => "Your booking {$bookingNo} has been confirmed, you can check your booking with this number.",
                 'type' => 'booking',
-                'icon' => 'fas fa-plane',
+                'icon' => 'fas fa-plane', // Changed to check icon for confirmed booking
                 'booking_id' => $bookingId
             ]);
             
@@ -63,7 +63,7 @@ class BookingNotificationSystem {
             $userMessage = '';
             $companyTitle = '';
             $companyMessage = '';
-            $icon = 'fas fa-edit';
+            $icon = 'fas fa-plane'; // Default to check icon for updates
             
             switch ($updateType) {
                 case 'updated':
@@ -71,6 +71,7 @@ class BookingNotificationSystem {
                     $userMessage = "Your booking {$bookingNo} has been updated successfully.";
                     $companyTitle = 'Booking Updated';
                     $companyMessage = "{$userName} has updated their booking. Please review the changes.";
+                    $icon = 'fas fa-plane'; // Check icon for successful update
                     break;
                 case 'cancelled':
                     $userTitle = 'Booking Cancelled';
@@ -84,14 +85,14 @@ class BookingNotificationSystem {
                     $userMessage = "Your booking {$bookingNo} has been rescheduled successfully.";
                     $companyTitle = 'Booking Rescheduled';
                     $companyMessage = "{$userName} has rescheduled their booking {$bookingNo}.";
-                    $icon = 'fas fa-calendar-alt';
+                    $icon = 'fas fa-plane'; // Check icon for successful reschedule
                     break;
             }
             
-            // Send notification to the user
+            // Send notification to the passenger
             $this->createNotification([
                 'recipient_id' => $userId,
-                'recipient_type' => 'user',
+                'recipient_type' => 'passenger',
                 'title' => $userTitle,
                 'message' => $userMessage,
                 'type' => 'booking',
@@ -494,14 +495,14 @@ class BookingNotificationSystem {
      */
     private function getStatusIcon($status) {
         $icons = [
-            'confirmed' => 'fas fa-check-circle',
+            'confirmed' => 'fas fa-plane',
             'cancelled' => 'fas fa-times-circle',
             'pending' => 'fas fa-clock',
-            'completed' => 'fas fa-flag-checkered',
-            'approved' => 'fas fa-thumbs-up',
+            'completed' => 'fas fa-plane', // Changed to check icon
+            'approved' => 'fas fa-plane', // Changed to check icon
             'rejected' => 'fas fa-thumbs-down',
-            'updated' => 'fas fa-edit',
-            'rescheduled' => 'fas fa-calendar-alt'
+            'updated' => 'fas fa-plane', // Changed to check icon
+            'rescheduled' => 'fas fa-plane' // Changed to check icon
         ];
         
         return $icons[$status] ?? 'fas fa-info-circle';
