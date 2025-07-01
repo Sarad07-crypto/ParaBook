@@ -7,11 +7,7 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
-// Database connection
-$_servername = "localhost:3307";
-$_username = "root";
-$_password = "";
-$_database = "parabook";
+require '../connection.php';
 
 $connect = mysqli_connect($_servername, $_username, $_password, $_database);
 
@@ -112,28 +108,29 @@ try {
     $check_stmt->close();
     
     $sql = "SELECT 
-                b.booking_id,
-                b.booking_no,
-                b.user_id,
-                b.date,
-                b.pickup,
-                b.flight_type,
-                b.weight,
-                b.age,
-                b.medical_condition,
-                b.status,
-                COALESCE(ui.firstName, 'N/A') as firstName,
-                COALESCE(ui.lastName, 'N/A') as lastName,
-                COALESCE(ui.gender, 'N/A') as gender,
-                COALESCE(ui.contact, 'N/A') as contact,
-                ui.dob,
-                COALESCE(ui.country, 'N/A') as country,
-                COALESCE(u.email, 'N/A') as email
-            FROM bookings b
-            LEFT JOIN users u ON b.user_id = u.id
-            LEFT JOIN users_info ui ON u.id = ui.user_id
-            WHERE UPPER(b.booking_no) = UPPER(?) 
-            AND b.user_id = ?";
+            b.booking_id,
+            b.booking_no,
+            b.user_id,
+            b.date,
+            b.pickup,
+            b.flight_type,
+            b.weight,
+            b.age,
+            b.medical_condition,
+            b.status,
+            b.total_amount,
+            COALESCE(ui.firstName, 'N/A') as firstName,
+            COALESCE(ui.lastName, 'N/A') as lastName,
+            COALESCE(ui.gender, 'N/A') as gender,
+            COALESCE(ui.contact, 'N/A') as contact,
+            ui.dob,
+            COALESCE(ui.country, 'N/A') as country,
+            COALESCE(u.email, 'N/A') as email
+        FROM bookings b
+        LEFT JOIN users u ON b.user_id = u.id
+        LEFT JOIN users_info ui ON u.id = ui.user_id
+        WHERE UPPER(b.booking_no) = UPPER(?) 
+        AND b.user_id = ?";
     
     // Prepare and execute the statement
     $stmt = $connect->prepare($sql);
@@ -180,6 +177,7 @@ try {
                     'age' => $booking['age'] ?: 'Not specified',
                     'medical_condition' => $booking['medical_condition'] ?: 'None',
                     'status' => ucfirst($booking['status'] ?: 'pending'),
+                    'total_amount' => $booking['total_amount'] ?: '0.00',  // ADD THIS LINE
                     'firstName' => $booking['firstName'],
                     'lastName' => $booking['lastName'],
                     'gender' => $booking['gender'],
@@ -189,6 +187,7 @@ try {
                     // Security flag to confirm ownership verification
                     'verified_ownership' => true
                 );
+                error_log("Booking found for User ID: " . $current_user_id . " - Booking No: " . $booking['booking_no']);   
             }
         } else {
             // DOB is not set in database, but user provided one - this might be an issue

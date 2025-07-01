@@ -52,7 +52,7 @@ function closeEnvelopeNotifications() {
 async function loadEnvelopeNotifications() {
   const loadingElement = document.getElementById("loading-envelope");
   const listElement = document.getElementById("envelope-list");
-
+  /*
   try {
     if (loadingElement) loadingElement.style.display = "block";
 
@@ -73,7 +73,7 @@ async function loadEnvelopeNotifications() {
     if (loadingElement) loadingElement.style.display = "none";
     console.error("Error loading conversations:", error);
     showEnvelopeError("Error loading conversations");
-  }
+  } */
 }
 
 // Render conversations in the dropdown
@@ -277,10 +277,16 @@ function toggleHeartNotifications(event) {
   const heart = document.getElementById("heart-bell");
   const isVisible = dropdown && dropdown.classList.contains("show");
 
-  // Close other notification panels first
-  closeAllNotificationPanels();
-  closeNotifications();
-  closeEnvelopeNotifications();
+  // Close other notification panels first (if these functions exist)
+  try {
+    if (typeof closeAllNotificationPanels === "function")
+      closeAllNotificationPanels();
+    if (typeof closeNotifications === "function") closeNotifications();
+    if (typeof closeEnvelopeNotifications === "function")
+      closeEnvelopeNotifications();
+  } catch (e) {
+    // Functions don't exist, that's okay
+  }
 
   if (isVisible) {
     closeHeartNotifications();
@@ -294,12 +300,20 @@ function openHeartNotifications() {
   const heartIcon = document.getElementById("heart-icon");
   const heart = document.getElementById("heart-bell");
 
+  // Show dropdown
   if (dropdown) dropdown.classList.add("show");
-  if (heartIcon) heartIcon.className = "fas fa-heart"; // Switch to filled heart
+
+  // Change icon to filled heart
+  if (heartIcon) heartIcon.className = "fas fa-heart";
+
+  // Add active state to heart bell
   if (heart) heart.classList.add("active");
 
   // Load favorites when opening
-  loadHeartNotifications();
+  loadFavoritesList();
+
+  // Close when clicking outside
+  document.addEventListener("click", handleOutsideClick);
 }
 
 function closeHeartNotifications() {
@@ -307,11 +321,25 @@ function closeHeartNotifications() {
   const heartIcon = document.getElementById("heart-icon");
   const heart = document.getElementById("heart-bell");
 
+  // Hide dropdown
   if (dropdown) dropdown.classList.remove("show");
-  if (heartIcon) heartIcon.className = "far fa-heart"; // Switch back to outline heart
+
+  // Change icon to outline heart
+  if (heartIcon) heartIcon.className = "far fa-heart";
+
+  // Remove active state from heart bell
   if (heart) heart.classList.remove("active");
+
+  // Remove outside click listener
+  document.removeEventListener("click", handleOutsideClick);
 }
 
+function handleOutsideClick(event) {
+  const heartContainer = document.querySelector(".heart-container");
+  if (!heartContainer.contains(event.target)) {
+    closeHeartNotifications();
+  }
+}
 // Load favorites from API
 async function loadHeartNotifications() {
   const loadingElement = document.getElementById("loading-heart");
@@ -974,13 +1002,144 @@ document.addEventListener("click", function (e) {
 });
 
 // Initialize when DOM is loaded
+// Fix for the setInterval call at the end of the file
 document.addEventListener("DOMContentLoaded", function () {
   // Load all notification counts on page load
   loadAllNotificationCounts();
 
   // Auto-refresh notification count every 30 seconds
-  setInterval(loadNotificationCount, 30000);
+  // FIXED: Changed from loadNotificationCount to loadAllNotificationCounts
+  setInterval(loadAllNotificationCounts, 30000);
 
   // Initialize other components if needed
   console.log("Notification system initialized");
 });
+
+// Enhanced error handling for API calls
+async function loadAllNotificationCounts() {
+  try {
+    // Load notification count with better error handling
+    try {
+      const notificationResponse = await fetch(
+        "Web/php/AJAX/bookingNotificationAPI.php?action=unread_count"
+      );
+
+      // Check if response is OK
+      if (!notificationResponse.ok) {
+        console.error(
+          `Notification API error: ${notificationResponse.status} ${notificationResponse.statusText}`
+        );
+      } else {
+        const responseText = await notificationResponse.text();
+        console.log("Notification API raw response:", responseText); // Debug log
+
+        let notificationData;
+        try {
+          notificationData = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error(
+            "Failed to parse notification response as JSON:",
+            parseError
+          );
+          console.error("Response was:", responseText);
+          return;
+        }
+
+        if (notificationData.success) {
+          const badge = document.getElementById("notification-badge");
+          const unreadCount = notificationData.unread_count || 0;
+
+          if (badge && unreadCount > 0) {
+            badge.textContent = unreadCount > 99 ? "99+" : unreadCount;
+            badge.classList.add("show");
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error loading notification count:", error);
+    }
+
+    // Load message count with better error handling
+    /*
+    try {
+      const messageResponse = await fetch(
+        "Web/php/AJAX/messageAPI.php?action=unread_count"
+      );
+
+      if (!messageResponse.ok) {
+        console.error(
+          `Message API error: ${messageResponse.status} ${messageResponse.statusText}`
+        );
+      } else {
+        const responseText = await messageResponse.text();
+        console.log("Message API raw response:", responseText); // Debug log
+
+        let messageData;
+        try {
+          messageData = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error(
+            "Failed to parse message response as JSON:",
+            parseError
+          );
+          console.error("Response was:", responseText);
+          return;
+        }
+
+        if (messageData.success) {
+          const badge = document.getElementById("envelope-badge");
+          const unreadCount = messageData.unread_count || 0;
+
+          if (badge && unreadCount > 0) {
+            badge.textContent = unreadCount > 99 ? "99+" : unreadCount;
+            badge.classList.add("show");
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error loading message count:", error);
+    }
+*/
+    // Load favorites count with better error handling
+    try {
+      const favoritesResponse = await fetch(
+        "Web/php/AJAX/favoritesAPI.php?action=count"
+      );
+
+      if (!favoritesResponse.ok) {
+        console.error(
+          `Favorites API error: ${favoritesResponse.status} ${favoritesResponse.statusText}`
+        );
+      } else {
+        const responseText = await favoritesResponse.text();
+        console.log("Favorites API raw response:", responseText); // Debug log
+
+        let favoritesData;
+        try {
+          favoritesData = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error(
+            "Failed to parse favorites response as JSON:",
+            parseError
+          );
+          console.error("Response was:", responseText);
+          return;
+        }
+
+        if (favoritesData.success) {
+          const badge = document.getElementById("heart-badge");
+          const favoriteCount = favoritesData.count || 0;
+
+          if (badge && favoriteCount > 0) {
+            badge.textContent = favoriteCount > 99 ? "99+" : favoriteCount;
+            badge.classList.add("show");
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error loading favorites count:", error);
+    }
+  } catch (error) {
+    console.error("Error in loadAllNotificationCounts:", error);
+  }
+}

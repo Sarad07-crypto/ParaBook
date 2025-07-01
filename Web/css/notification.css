@@ -529,3 +529,190 @@ body {
     right: -50px;
   }
 }
+
+/* Heart icon on service cards */
+.service-heart-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.service-heart-icon:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.service-heart-icon i {
+  font-size: 16px;
+  color: #e74c3c;
+  transition: all 0.3s ease;
+}
+
+.service-heart-icon i.fas {
+  color: #e74c3c;
+  animation: heartBeat 0.5s ease-in-out;
+}
+
+.service-heart-icon i.far {
+  color: #bdc3c7;
+}
+
+.service-heart-icon:hover i {
+  color: #e74c3c;
+}
+
+/* Heart beat animation */
+@keyframes heartBeat {
+  0% {
+    transform: scale(1);
+  }
+
+  25% {
+    transform: scale(1.2);
+  }
+
+  50% {
+    transform: scale(1);
+  }
+
+  75% {
+    transform: scale(1.1);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Company card positioning */
+.company-card {
+  position: relative;
+}
+
+.company-thumbnail {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Notification styles */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 40%;
+  padding: 15px 20px;
+  border-radius: 5px;
+  z-index: 10000;
+  max-width: 300px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.notification.success {
+  background: #4caf50;
+  color: white;
+}
+
+.notification.error {
+  background: #f44336;
+  color: white;
+}
+
+.notification.info {
+  background: #2196f3;
+  color: white;
+}
+
+/* Favorites dropdown styles */
+#heart-dropdown {
+  position: absolute;
+  top: 20px;
+  right: 0;
+  width: 320px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  padding: 0;
+  z-index: 10001;
+  display: none;
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid rgb(255, 255, 255);
+}
+
+#heart-dropdown.show {
+  display: block;
+}
+
+#heart-list {
+  padding: 0;
+}
+
+.favorite-notification {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 8px;
+  padding: 10px 16px;
+  transition: box-shadow 0.2s;
+}
+
+.favorite-notification:hover {
+  background: #f8f9fa;
+}
+
+.favorite-notification p {
+  margin: 0;
+  font-size: 1rem;
+  color: #333;
+  flex: 1;
+}
+
+.favorite-notification .remove-favorite {
+  background: none;
+  border: none;
+  color: #dc3545;
+  font-size: 1.1em;
+  cursor: pointer;
+  margin-left: 12px;
+  transition: color 0.2s;
+}
+
+.favorite-notification .remove-favorite:hover {
+  color: #a71d2a;
+}
+
+.empty-favorites {
+  text-align: center;
+  color: #aaa;
+  padding: 30px 0;
+}
+
+.empty-favorites i {
+  font-size: 2em;
+  margin-bottom: 8px;
+  color: #e74c3c;
+}
+
+.loading-heart {
+  text-align: center;
+  color: #888;
+  padding: 30px 0;
+}
+
+/* Heart icon container for dropdown positioning */
+.heart-container {
+  position: relative;
+  display: inline-block;
+}

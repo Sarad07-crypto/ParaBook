@@ -7,7 +7,7 @@
     require 'avatar.php';
     require 'partials/header.php';
     require 'partials/nav_P.php';
-    include "Web/php/connection.php";
+    require '../connection.php';
     
     // Check if user is logged in first
     if (!isset($_SESSION['user_id'])) {
@@ -22,7 +22,7 @@
     if ($serviceId == 0) {
         error_log("Error: No service_id found in session for user: " . $userid);
         // Redirect to service selection or show error
-        header('Location: /services?error=no_service_selected');
+        header('Location: /serviceDescription');
         exit();
     }
 
@@ -111,7 +111,8 @@
     // print_r($flightTypes);
     // echo '</pre>';
 ?>
-<link rel="stylesheet" href="Web/css/booking_P.css?v=1.0" />
+
+<link rel="stylesheet" href="/Web/css/booking_P.css?v=1.0" />
 
 <body style="background: #fff; min-height: 100vh">
     <div class="main-wrap">
@@ -139,8 +140,7 @@
                     <div class="form-group">
                         <label for="mainPhone">Contact Number</label>
                         <input type="tel" id="mainPhone" name="mainPhone"
-                            value="<?php echo htmlspecialchars($contact); ?>" required
-                            placeholder="e.g. +977-98XXXXXXXX" />
+                            value="<?php echo htmlspecialchars($contact); ?>" required placeholder="e.g. 98XXXXXXXX" />
                     </div>
                     <div class="form-group">
                         <label for="mainNationality">Nationality</label>
