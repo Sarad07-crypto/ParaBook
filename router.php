@@ -16,7 +16,7 @@
         
         //admin
         '/admin' => PHP . 'ADMIN/Admin.php',
-        '/chat' => PHP . 'chat/ChatServer.php',
+        '/chat' => PHP . 'views/chat.php',
         
         // login and signup
         '/' => LOG_SIGN . '/login.php',

@@ -2,4 +2,4 @@
 /Web/composer.lock
 /Web/php/.env
 /Assets/uploads
-/Web/php/chat
+/Web/php/chat/websocket_errors.log
