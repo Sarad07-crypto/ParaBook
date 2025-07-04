@@ -15,8 +15,10 @@
     $routes = [
         
         //admin
-        '/admin' => PHP . 'ADMIN/Admin.php',
-        '/chat' => PHP . 'chat/ChatServer.php',
+        '/adminhome' => PHP . 'ADMIN/Admin.php',
+        '/adminlogin' => PHP . 'ADMIN/login.php',
+        '/adminsignup' => PHP . 'ADMIN/signup.php',
+        '/createadmins' => PHP . 'ADMIN/createAdmins.php',
         
         // login and signup
         '/' => LOG_SIGN . '/login.php',
@@ -59,6 +61,9 @@
         '/profile' => PHP . 'views/profile.php',
         // settings
         '/settings' => PHP . 'views/settings_menu.php',
+        //chat system
+        '/chat' => PHP . 'views/chat.php',
+        
     ];
 
     function routeToController($uri, $routes) {

@@ -49,15 +49,18 @@ function closeEnvelopeNotifications() {
 }
 
 // Load conversations from your existing API
+/*
 async function loadEnvelopeNotifications() {
   const loadingElement = document.getElementById("loading-envelope");
   const listElement = document.getElementById("envelope-list");
-  /*
+
   try {
     if (loadingElement) loadingElement.style.display = "block";
 
     // Use your existing get_conversations.php API
-    const response = await fetch("Web/php/AJAX/get_conversations.php?limit=20");
+    const response = await fetch(
+      "Web/php/chat/api/get_conversations.php?limit=20"
+    );
     const data = await response.json();
 
     if (loadingElement) loadingElement.style.display = "none";
@@ -73,9 +76,9 @@ async function loadEnvelopeNotifications() {
     if (loadingElement) loadingElement.style.display = "none";
     console.error("Error loading conversations:", error);
     showEnvelopeError("Error loading conversations");
-  } */
+  }
 }
-
+*/
 // Render conversations in the dropdown
 function renderEnvelopeNotifications() {
   const listElement = document.getElementById("envelope-list");
