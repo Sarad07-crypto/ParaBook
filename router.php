@@ -15,8 +15,10 @@
     $routes = [
         
         //admin
-        '/admin' => PHP . 'ADMIN/Admin.php',
-        '/chat' => PHP . 'views/chat.php',
+        '/adminhome' => PHP . 'ADMIN/Admin.php',
+        '/adminlogin' => PHP . 'ADMIN/login.php',
+        '/adminsignup' => PHP . 'ADMIN/signup.php',
+        '/createadmins' => PHP . 'ADMIN/createAdmins.php',
         
         // login and signup
         '/' => LOG_SIGN . '/login.php',
@@ -54,6 +56,9 @@
         '/eSewaPayment' => PHP . 'eSewa/eSewaPayment.php',
         '/booking-success' => PHP . 'eSewa/pageSuccess.php',
         '/booking-error' => PHP . 'eSewa/pageError.php',
+        
+        //chat system
+        '/chat' => PHP . 'views/chat.php',
         
     ];
 
