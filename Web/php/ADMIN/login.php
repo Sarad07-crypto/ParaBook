@@ -319,6 +319,204 @@
         }
 
     }
+
+    /* Alert Styles Only */
+    .alert-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .alert-overlay.show {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .alert-box {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 30px;
+        max-width: 450px;
+        width: 90%;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        text-align: center;
+        transform: scale(0.7);
+        transition: transform 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .alert-overlay.show .alert-box {
+        transform: scale(1);
+    }
+
+    .alert-box::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transform: rotate(45deg);
+        animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+        0% {
+            transform: translateX(-100%) translateY(-100%) rotate(45deg);
+        }
+
+        100% {
+            transform: translateX(100%) translateY(100%) rotate(45deg);
+        }
+    }
+
+    .alert-icon {
+        font-size: 4rem;
+        color: #ffd700;
+        margin-bottom: 20px;
+        display: block;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.1);
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .alert-title {
+        color: #ffffff;
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 15px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .alert-message {
+        color: #f0f0f0;
+        font-size: 1.1rem;
+        line-height: 1.6;
+        margin-bottom: 20px;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    .alert-details {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 25px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .alert-details p {
+        margin: 5px 0;
+        color: #ffffff;
+        font-size: 0.95rem;
+    }
+
+    .alert-details strong {
+        color: #ffd700;
+    }
+
+    .alert-button {
+        background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(238, 90, 36, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .alert-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(238, 90, 36, 0.4);
+    }
+
+    .alert-button:active {
+        transform: translateY(0);
+    }
+
+    .alert-button::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: width 0.3s, height 0.3s;
+    }
+
+    .alert-button:hover::after {
+        width: 100%;
+        height: 100%;
+    }
+
+    .loading-spinner {
+        display: none;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 10px auto;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .error-alert .alert-box {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    }
+
+    .error-alert .alert-icon {
+        color: #ffffff;
+    }
+
+    .success-alert .alert-box {
+        background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+    }
+
+    .success-alert .alert-icon {
+        color: #ffffff;
+    }
     </style>
 </head>
 
@@ -329,7 +527,7 @@
                 <div class="login-form">
                     <h3>Admin Login</h3>
                     <p>Secure access to administrative dashboard</p>
-                    <form class="form" method="post" action="/adminhome">
+                    <form class="form" method="POST" action="/logincheck">
                         <div class="input-box-wrapper">
                             <div class="input-box">
                                 <input type="text" name="email" placeholder="Administrator Email"
@@ -375,6 +573,29 @@
             </div>
         </div>
     </div>
+
+    <!-- Alert Overlay -->
+    <div class="alert-overlay" id="alertOverlay">
+        <div class="alert-box">
+            <i class="bx bx-time-five alert-icon" id="alertIcon"></i>
+            <h3 class="alert-title" id="alertTitle">Account Pending Approval</h3>
+            <p class="alert-message" id="alertMessage">
+                Your account is pending approval by the main administrator. Please wait for approval before accessing
+                the dashboard.
+            </p>
+            <div class="alert-details" id="alertDetails">
+                <p><strong>Name:</strong> <span id="adminName">-</span></p>
+                <p><strong>Registration Date:</strong> <span id="registrationDate">-</span></p>
+                <p><strong>Status:</strong> <span id="accountStatus">Pending</span></p>
+            </div>
+            <button class="alert-button" id="alertButton" onclick="closeAlert()">
+                <span>Understood</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="loading-spinner" id="loadingSpinner"></div>
+
     <script>
     // Password show and hide
     const showPWDIcons = document.querySelectorAll(".eye-icon");
@@ -393,7 +614,53 @@
         });
     });
 
-    // Email validation
+    // Alert functions
+    function showAlert(type, title, message, details = null) {
+        const overlay = document.getElementById('alertOverlay');
+        const alertBox = overlay.querySelector('.alert-box');
+        const icon = document.getElementById('alertIcon');
+        const titleEl = document.getElementById('alertTitle');
+        const messageEl = document.getElementById('alertMessage');
+        const detailsEl = document.getElementById('alertDetails');
+
+        // Reset classes
+        overlay.className = 'alert-overlay';
+
+        // Set content
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+
+        // Set icon and styling based on type
+        if (type === 'pending') {
+            overlay.classList.add('show');
+            icon.className = 'bx bx-time-five alert-icon';
+            detailsEl.style.display = 'block';
+
+            if (details) {
+                document.getElementById('adminName').textContent = details.admin_name || '-';
+                document.getElementById('registrationDate').textContent =
+                    details.created_at ? new Date(details.created_at).toLocaleDateString() : '-';
+                document.getElementById('accountStatus').textContent = 'Pending Approval';
+            }
+        } else if (type === 'error') {
+            overlay.classList.add('show', 'error-alert');
+            icon.className = 'bx bx-error-circle alert-icon';
+            detailsEl.style.display = 'none';
+        } else if (type === 'success') {
+            overlay.classList.add('show', 'success-alert');
+            icon.className = 'bx bx-check-circle alert-icon';
+            detailsEl.style.display = 'none';
+        }
+
+        overlay.classList.add('show');
+    }
+
+    function closeAlert() {
+        const overlay = document.getElementById('alertOverlay');
+        overlay.classList.remove('show');
+    }
+
+    // Email validation and form handling
     const validateForm = (formSelector) => {
         const formElement = document.querySelector(formSelector);
 
@@ -472,6 +739,7 @@
             }
         };
 
+        // Form submission with AJAX
         formElement.setAttribute("novalidate", "");
         formElement.addEventListener("submit", (event) => {
             event.preventDefault();
@@ -483,7 +751,44 @@
             const isCheckboxValid = validateCheckbox();
 
             if (isValidInputs && isCheckboxValid) {
-                formElement.submit();
+                // Show loading
+                const submitButton = formElement.querySelector('input[type="submit"]');
+                const originalValue = submitButton.value;
+                submitButton.disabled = true;
+                submitButton.value = 'Logging in...';
+
+                // Submit form via AJAX
+                const formData = new FormData(formElement);
+
+                fetch('Web/php/ADMIN/logincheck.php', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            showAlert('success', 'Login Successful!', data.message);
+                            setTimeout(() => {
+                                window.location.href = data.redirect || '/adminhome';
+                            }, 2000);
+                        } else if (data.status === 'pending') {
+                            showAlert('pending', 'Account Pending Approval', data.message, data);
+                        } else {
+                            showAlert('error', 'Login Failed', data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showAlert('error', 'Connection Error', 'An error occurred. Please try again.');
+                    })
+                    .finally(() => {
+                        // Re-enable submit button
+                        submitButton.disabled = false;
+                        submitButton.value = originalValue;
+                    });
             } else {
                 console.log("Form has errors.");
             }

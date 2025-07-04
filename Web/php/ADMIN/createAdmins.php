@@ -136,24 +136,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $result = insertAdmin($connect, $_POST);
     
     if ($result['success']) {
-        // Success response
-        echo json_encode([
-            'status' => 'success',
-            'message' => $result['message'],
-            'role' => $result['role'],
-            'admin_id' => $result['admin_id']
-        ]);
-        
-        // Optional: Redirect after successful registration
-        // header('Location: dashboard.php');
-        // exit();
+        // Check if this is an AJAX request
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+            
+            // AJAX request - return JSON response
+            echo json_encode([
+                'status' => 'success',
+                'message' => $result['message'],
+                'role' => $result['role'],
+                'admin_id' => $result['admin_id'],
+                'redirect' => '/adminhome'
+            ]);
+            
+        } else {
+            // Regular form submission - redirect directly
+            session_start();
+            $_SESSION['admin_id'] = $result['admin_id'];
+            $_SESSION['role'] = $result['role'];
+            $_SESSION['success_message'] = $result['message'];
+            
+            // Redirect to admin home
+            header('Location: /adminhome');
+            exit();
+        }
         
     } else {
         // Error response
-        echo json_encode([
-            'status' => 'error',
-            'message' => $result['message']
-        ]);
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+            
+            echo json_encode([
+                'status' => 'error',
+                'message' => $result['message']
+            ]);
+        } else {
+            // For regular form submission, you might want to redirect back with error
+            session_start();
+            $_SESSION['error_message'] = $result['message'];
+            header('Location: /register'); // or wherever your registration form is
+            exit();
+        }
     }
 } else {
     // Invalid request method
