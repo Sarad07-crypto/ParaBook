@@ -19,6 +19,7 @@
         '/adminlogin' => PHP . 'ADMIN/login.php',
         '/adminsignup' => PHP . 'ADMIN/signup.php',
         '/createadmins' => PHP . 'ADMIN/createAdmins.php',
+        '/logincheck' => PHP . 'ADMIN/logincheck.php',
         
         // login and signup
         '/' => LOG_SIGN . '/login.php',
@@ -59,8 +60,10 @@
         
         // profile
         '/profile' => PHP . 'views/profile.php',
+
         // settings
         '/settings' => PHP . 'views/settings_menu.php',
+        
         //chat system
         '/chat' => PHP . 'views/chat.php',
         
