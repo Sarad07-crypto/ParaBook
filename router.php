@@ -55,6 +55,10 @@
         '/booking-success' => PHP . 'eSewa/pageSuccess.php',
         '/booking-error' => PHP . 'eSewa/pageError.php',
         
+        // profile
+        '/profile' => PHP . 'views/profile.php',
+        // settings
+        '/settings' => PHP . 'views/settings_menu.php',
     ];
 
     function routeToController($uri, $routes) {
