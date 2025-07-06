@@ -395,6 +395,35 @@
             gap: 10px;
         }
     }
+
+    .message-box {
+        padding: 15px 20px;
+        border-radius: 8px;
+        font-weight: bold;
+        position: relative;
+        margin-bottom: 20px;
+    }
+
+    .message-box.success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .message-box.error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    #closeMessage {
+        color: inherit;
+        opacity: 0.7;
+    }
+
+    #closeMessage:hover {
+        opacity: 1;
+    }
     </style>
 </head>
 
@@ -407,7 +436,7 @@
             </div>
             <div class="signup-form">
                 <p>Create an account</p>
-                <form class="form" method="post" action="/createadmins">
+                <form class="form" method="post" action="/createadmins" id="signupForm">
                     <div class="input-box-wrapper">
                         <div class="input-box">
                             <input type="text" minlength="2" name="firstName" id="firstName" placeholder="First Name"
@@ -512,6 +541,14 @@
                     </div>
                 </form>
 
+                <div id="messageContainer" style="display: none; margin: 20px 0;">
+                    <div class="message-box">
+                        <span id="messageText"></span>
+                        <button type="button" id="closeMessage"
+                            style="float: right; background: none; border: none; font-size: 18px; cursor: pointer;">&times;</button>
+                    </div>
+                </div>
+
                 <div class="login-section">
                     <p>Already have an account ?</p>
                     <a href="/adminlogin">
@@ -524,6 +561,71 @@
     </div>
 
     <script src="Web/scripts/signup.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('signupForm');
+        const messageContainer = document.getElementById('messageContainer');
+        const messageText = document.getElementById('messageText');
+        const messageBox = document.querySelector('.message-box');
+        const closeButton = document.getElementById('closeMessage');
+
+        // Function to show message
+        function showMessage(message, type) {
+            messageText.textContent = message;
+            messageBox.className = 'message-box ' + type;
+            messageContainer.style.display = 'block';
+            messageContainer.scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest'
+            });
+        }
+
+        // Function to hide message
+        function hideMessage() {
+            messageContainer.style.display = 'none';
+        }
+
+        // Close message button
+        closeButton.addEventListener('click', hideMessage);
+
+        // Handle form submission
+        form.addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent default form submission
+            e.stopPropagation(); // Stop event bubbling
+            hideMessage(); // Hide any existing message
+
+            const formData = new FormData(form);
+
+            fetch('/createadmins', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showMessage(data.message, 'success');
+                        form.reset();
+
+                        // Redirect after showing success message
+                        setTimeout(() => {
+                            if (data.redirect) {
+                                window.location.href = data.redirect;
+                            }
+                        }, 2000);
+                    } else {
+                        showMessage(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showMessage('An error occurred. Please try again.', 'error');
+                });
+        });
+    });
+    </script>
 </body>
 
 </html>
