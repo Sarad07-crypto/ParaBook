@@ -1,4 +1,6 @@
-/* Hide refresh and close buttons by default */
+/* Optimized Message System CSS */
+
+/* Button visibility control */
 .notification-actions,
 .envelope-actions,
 .heart-actions,
@@ -10,7 +12,6 @@
   transition: all 0.3s ease;
 }
 
-/* Show buttons only when dropdown is active/open */
 .notification-dropdown.show .notification-actions,
 .notification-dropdown.show .close-notification,
 .envelope-dropdown.show .envelope-actions,
@@ -21,17 +22,6 @@
   visibility: visible;
 }
 
-/* Alternative approach: Hide buttons until dropdown is shown */
-.notification-dropdown:not(.show) .notification-actions,
-.notification-dropdown:not(.show) .close-notification,
-.envelope-dropdown:not(.show) .envelope-actions,
-.envelope-dropdown:not(.show) .close-envelope,
-.heart-dropdown:not(.show) .heart-actions,
-.heart-dropdown:not(.show) .close-heart {
-  display: none;
-}
-
-/* Ensure the h3 titles are always visible */
 .notification-header h3,
 .envelope-header h3,
 .heart-header h3 {
@@ -39,6 +29,7 @@
   visibility: visible;
 }
 
+/* Base styles */
 body {
   font-family: Arial, sans-serif;
   background: #f5f5f5;
@@ -55,7 +46,7 @@ body {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Notification Styles */
+/* Notification container */
 .notification-container {
   position: relative;
   display: inline-block;
@@ -100,6 +91,7 @@ body {
   display: flex;
 }
 
+/* Dropdown styles */
 .notification-dropdown {
   position: absolute;
   top: 100%;
@@ -152,6 +144,7 @@ body {
   gap: 10px;
 }
 
+/* Action buttons */
 .mark-all-btn,
 .refresh-btn,
 .envelope-mark-all-btn,
@@ -205,6 +198,7 @@ body {
   background: rgba(0, 0, 0, 0.05);
 }
 
+/* Notification list */
 .notification-list {
   max-height: 400px;
   overflow-y: auto;
@@ -273,6 +267,7 @@ body {
   color: #666;
 }
 
+/* Loading and empty states */
 .loading-notifications,
 .loading-envelope,
 .loading-heart {
@@ -281,130 +276,422 @@ body {
   color: #6c757d;
 }
 
-.no-notifications {
+.no-notifications,
+.envelope-empty {
   padding: 40px 20px;
   text-align: center;
   color: #6c757d;
 }
 
-.no-notifications i {
+.no-notifications i,
+.envelope-empty i {
   font-size: 48px;
   margin-bottom: 16px;
   opacity: 0.5;
 }
 
+/* Notification toast */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  min-width: 300px;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  animation: slideInRight 0.3s ease-out;
+}
+
+.notification-success {
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+}
+
+.notification-error {
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+}
+
+.notification-info {
+  background-color: #d1ecf1;
+  border: 1px solid #bee5eb;
+  color: #0c5460;
+}
+
+.notification-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.notification-close:hover {
+  opacity: 1;
+}
+
+/* Envelope specific styles */
+.envelope-item {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.envelope-item:hover {
+  background-color: #f8f9fa;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.envelope-item.unread {
+  background-color: #e3f2fd;
+  border-left: 4px solid #007bff;
+}
+
+.envelope-item.unread:hover {
+  background-color: #bbdefb;
+}
+
+.conversation-unread-badge {
+  background: #dc3545;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  min-width: 18px;
+  text-align: center;
+  display: inline-block;
+  margin-left: 8px;
+}
+
+.envelope-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.envelope-action-btn:disabled:hover {
+  background-color: transparent;
+}
+
+/* Error states */
+.envelope-error {
+  text-align: center;
+  padding: 20px;
+  color: #dc3545;
+}
+
+.retry-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.retry-btn:hover {
+  background: #0056b3;
+}
+
+/* Animations */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .notification-dropdown {
+    width: 90vw;
+    right: 5vw;
+  }
+
+  .notification {
+    right: 10px;
+    left: 10px;
+    min-width: auto;
+  }
+}
+
 /* Envelope (Messages) Styles */
+/* Envelope Notification Styles */
 .envelope-container {
   position: relative;
   display: inline-block;
 }
 
 .envelope-bell {
-  position: relative;
-  color: #666;
-  font-size: 18px;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f8f9fa;
+  color: #6c757d;
   text-decoration: none;
+  transition: all 0.3s ease;
+  position: relative;
 }
 
 .envelope-bell:hover {
-  color: #28a745;
+  background: #e9ecef;
+  color: #495057;
+  text-decoration: none;
 }
 
-.envelope-bell.active {
-  color: #28a745;
+.envelope-bell i {
+  font-size: 18px;
 }
 
 .envelope-badge {
   position: absolute;
-  top: -8px;
-  right: -8px;
-  background: #28a745;
+  top: -2px;
+  right: -2px;
+  background: #dc3545;
   color: white;
   border-radius: 50%;
-  width: 18px;
+  min-width: 18px;
   height: 18px;
   font-size: 11px;
-  display: none;
+  font-weight: bold;
+  display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
-  border: 2px solid white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.envelope-badge.show {
-  display: flex;
+  line-height: 1;
+  display: none;
 }
 
 .envelope-dropdown {
   position: absolute;
   top: 100%;
   right: 0;
-  width: 400px;
+  width: 380px;
   max-width: 90vw;
   background: white;
-  border: 1px solid #e1e8ed;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 1000;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-10px);
-  transition: all 0.3s ease;
+  display: none;
   max-height: 500px;
   overflow: hidden;
 }
 
-.envelope-dropdown.show {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
 .envelope-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid #e1e8ed;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid #dee2e6;
+  background: #f8f9fa;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #f8f9fa;
-  border-radius: 12px 12px 0 0;
 }
 
 .envelope-header h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #212529;
 }
 
 .envelope-header-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
-.envelope-actions,
-.heart-actions {
+.envelope-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
-.envelope-mark-all-btn,
 .envelope-refresh-btn {
-  color: #28a745;
+  background: none;
+  border: none;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
 }
 
-.envelope-mark-all-btn:hover,
 .envelope-refresh-btn:hover {
-  background: rgba(40, 167, 69, 0.1);
+  color: #495057;
+  background: #e9ecef;
+}
+
+.envelope-mark-all-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.envelope-mark-all-btn:hover {
+  background: #0056b3;
+}
+
+.close-envelope {
+  background: none;
+  border: none;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.close-envelope:hover {
+  color: #495057;
+  background: #e9ecef;
 }
 
 .envelope-list {
   max-height: 400px;
   overflow-y: auto;
-  padding: 10px 0;
+}
+
+.envelope-item {
+  border-bottom: 1px solid #f1f3f4;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: stretch;
+}
+
+.envelope-item:hover {
+  background: #f8f9fa;
+}
+
+.envelope-item.unread {
+  background: #f8f9ff;
+  border-left: 3px solid #007bff;
+}
+
+.envelope-item.unread:hover {
+  background: #f0f0ff;
+}
+
+.envelope-item-content {
+  flex: 1;
+  padding: 12px 16px;
+  cursor: pointer;
+}
+
+.envelope-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 4px;
+}
+
+.envelope-sender {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #212529;
+}
+
+.envelope-sender strong {
+  font-weight: 600;
+}
+
+.conversation-unread-badge {
+  background: #007bff;
+  color: white;
+  border-radius: 10px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: bold;
+  min-width: 16px;
+  text-align: center;
+}
+
+.envelope-time {
+  font-size: 12px;
+  color: #6c757d;
+  white-space: nowrap;
+}
+
+.envelope-service {
+  margin-bottom: 6px;
+}
+
+.envelope-service small {
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.envelope-service i {
+  margin-right: 4px;
+}
+
+.envelope-preview {
+  font-size: 13px;
+  color: #495057;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 280px;
+}
+
+.envelope-actions {
+  display: flex;
+  align-items: center;
+  padding: 12px 8px;
+  border-left: 1px solid #f1f3f4;
+}
+
+.envelope-action-btn {
+  background: none;
+  border: none;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.envelope-action-btn:hover:not(:disabled) {
+  color: #007bff;
+  background: #e7f3ff;
+}
+
+.envelope-action-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.loading-envelope {
+  padding: 40px 20px;
+  text-align: center;
+  color: #6c757d;
 }
 
 /* Heart (Favorites) Styles */

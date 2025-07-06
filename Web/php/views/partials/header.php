@@ -1,5 +1,8 @@
 <?php
-    // session_start();
+
+    if (session_status() == PHP_SESSION_NONE) {
+        session_start();
+    }
     $firstName = $_SESSION['firstName'];
     $firstInitial = strtoupper(substr($firstName, 0, 1));
 
@@ -200,6 +203,475 @@
     <?php if ($accType === 'passenger'): ?>
     <script src="Web/scripts/favorite.js?v=1.0"></script>
     <?php endif; ?>
+    <script>
+    // Optimized Message Notification System for Company Dashboard
+    class MessageNotificationSystem {
+        constructor() {
+            this.socket = null;
+            this.isConnected = false;
+            this.isAuthenticated = false;
+            this.userId = null;
+            this.userType = null;
+            this.conversations = [];
+            this.totalUnread = 0;
+            this.refreshInterval = null;
+            this.reconnectAttempts = 0;
+            this.maxReconnectAttempts = 5;
+
+            this.init();
+        }
+
+        init() {
+            this.userId = window.userId || <?php echo json_encode($_SESSION['user_id'] ?? 0); ?>;
+
+            if (!this.userId || this.userId <= 0) {
+                console.error('User ID not available for message system');
+                return;
+            }
+
+            console.log('Initializing message system for user:', this.userId);
+
+            this.connectWebSocket();
+            this.loadConversations();
+
+            // Set up periodic refresh (every 30 seconds)
+            this.refreshInterval = setInterval(() => this.loadConversations(), 30000);
+
+            this.setupEventListeners();
+        }
+
+        connectWebSocket() {
+            if (this.socket?.readyState === WebSocket.OPEN) return;
+
+            try {
+                this.socket = new WebSocket('ws://localhost:8081');
+
+                this.socket.onopen = () => {
+                    console.log('Connected to message notification WebSocket');
+                    this.isConnected = true;
+                    this.reconnectAttempts = 0;
+                    this.authenticate();
+                };
+
+                this.socket.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        this.handleWebSocketMessage(data);
+                    } catch (error) {
+                        console.error('Error parsing WebSocket message:', error);
+                    }
+                };
+
+                this.socket.onclose = () => {
+                    console.log('Disconnected from message notification WebSocket');
+                    this.isConnected = false;
+                    this.isAuthenticated = false;
+                    this.handleReconnect();
+                };
+
+                this.socket.onerror = (error) => console.error('WebSocket error:', error);
+
+            } catch (error) {
+                console.error('Failed to connect to WebSocket:', error);
+            }
+        }
+
+        authenticate() {
+            if (!this.isConnected || !this.userId) return;
+
+            this.socket.send(JSON.stringify({
+                type: 'auth',
+                token: `user_${this.userId}`,
+                user_id: parseInt(this.userId)
+            }));
+        }
+
+        handleWebSocketMessage(data) {
+            switch (data.type) {
+                case 'auth_success':
+                    this.isAuthenticated = true;
+                    console.log('Message system authenticated');
+                    break;
+
+                case 'new_message':
+                    console.log('New message received, refreshing conversations');
+                    this.loadConversations();
+                    this.showBrowserNotification(data.message);
+                    break;
+
+                case 'error':
+                    console.error('WebSocket error:', data.message);
+                    break;
+            }
+        }
+
+        handleReconnect() {
+            if (this.reconnectAttempts < this.maxReconnectAttempts) {
+                this.reconnectAttempts++;
+                console.log(`Reconnecting to message system... Attempt ${this.reconnectAttempts}`);
+                setTimeout(() => this.connectWebSocket(), 2000 * this.reconnectAttempts);
+            }
+        }
+
+        async loadConversations() {
+            try {
+                const response = await fetch('Web/php/chat/api/get_conversations.php', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    this.conversations = data.conversations || [];
+                    this.totalUnread = data.total_unread || 0;
+                    this.userType = data.user_type;
+
+                    console.log('Loaded conversations:', this.conversations.length, 'Total unread:', this
+                        .totalUnread);
+
+                    this.updateEnvelopeBadge();
+                    this.renderConversations();
+                } else {
+                    console.error('Failed to load conversations:', data.error);
+                }
+            } catch (error) {
+                console.error('Error loading conversations:', error);
+                this.showErrorInDropdown('Failed to load messages');
+            }
+        }
+
+        updateEnvelopeBadge() {
+            const badge = document.getElementById('envelope-badge');
+            const icon = document.getElementById('envelope-icon');
+            const markAllBtn = document.getElementById('envelope-mark-all-btn');
+
+            if (badge) {
+                badge.textContent = this.totalUnread;
+                badge.style.display = this.totalUnread > 0 ? 'block' : 'none';
+            }
+
+            if (icon) {
+                icon.className = this.totalUnread > 0 ? 'fas fa-envelope' : 'far fa-envelope';
+                icon.style.color = this.totalUnread > 0 ? '#007bff' : '';
+            }
+
+            if (markAllBtn) {
+                markAllBtn.style.display = this.totalUnread > 0 ? 'block' : 'none';
+            }
+        }
+
+        renderConversations() {
+            const container = document.getElementById('envelope-list');
+            const loading = document.getElementById('loading-envelope');
+
+            if (!container) return;
+
+            if (loading) loading.style.display = 'none';
+
+            if (this.conversations.length === 0) {
+                container.innerHTML = `
+                <div class="envelope-empty">
+                    <i class="far fa-envelope-open"></i>
+                    <p>No messages yet</p>
+                </div>
+            `;
+                return;
+            }
+
+            container.innerHTML = this.conversations.map(conversation => {
+                const timeAgo = this.formatTimeAgo(conversation.last_message_time);
+                const unreadClass = conversation.has_unread ? 'unread' : '';
+                const unreadBadge = conversation.unread_count > 0 ?
+                    `<span class="conversation-unread-badge">${conversation.unread_count}</span>` : '';
+
+                return `
+                <div class="envelope-item ${unreadClass}" data-conversation-id="${conversation.id}">
+                    <div class="envelope-item-content" onclick="openConversationChat(${conversation.id}, ${conversation.service_id})">
+                        <div class="envelope-item-header">
+                            <div class="envelope-sender">
+                                <strong>${this.escapeHtml(conversation.other_participant_name)}</strong>
+                                ${unreadBadge}
+                            </div>
+                            <div class="envelope-time">${timeAgo}</div>
+                        </div>
+                        <div class="envelope-service">
+                            <small class="text-muted">
+                                <i class="fas fa-map-marker-alt"></i>
+                                ${this.escapeHtml(conversation.service_name)} - ${this.escapeHtml(conversation.service_location)}
+                            </small>
+                        </div>
+                        <div class="envelope-preview">
+                            <small class="text-muted">
+                                <i class="fas fa-user"></i>
+                                ${conversation.has_unread ? 'New message' : 'Last message'} from: ${this.escapeHtml(conversation.other_participant_name)}
+                            </small>
+                        </div>
+                    </div>
+                    <div class="envelope-actions">
+                        <button class="envelope-action-btn" onclick="markConversationAsRead(${conversation.id})" 
+                                title="Mark as read" ${!conversation.has_unread ? 'disabled' : ''}>
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            }).join('');
+        }
+
+        showErrorInDropdown(message) {
+            const container = document.getElementById('envelope-list');
+            const loading = document.getElementById('loading-envelope');
+
+            if (loading) loading.style.display = 'none';
+
+            if (container) {
+                container.innerHTML = `
+                <div class="envelope-error">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>${this.escapeHtml(message)}</p>
+                    <button onclick="messageSystem.loadConversations()" class="retry-btn">
+                        <i class="fas fa-retry"></i> Retry
+                    </button>
+                </div>
+            `;
+            }
+        }
+
+        async markConversationAsRead(conversationId) {
+            try {
+                const response = await fetch('Web/php/chat/api/mark_read.php', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        conversation_id: conversationId
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    console.log('Marked conversation as read:', conversationId);
+                    this.updateConversationUI(conversationId);
+                    this.loadConversations();
+                    return true;
+                } else {
+                    throw new Error(data.error || 'Failed to mark as read');
+                }
+            } catch (error) {
+                console.error('Error marking conversation as read:', error);
+                throw error;
+            }
+        }
+
+        updateConversationUI(conversationId) {
+            const conversationElement = document.querySelector(`[data-conversation-id="${conversationId}"]`);
+            if (conversationElement) {
+                conversationElement.classList.remove('unread');
+
+                const unreadBadge = conversationElement.querySelector('.conversation-unread-badge');
+                if (unreadBadge) unreadBadge.remove();
+
+                const markReadBtn = conversationElement.querySelector('.envelope-action-btn');
+                if (markReadBtn) markReadBtn.disabled = true;
+            }
+        }
+
+        async markAllAsRead() {
+            try {
+                const response = await fetch('Web/php/chat/api/mark_all_read.php', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    console.log('Marked all conversations as read');
+                    showNotification(`Marked ${data.marked_count} conversations as read`, 'success');
+                    this.loadConversations();
+                } else {
+                    throw new Error(data.error || 'Failed to mark all as read');
+                }
+            } catch (error) {
+                console.error('Error marking all as read:', error);
+                showNotification('Failed to mark all messages as read', 'error');
+            }
+        }
+
+        showBrowserNotification(message) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('New Message', {
+                    body: message.message,
+                    icon: '/path/to/your/icon.png',
+                    tag: 'chat-message'
+                });
+            }
+        }
+
+        requestNotificationPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        }
+
+        formatTimeAgo(dateString) {
+            if (!dateString) return '';
+
+            const now = new Date();
+            const messageTime = new Date(dateString);
+            const diff = now - messageTime;
+
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+
+            if (minutes < 1) return 'Just now';
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            if (days < 7) return `${days}d ago`;
+
+            return messageTime.toLocaleDateString();
+        }
+
+        escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        setupEventListeners() {
+            document.addEventListener('click', () => this.requestNotificationPermission(), {
+                once: true
+            });
+        }
+
+        destroy() {
+            if (this.refreshInterval) clearInterval(this.refreshInterval);
+            if (this.socket) this.socket.close();
+        }
+    }
+
+    // Global functions for envelope dropdown
+    function toggleEnvelopeNotifications(event) {
+        event.preventDefault();
+        const dropdown = document.getElementById('envelope-dropdown');
+
+        if (dropdown.style.display === 'block') {
+            closeEnvelopeNotifications();
+        } else {
+            dropdown.style.display = 'block';
+            if (window.messageSystem) {
+                window.messageSystem.loadConversations();
+            }
+        }
+    }
+
+    function closeEnvelopeNotifications() {
+        const dropdown = document.getElementById('envelope-dropdown');
+        if (dropdown) dropdown.style.display = 'none';
+    }
+
+    function refreshEnvelopeNotifications() {
+        if (window.messageSystem) {
+            const loading = document.getElementById('loading-envelope');
+            if (loading) loading.style.display = 'block';
+            window.messageSystem.loadConversations();
+        }
+    }
+
+    function markAllEnvelopeAsRead() {
+        if (window.messageSystem) {
+            window.messageSystem.markAllAsRead();
+        }
+    }
+
+    function markConversationAsRead(conversationId) {
+        if (window.messageSystem) {
+            window.messageSystem.markConversationAsRead(conversationId);
+        }
+    }
+
+    // Function to open conversation chat and mark as read
+    async function openConversationChat(conversationId, serviceId) {
+        try {
+            await markConversationAsRead(conversationId);
+            window.location.href = `/chat?conversation_id=${conversationId}&service_id=${serviceId}`;
+        } catch (error) {
+            console.error('Error opening conversation:', error);
+            showNotification('Failed to open conversation. Please try again.', 'error');
+        }
+    }
+
+    // Function to show notifications to users
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.innerHTML = `
+        <div class="notification-content">
+            <i class="fas fa-${type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+            <span>${message}</span>
+        </div>
+        <button class="notification-close" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.remove();
+            }
+        }, 5000);
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(event) {
+        const envelopeContainer = document.querySelector('.envelope-container');
+        if (envelopeContainer && !envelopeContainer.contains(event.target)) {
+            closeEnvelopeNotifications();
+        }
+    });
+
+    // Initialize the message system when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        const userId = <?php echo json_encode($_SESSION['user_id'] ?? 0); ?>;
+        if (userId && userId > 0) {
+            window.messageSystem = new MessageNotificationSystem();
+            console.log('Message notification system initialized');
+        }
+    });
+
+    // Clean up on page unload
+    window.addEventListener('beforeunload', function() {
+        if (window.messageSystem) {
+            window.messageSystem.destroy();
+        }
+    });
+    </script>
 
 </body>
 

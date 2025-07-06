@@ -7,8 +7,6 @@ header('Access-Control-Allow-Headers: Content-Type');
 require_once '../connection.php';
 session_start();
 
-error_log("fetchServices.php called at " . date('Y-m-d H:i:s'));
-
 try {
     $user_id = $_SESSION['user_id'] ?? null;
 
@@ -38,14 +36,16 @@ try {
         LEFT JOIN service_office_photos sop ON cs.id = sop.service_id
     ";
 
-    // Filter by company user_id if it's a company
+    // Filter by company user_id if it's a company, otherwise show only approved services
     if ($acc_type === 'company') {
+        // Company users can see all their own services (pending, approved, rejected)
         $query .= " WHERE cs.user_id = ? GROUP BY cs.id ORDER BY cs.created_at DESC";
         $stmt = $connect->prepare($query);
         if (!$stmt) throw new Exception("Failed to prepare company-only services query");
         $stmt->bind_param("i", $user_id);
     } else {
-        $query .= " GROUP BY cs.id ORDER BY cs.created_at DESC";
+        // Passengers can only see approved services
+        $query .= " WHERE cs.status = 'approved' GROUP BY cs.id ORDER BY cs.created_at DESC";
         $stmt = $connect->prepare($query);
         if (!$stmt) throw new Exception("Failed to prepare passenger services query");
     }
@@ -85,6 +85,7 @@ try {
             'service_title' => $row['service_title'] ?? '',
             'service_description' => $row['service_description'] ?? '',
             'thumbnail_path' => $row['thumbnail_path'] ?? '',
+            'status' => $row['status'] ?? 'pending', // Include status in response
             'flight_types' => $flightTypes,
             'office_photos' => $officePhotos,
             'created_at' => $row['created_at'] ?? null

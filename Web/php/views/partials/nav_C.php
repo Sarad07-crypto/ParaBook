@@ -31,10 +31,10 @@ body {
                 src="<?php echo $avatar ?>">
         </div>
         <div class="sidebar-section sidebar-links">
-            <a href="#">Dashboard</a>
+            <a href="/home">Home</a>
             <a href="#">Flight Management</a>
             <a href="#">Bookings</a>
-            <a href="#">Analytics</a>
+            <a href="/statistics">Analytics</a>
             <a href="#">Revenue</a>
         </div>
         <div class="sidebar-section">
@@ -43,7 +43,7 @@ body {
     </div>
     <!-- Navigation Bar -->
     <div class="nav-bar">
-        <a href="#">Dashboard</a>
+        <a href="/home">Home</a>
         <a href="#">Flight Management</a>
         <a href="/bookingcompany">Bookings</a>
         <a href="/statistics">Analytics</a>

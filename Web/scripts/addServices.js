@@ -1,3 +1,18 @@
+// Tab switching functionality
+$(document).on("click", ".tab-btn", function () {
+  const tabType = $(this).data("tab");
+
+  // Update active tab button
+  $(".tab-btn").removeClass("active");
+  $(this).addClass("active");
+
+  // Update active section
+  $(".service-section").removeClass("active");
+  $(`#${tabType}Section`).addClass("active");
+
+  console.log(`Switched to ${tabType} tab`);
+});
+
 // Load the modal and form content
 $(document).on("click", "#loadServiceForm", function () {
   $("body").css("overflow", "hidden");
@@ -69,10 +84,6 @@ $(document).on("click", ".company-card", function () {
 function loadCompanyServices() {
   console.log("loadCompanyServices called");
 
-  const companyGrid = $(".company-grid");
-  console.log("Found companyGrid element:", companyGrid.length);
-  // console.log("CompanyGrid HTML:", companyGrid.html());
-
   $.ajax({
     url: "Web/php/formDatabase/fetchServices.php",
     type: "GET",
@@ -80,87 +91,118 @@ function loadCompanyServices() {
     success: function (response) {
       console.log("AJAX success. Response received:", response);
 
-      if (response.success && response.services.length > 0) {
-        const companyGrid = $(".company-grid");
-        console.log("Found companyGrid element:", companyGrid.length);
+      if (response.success) {
+        // Clear existing cards from both grids
+        $("#approvedGrid").find(".company-card").remove();
+        $("#pendingGrid").find(".company-card").remove();
 
-        // Clear existing cards except the "Add Service" button
-        // console.log("Before removing cards:", companyGrid.html());
-        companyGrid.find(".company-card").remove();
-        // console.log("After removing cards:", companyGrid.html());
-        console.log("Cleared existing service cards");
+        // Reset counts
+        let approvedCount = 0;
+        let pendingCount = 0;
 
-        // Add each service card
-        response.services.forEach((service, index) => {
-          console.log(`Processing service #${index}:`, service);
+        if (response.services.length > 0) {
+          // Process each service
+          response.services.forEach((service, index) => {
+            console.log(`Processing service #${index}:`, service);
 
-          // Get the lowest price from flight types
-          let lowestPrice = null;
-          if (service.flight_types && service.flight_types.length > 0) {
-            const prices = service.flight_types.map((ft) => {
-              const priceNum = parseFloat(ft.price.replace(/[^\d.]/g, ""));
-              console.log(
-                `Flight type price parsed: ${ft.price} -> ${priceNum}`
-              );
-              return priceNum;
-            });
-            lowestPrice = Math.min(...prices);
-            console.log("Lowest price for this service:", lowestPrice);
-          } else {
-            console.log(
-              "No flight types or empty array for service:",
-              service.id
-            );
-          }
+            // Get the lowest price from flight types
+            let lowestPrice = null;
+            if (service.flight_types && service.flight_types.length > 0) {
+              const prices = service.flight_types.map((ft) => {
+                const priceNum = parseFloat(ft.price.replace(/[^\d.]/g, ""));
+                return priceNum;
+              });
+              lowestPrice = Math.min(...prices);
+            }
 
-          const serviceCard = `
-                            <div class="company-card" data-service-id="${
-                              service.id
-                            }">
-                                <div class="company-thumbnail">
-                                    <img src="${service.thumbnail_path}" 
-                                        alt="${service.service_title}"
-                                        onerror="console.error('Image failed to load:', '${
-                                          service.thumbnail_path
-                                        }'); this.parentElement.innerHTML='<div style=\\'padding:50px;text-align:center;color:#999;background:#f5f5f5\\'>Image not available</div>';"
-                                        onload="console.log('Image loaded successfully for ${
-                                          service.company_name
-                                        }');">
-                                </div>
-                                <div class="company-info">
-                                    <div class="company-title"><b>${
-                                      service.company_name || "Unknown Company"
-                                    }</b></div>
-                                        <div class="company-desc">${
-                                          service.service_description ||
-                                          "No description available"
-                                        }</div>
-                                        <div class="company-meta">
-                                            <span class="company-rating">
-                                                <i class="fas fa-star"></i> 5.0 
-                                                <span class="company-reviews">(0)</span>
-                                            </span>
-                                            ${
-                                              lowestPrice
-                                                ? `<span class="company-price">Rs. ${lowestPrice.toLocaleString()}</span>`
-                                                : '<span class="company-price">Price not available</span>'
-                                            }
-                                        </div>
-                                </div>
-                            </div>
-                        `;
+            // Determine status badge
+            const statusBadge = service.status
+              ? `<div class="status-badge ${service.status}">${service.status}</div>`
+              : '<div class="status-badge pending">pending</div>';
 
-          companyGrid.find(".add-company-wrapper").before(serviceCard);
-          console.log("Inserted service card for service ID:", service.id);
+            const serviceCard = `
+              <div class="company-card" data-service-id="${service.id}">
+                ${statusBadge}
+                <div class="company-thumbnail">
+                  <img src="${service.thumbnail_path}" 
+                      alt="${service.service_title}"
+                      onerror="console.error('Image failed to load:', '${
+                        service.thumbnail_path
+                      }'); this.parentElement.innerHTML='<div style=\\'padding:50px;text-align:center;color:#999;background:#f5f5f5\\'>Image not available</div>';"
+                      onload="console.log('Image loaded successfully for ${
+                        service.company_name
+                      }');">
+                </div>
+                <div class="company-info">
+                  <div class="company-title"><b>${
+                    service.company_name || "Unknown Company"
+                  }</b></div>
+                  <div class="company-desc">${
+                    service.service_description || "No description available"
+                  }</div>
+                  <div class="company-meta">
+                    <span class="company-rating">
+                      <i class="fas fa-star"></i> 5.0 
+                      <span class="company-reviews">(0)</span>
+                    </span>
+                    ${
+                      lowestPrice
+                        ? `<span class="company-price">Rs. ${lowestPrice.toLocaleString()}</span>`
+                        : '<span class="company-price">Price not available</span>'
+                    }
+                  </div>
+                </div>
+              </div>
+            `;
 
-          const addedCard = companyGrid.find(
-            `[data-service-id="${service.id}"]`
-          );
-          console.log("Added card element:", addedCard[0]);
-          console.log("Card is visible:", addedCard.is(":visible"));
-        });
+            // Add to appropriate grid based on status
+            const status = service.status || "pending";
+            if (status === "approved") {
+              $("#approvedGrid")
+                .find(".add-company-wrapper")
+                .before(serviceCard);
+              approvedCount++;
+            } else if (status === "pending") {
+              $("#pendingGrid")
+                .find(".add-company-wrapper")
+                .before(serviceCard);
+              pendingCount++;
+            }
+          });
+        }
+
+        // Update counts in tab buttons
+        $("#approvedCount").text(approvedCount);
+        $("#pendingCount").text(pendingCount);
+
+        // Show/hide empty states
+        if (approvedCount === 0) {
+          $("#emptyApproved").show();
+          $("#approvedGrid").hide();
+        } else {
+          $("#emptyApproved").hide();
+          $("#approvedGrid").show();
+        }
+
+        if (pendingCount === 0) {
+          $("#emptyPending").show();
+          $("#pendingGrid").hide();
+        } else {
+          $("#emptyPending").hide();
+          $("#pendingGrid").show();
+        }
+
+        console.log(
+          `Loaded ${approvedCount} approved and ${pendingCount} pending services`
+        );
       } else {
-        console.log("No services found for this company or empty array");
+        console.log("No services found or error in response");
+        $("#approvedCount").text(0);
+        $("#pendingCount").text(0);
+        $("#emptyApproved").show();
+        $("#emptyPending").show();
+        $("#approvedGrid").hide();
+        $("#pendingGrid").hide();
       }
     },
     error: function (xhr, status, error) {
