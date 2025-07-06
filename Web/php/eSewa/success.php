@@ -1,7 +1,11 @@
 <?php
 // Enable error reporting for debugging
+
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
 
 session_start();
 
@@ -221,14 +225,15 @@ try {
     $companyUsersStmt->close();
 
     // Delete temporary booking
-    $deleteTempStmt = $connect->prepare("DELETE FROM temp_bookings WHERE booking_no = ?");
-    $deleteTempStmt->bind_param("s", $tempBooking['booking_no']);
+    $deleteTempStmt = $connect->prepare("DELETE  FROM temp_bookings");
+ 
     $deleteTempStmt->execute();
     $deleteTempStmt->close();
 
     // Commit transaction
     $connect->commit();
-
+// email sent
+//$emailSent = sendBookingConfirmationEmail($userDetails, $tempBooking, $transaction_code, $bookingId);
     // Clear session
     session_unset();
 
@@ -509,4 +514,98 @@ function createNotification($connect, $recipient_id, $recipient_type, $title, $m
     $stmt->close();
     return true;
 }
+    //for email verification, you can add email sending logic here if needed
+//     function sendBookingConfirmationEmail($userDetails, $bookingDetails, $transactionCode, $bookingId) {
+//     try {
+//        //require_once $_SERVER['DOCUMENT_ROOT'] . '/ParaBook/Web/php/env.php';
+//          $mail = new PHPMailer(true);
+//           //Server settings
+//         $mail->isSMTP();
+//         $mail->Host       = 'smtp.gmail.com';  // Gmail SMTP server
+//         $mail->SMTPAuth   = true;
+//         $mail->Username   = 'saradcr7adhikari@gmail.com';     // Your Gmail address
+//         $mail->Password   = 'femosrdqlzvdyxgg';        // Your Gmail App Password (not regular password)
+//       //  $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+//          $mail->SMTPSecure = 'tls';
+//         $mail->Port       = 587;
+
+//          $mail->setFrom('noreply@gmail.com', 'Parabook');
+//         $mail->addAddress($userDetails['email']);
+//         $mail->addReplyTo('support@parabook.com', 'Parabook Support');
+
+//          $mail->isHTML(true);
+//         $mail->Subject = "Booking Confirmation - Parabook #{$bookingDetails['booking_no']}";
+       
+//   $customerName = trim(($userDetails['firstName'] ?? '') . ' ' . ($userDetails['lastName'] ?? ''));
+        
+//         $mail->Body = "
+//         <!DOCTYPE html>
+//         <html>
+//         <head>
+//             <meta charset='UTF-8'>
+//             <title>Booking Confirmation</title>
+//             <style>
+//                 body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+//                 .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+//                 .header { background: #007bff; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+//                 .content { background: #f9f9f9; padding: 20px; border-radius: 0 0 8px 8px; }
+//                 .booking-details { background: white; padding: 15px; border-radius: 5px; margin: 20px 0; }
+//                 .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 5px; margin: 20px 0; }
+//                 .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
+//             </style>
+//         </head>
+//         <body>
+//             <div class='container'>
+//                 <div class='header'>
+//                     <h1>🎉 Booking Confirmed!</h1>
+//                     <p>Your paragliding adventure is confirmed</p>
+//                 </div>
+                
+//                 <div class='content'>
+//                     <div class='success'>
+//                         <h3>✅ Payment Successful</h3>
+//                         <p>Dear " . htmlspecialchars($customerName) . ",</p>
+//                         <p>Thank you for choosing Parabook! Your booking has been confirmed and payment has been processed successfully.</p>
+//                     </div>
+                    
+//                     <div class='booking-details'>
+//                         <h3>📋 Booking Details</h3>
+//                         <table style='width: 100%; border-collapse: collapse;'>
+//                             <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Booking Number:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" . htmlspecialchars($bookingDetails['booking_no']) . "</td></tr>
+//                             <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Amount Paid:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>Rs. " . number_format($bookingDetails['total_amount'], 2) . "</td></tr>
+//                             <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Date:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" . htmlspecialchars($bookingDetails['date']) . "</td></tr>
+//                             <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Pickup Location:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" . htmlspecialchars($bookingDetails['pickup']) . "</td></tr>
+//                             <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Flight Type:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" . htmlspecialchars($bookingDetails['flight_type_name']) . "</td></tr>
+//                         </table>
+//                     </div>
+                    
+//                     <div style='background: #e7f3ff; padding: 15px; border-radius: 5px; margin: 20px 0;'>
+//                         <h4>📋 Important Instructions:</h4>
+//                         <ul>
+//                             <li>Save this email and your booking number for future reference</li>
+//                             <li>Arrive at the pickup location 15 minutes before your scheduled time</li>
+//                             <li>Bring a valid government-issued ID for verification</li>
+//                             <li>Wear comfortable clothing and closed-toe shoes</li>
+//                         </ul>
+//                     </div>
+//                 </div>
+                
+//                 <div class='footer'>
+//                     <p>Thank you for choosing Parabook!</p>
+//                     <p><small>This is an automated confirmation email.</small></p>
+//                 </div>
+//             </div>
+//         </body>
+//         </html>";
+
+//         $mail->send();
+//         error_log("Booking confirmation email sent successfully to: " . $userDetails['email']);
+//         return true;
+        
+//     } catch (Exception $e) {
+//         error_log("Email sending failed: " . $mail->ErrorInfo);
+//         return false;
+//     }
+
+
 ?>

@@ -8,7 +8,7 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-require '../connection.php';
+require 'Web/php/connection.php';
 
 if ($connect->connect_error) {
     die("Connection failed: " . $connect->connect_error);
