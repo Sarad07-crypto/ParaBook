@@ -15,11 +15,13 @@
     $routes = [
         
         //admin
-        '/adminhome' => PHP . 'ADMIN/Admin.php',
+        '/adminhome' => PHP . 'ADMIN/home.php',
         '/adminlogin' => PHP . 'ADMIN/login.php',
+        '/adminlogout' => PHP . 'ADMIN/logout.php',
         '/adminsignup' => PHP . 'ADMIN/signup.php',
         '/createadmins' => PHP . 'ADMIN/createAdmins.php',
         '/logincheck' => PHP . 'ADMIN/logincheck.php',
+        '/servicedetails' => PHP . 'ADMIN/serviceDetails.php',
         
         // login and signup
         '/' => LOG_SIGN . '/login.php',

@@ -343,7 +343,7 @@
     }
 
     .alert-box {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: var(--gradient);
         border-radius: 20px;
         padding: 30px;
         max-width: 450px;
@@ -440,8 +440,8 @@
     }
 
     .alert-button {
-        background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-        color: white;
+        background: white;
+        color: #8b0000;
         border: none;
         padding: 12px 30px;
         border-radius: 25px;
@@ -461,24 +461,6 @@
 
     .alert-button:active {
         transform: translateY(0);
-    }
-
-    .alert-button::after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 0;
-        height: 0;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 50%;
-        transform: translate(-50%, -50%);
-        transition: width 0.3s, height 0.3s;
-    }
-
-    .alert-button:hover::after {
-        width: 100%;
-        height: 100%;
     }
 
     .loading-spinner {
@@ -503,18 +485,10 @@
     }
 
     .error-alert .alert-box {
-        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        background: var(--gradient);
     }
 
     .error-alert .alert-icon {
-        color: #ffffff;
-    }
-
-    .success-alert .alert-box {
-        background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
-    }
-
-    .success-alert .alert-icon {
         color: #ffffff;
     }
     </style>
@@ -770,10 +744,11 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.status === 'success') {
-                            showAlert('success', 'Login Successful!', data.message);
+                            window.location.href = data.redirect || '/adminhome';
+                            /* showAlert('success', 'Login Successful!', data.message);
                             setTimeout(() => {
                                 window.location.href = data.redirect || '/adminhome';
-                            }, 2000);
+                            }, 2000); */
                         } else if (data.status === 'pending') {
                             showAlert('pending', 'Account Pending Approval', data.message, data);
                         } else {

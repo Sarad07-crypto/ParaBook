@@ -51,17 +51,21 @@ try {
         throw new Exception('Only company accounts can view services');
     }
 
-    // Fetch all services for this company
+    // First, get all services for this company
     $stmt = $connect->prepare("
-        SELECT cs.*, 
-               GROUP_CONCAT(DISTINCT CONCAT(sft.flight_type_name, '|', sft.price) SEPARATOR ';;') as flight_types,
-               GROUP_CONCAT(DISTINCT sop.photo_path SEPARATOR ';;') as office_photos
+        SELECT cs.id, cs.user_id, cs.company_name, cs.service_title, cs.address, 
+               cs.contact, cs.pan_number, cs.service_description, cs.thumbnail_path, 
+               cs.status, cs.created_at, cs.updated_at
         FROM company_services cs
-        LEFT JOIN service_flight_types sft ON cs.id = sft.service_id
-        LEFT JOIN service_office_photos sop ON cs.id = sop.service_id
         WHERE cs.user_id = ?
-        GROUP BY cs.id
-        ORDER BY cs.created_at DESC
+        ORDER BY 
+            CASE cs.status 
+                WHEN 'approved' THEN 1
+                WHEN 'pending' THEN 2
+                WHEN 'rejected' THEN 3
+                ELSE 4
+            END,
+            cs.created_at DESC
     ");
     
     if (!$stmt) {
@@ -79,36 +83,66 @@ try {
     error_log("Services query executed. Row count: " . $result->num_rows);
 
     $services = [];
+    $statusCounts = [
+        'approved' => 0,
+        'pending' => 0,
+        'rejected' => 0
+    ];
+    
     while ($row = $result->fetch_assoc()) {
-        error_log("Processing service: " . $row['service_title']);
+        error_log("Processing service: " . $row['service_title'] . " with status: " . ($row['status'] ?? 'NULL'));
         
-        // Process flight types
+        $service_id = $row['id'];
+        
+        // Get flight types for this service
+        $flightTypesStmt = $connect->prepare("
+            SELECT flight_type_name, price 
+            FROM service_flight_types 
+            WHERE service_id = ?
+        ");
+        
         $flightTypes = [];
-        if (!empty($row['flight_types'])) {
-            $types = explode(';;', $row['flight_types']);
-            foreach ($types as $type) {
-                if (strpos($type, '|') !== false) {
-                    list($name, $price) = explode('|', $type, 2);
-                    $flightTypes[] = [
-                        'name' => trim($name),
-                        'price' => trim($price)
-                    ];
-                }
+        if ($flightTypesStmt) {
+            $flightTypesStmt->bind_param("i", $service_id);
+            $flightTypesStmt->execute();
+            $flightResult = $flightTypesStmt->get_result();
+            
+            while ($flightRow = $flightResult->fetch_assoc()) {
+                $flightTypes[] = [
+                    'name' => $flightRow['flight_type_name'],
+                    'price' => $flightRow['price']
+                ];
             }
+            $flightTypesStmt->close();
         }
-        error_log("Flight types for service " . $row['service_title'] . ": " . count($flightTypes));
-
-        // Process office photos
+        
+        // Get office photos for this service
+        $photosStmt = $connect->prepare("
+            SELECT photo_path 
+            FROM service_office_photos 
+            WHERE service_id = ?
+        ");
+        
         $officePhotos = [];
-        if (!empty($row['office_photos'])) {
-            $photos = explode(';;', $row['office_photos']);
-            foreach ($photos as $photo) {
-                if (!empty(trim($photo))) {
-                    $officePhotos[] = trim($photo);
+        if ($photosStmt) {
+            $photosStmt->bind_param("i", $service_id);
+            $photosStmt->execute();
+            $photoResult = $photosStmt->get_result();
+            
+            while ($photoRow = $photoResult->fetch_assoc()) {
+                if (!empty(trim($photoRow['photo_path']))) {
+                    $officePhotos[] = trim($photoRow['photo_path']);
                 }
             }
+            $photosStmt->close();
         }
+        
+        error_log("Flight types for service " . $row['service_title'] . ": " . count($flightTypes));
         error_log("Office photos for service " . $row['service_title'] . ": " . count($officePhotos));
+
+        // Get status (default to pending if not set)
+        $status = $row['status'] ?? 'pending';
+        $statusCounts[$status]++;
 
         $services[] = [
             'id' => $row['id'],
@@ -116,6 +150,7 @@ try {
             'service_title' => $row['service_title'] ?? '',
             'service_description' => $row['service_description'] ?? '',
             'thumbnail_path' => $row['thumbnail_path'] ?? '',
+            'status' => $status,
             'flight_types' => $flightTypes,
             'office_photos' => $officePhotos,
             'created_at' => $row['created_at'] ?? null
@@ -123,11 +158,13 @@ try {
     }
 
     error_log("Final services count: " . count($services));
+    error_log("Status counts: " . json_encode($statusCounts));
 
     $response = [
         'success' => true,
         'services' => $services,
         'count' => count($services),
+        'status_counts' => $statusCounts,
         'user_id' => $user_id
     ];
 
