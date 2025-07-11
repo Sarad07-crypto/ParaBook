@@ -1,3 +1,8 @@
+<?php
+     require 'avatar.php';
+     require 'partials/header.php';
+        require 'partials/nav_P.php';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -427,6 +432,215 @@
               width: 100%;
           }
       }
+
+      /* Dark Mode Styles */
+.dark-mode {
+  --primary-color: #4a90e2;
+  --gradient: linear-gradient(90deg, #4a90e2, #357abd);
+  --secondary-color: #9ca3af;
+  --success-color: #4a90e2;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --light-color: #1f2937;
+  --dark-color: #f9fafb;
+  --box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  --border-color: #374151;
+  --card-bg: rgba(31, 41, 55, 0.95);
+  --hover-bg: #374151;
+  --text-primary: #f9fafb;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+}
+
+.dark-mode body {
+  background: #111827;
+  color: var(--text-primary);
+}
+
+.dark-mode .fiverr-style-profile {
+  background: transparent;
+}
+
+/* Sidebar Dark Mode */
+.dark-mode .profile-sidebar {
+  background: var(--card-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.dark-mode .profile-sidebar:hover {
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+}
+
+.dark-mode .profile-sidebar h2 {
+  color: var(--text-primary);
+}
+
+.dark-mode .username {
+  color: var(--text-secondary);
+}
+
+.dark-mode .profile-info-item {
+  color: var(--text-primary);
+}
+
+.dark-mode .profile-info-item.muted {
+  color: var(--text-muted);
+}
+
+.dark-mode .profile-btn {
+  background: var(--light-color);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.dark-mode .profile-btn:hover {
+  background: var(--hover-bg);
+  transform: translateY(-2px);
+}
+
+.dark-mode .preview-btn:hover {
+  background: var(--primary-color);
+  color: white;
+}
+
+.dark-mode .explore-btn {
+  background: var(--success-color);
+  color: white;
+  border: 1px solid var(--success-color);
+}
+
+.dark-mode .explore-btn:hover {
+  background: #357abd;
+}
+
+/* Main Content Dark Mode */
+.dark-mode .profile-main-content {
+  background: var(--card-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.dark-mode .profile-banner {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+  border: 1px solid var(--primary-color);
+  color: #93c5fd;
+}
+
+.dark-mode .profile-banner a {
+  color: #93c5fd;
+  border-bottom: 1px solid #93c5fd;
+}
+
+.dark-mode .profile-banner a:hover {
+  color: #dbeafe;
+  border-bottom-color: #dbeafe;
+}
+
+.dark-mode .profile-main-content h2 {
+  color: var(--text-primary);
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dark-mode .profile-main-content > p {
+  color: var(--text-secondary);
+}
+
+/* Progress Section Dark Mode */
+.dark-mode .profile-progress-section {
+  background: var(--light-color);
+  border: 1px solid var(--border-color);
+}
+
+.dark-mode .profile-progress-section label {
+  color: var(--text-primary);
+}
+
+.dark-mode .progress-bar {
+  background: #374151;
+}
+
+.dark-mode .progress-fill {
+  background: var(--success-color);
+}
+
+.dark-mode .progress-text {
+  color: var(--text-secondary);
+}
+
+/* Recent Achievements Dark Mode */
+.dark-mode .recent-achievements {
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+  border: 1px solid var(--border-color);
+}
+
+.dark-mode .recent-achievements:hover {
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+}
+
+.dark-mode .recent-achievements h3 {
+  color: var(--text-primary);
+}
+
+.dark-mode .achievement-item {
+  background: var(--light-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+/* Todo List Dark Mode */
+.dark-mode .todo-item {
+  background: var(--light-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.dark-mode .todo-item:hover {
+  background: var(--hover-bg);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .todo-item button {
+  background: var(--gradient);
+  color: white;
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+}
+
+.dark-mode .todo-item button:hover {
+  box-shadow: 0 6px 16px rgba(74, 144, 226, 0.4);
+}
+
+/* Avatar Circle Dark Mode */
+.dark-mode .profile-avatar-circle {
+  box-shadow: 0 10px 30px rgba(74, 144, 226, 0.4);
+}
+
+.dark-mode .profile-avatar-circle:hover {
+  box-shadow: 0 15px 40px rgba(74, 144, 226, 0.5);
+}
+
+/* Scrollbar Dark Mode */
+.dark-mode::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dark-mode::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+.dark-mode::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 4px;
+}
+
+.dark-mode::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
     </style>
 </head>
 <body>
@@ -434,9 +648,10 @@
   <!-- Left Sidebar -->
   <div class="profile-sidebar">
     <div class="profile-avatar-circle">
-      SP
+      <img src="<?php echo $avatar ?>" alt="image not found"
+                                onerror="showInitial(this, '<?php echo $firstInitial ?>')">
     </div>
-    <h2>Sabin Pandey</h2>
+    <h2><?php echo htmlspecialchars($_SESSION['firstName']) . " " . htmlspecialchars($_SESSION['lastName']); ?></h2>
     <p class="username">@sabinpandey657</p>
     
     <div class="profile-info-section">
@@ -550,3 +765,7 @@
 </script>
 </body>
 </html>
+
+<?php
+    require 'partials/footer.php';
+?>

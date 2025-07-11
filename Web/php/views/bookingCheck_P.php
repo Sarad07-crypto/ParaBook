@@ -562,11 +562,11 @@ body {
 }
 
 .dark-mode .card-body {
-    background:rgb(50, 50, 71);
+    background:rgba(31, 41, 55, 0.95);
 }
 
 .dark-mode .info-section {
-    background: #1a1a2e;
+    background:rgba(20, 27, 37, 0.95);
     border-left: 4px solid var(--primary-color);
 }
 
