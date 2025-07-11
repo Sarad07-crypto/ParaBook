@@ -9,6 +9,21 @@ body {
   font-family: Arial, sans-serif;
   background: #f8f9fa;
   color: #333;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark mode styles */
+.dark-mode {
+  --primary-color: #4dabf7;
+  --gradient: linear-gradient(90deg, #339af0, #1971c2);
+  --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  background: #1a1a1a;
+  color: #ffffff;
+}
+
+.dark-mode body {
+  background: #1a1a1a;
+  color: #ffffff;
 }
 
 .stats-container {
@@ -35,6 +50,10 @@ body {
   margin-bottom: 20px;
 }
 
+.dark-mode .page-subtitle {
+  color: #b3b3b3;
+}
+
 .time-filter {
   display: flex;
   justify-content: center;
@@ -51,6 +70,11 @@ body {
   cursor: pointer;
   transition: all 0.3s;
   font-weight: 500;
+}
+
+.dark-mode .filter-btn {
+  background: #2d2d2d;
+  color: var(--primary-color);
 }
 
 .filter-btn.active,
@@ -71,14 +95,23 @@ body {
   border-radius: var(--border-radius);
   padding: 25px;
   box-shadow: var(--card-shadow);
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s;
   position: relative;
   overflow: hidden;
+}
+
+.dark-mode .stat-card {
+  background: #2d2d2d;
+  border: 1px solid #404040;
 }
 
 .stat-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.dark-mode .stat-card:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
 }
 
 .stat-card::before {
@@ -111,11 +144,19 @@ body {
   margin-bottom: 5px;
 }
 
+.dark-mode .stat-value {
+  color: #ffffff;
+}
+
 .stat-label {
   font-size: 0.95rem;
   color: #666;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+.dark-mode .stat-label {
+  color: #b3b3b3;
 }
 
 .stat-change {
@@ -128,8 +169,16 @@ body {
   color: #28a745;
 }
 
+.dark-mode .positive {
+  color: #51cf66;
+}
+
 .negative {
   color: #dc3545;
+}
+
+.dark-mode .negative {
+  color: #ff6b6b;
 }
 
 .charts-section {
@@ -144,6 +193,12 @@ body {
   border-radius: var(--border-radius);
   padding: 25px;
   box-shadow: var(--card-shadow);
+  transition: background-color 0.3s;
+}
+
+.dark-mode .chart-card {
+  background: #2d2d2d;
+  border: 1px solid #404040;
 }
 
 .chart-title {
@@ -151,6 +206,10 @@ body {
   color: #333;
   margin-bottom: 20px;
   font-weight: 600;
+}
+
+.dark-mode .chart-title {
+  color: #ffffff;
 }
 
 .chart-placeholder {
@@ -163,6 +222,13 @@ body {
   color: #666;
   font-size: 1.1rem;
   border: 2px dashed #ddd;
+  transition: all 0.3s;
+}
+
+.dark-mode .chart-placeholder {
+  background: linear-gradient(135deg, #3a3a3a 0%, #2d2d2d 100%);
+  color: #b3b3b3;
+  border-color: #404040;
 }
 
 .weather-section {
@@ -178,6 +244,12 @@ body {
   padding: 20px;
   box-shadow: var(--card-shadow);
   text-align: center;
+  transition: background-color 0.3s;
+}
+
+.dark-mode .weather-card {
+  background: #2d2d2d;
+  border: 1px solid #404040;
 }
 
 .weather-location {
@@ -185,6 +257,10 @@ body {
   font-weight: 600;
   color: #333;
   margin-bottom: 10px;
+}
+
+.dark-mode .weather-location {
+  color: #ffffff;
 }
 
 .weather-temp {
@@ -200,11 +276,19 @@ body {
   margin-bottom: 10px;
 }
 
+.dark-mode .weather-condition {
+  color: #b3b3b3;
+}
+
 .weather-details {
   display: flex;
   justify-content: space-between;
   font-size: 0.8rem;
   color: #777;
+}
+
+.dark-mode .weather-details {
+  color: #888888;
 }
 
 .flight-status-section {
@@ -213,6 +297,12 @@ body {
   padding: 25px;
   box-shadow: var(--card-shadow);
   margin-bottom: 40px;
+  transition: background-color 0.3s;
+}
+
+.dark-mode .flight-status-section {
+  background: #2d2d2d;
+  border: 1px solid #404040;
 }
 
 .section-title {
@@ -220,6 +310,10 @@ body {
   color: #333;
   margin-bottom: 20px;
   font-weight: 600;
+}
+
+.dark-mode .section-title {
+  color: #ffffff;
 }
 
 .flight-list {
@@ -235,6 +329,11 @@ body {
   background: #f8f9fa;
   border-radius: 8px;
   border-left: 4px solid var(--primary-color);
+  transition: background-color 0.3s;
+}
+
+.dark-mode .flight-item {
+  background: #3a3a3a;
 }
 
 .flight-info {
@@ -247,9 +346,17 @@ body {
   margin-bottom: 5px;
 }
 
+.dark-mode .flight-name {
+  color: #ffffff;
+}
+
 .flight-details {
   font-size: 0.9rem;
   color: #666;
+}
+
+.dark-mode .flight-details {
+  color: #b3b3b3;
 }
 
 .flight-status {
@@ -265,14 +372,29 @@ body {
   color: #155724;
 }
 
+.dark-mode .status-active {
+  background: #1a472a;
+  color: #51cf66;
+}
+
 .status-pending {
   background: #fff3cd;
   color: #856404;
 }
 
+.dark-mode .status-pending {
+  background: #4a3d1a;
+  color: #ffd43b;
+}
+
 .status-cancelled {
   background: #f8d7da;
   color: #721c24;
+}
+
+.dark-mode .status-cancelled {
+  background: #472329;
+  color: #ff6b6b;
 }
 
 .instructor-section {
@@ -287,6 +409,12 @@ body {
   padding: 20px;
   box-shadow: var(--card-shadow);
   text-align: center;
+  transition: background-color 0.3s;
+}
+
+.dark-mode .instructor-card {
+  background: #2d2d2d;
+  border: 1px solid #404040;
 }
 
 .instructor-avatar {
@@ -310,6 +438,10 @@ body {
   margin-bottom: 5px;
 }
 
+.dark-mode .instructor-name {
+  color: #ffffff;
+}
+
 .instructor-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -331,6 +463,10 @@ body {
   font-size: 0.8rem;
   color: #666;
   text-transform: uppercase;
+}
+
+.dark-mode .instructor-stat-label {
+  color: #b3b3b3;
 }
 
 @media (max-width: 768px) {
@@ -367,6 +503,11 @@ body {
   animation: spin 1s linear infinite;
 }
 
+.dark-mode .loading-animation {
+  border-color: #404040;
+  border-top-color: var(--primary-color);
+}
+
 @keyframes spin {
   0% {
     transform: rotate(0deg);
@@ -375,4 +516,27 @@ body {
   100% {
     transform: rotate(360deg);
   }
+}
+
+/* Additional dark mode enhancements */
+.dark-mode *::selection {
+  background: var(--primary-color);
+  color: white;
+}
+
+.dark-mode ::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dark-mode ::-webkit-scrollbar-track {
+  background: #2d2d2d;
+}
+
+.dark-mode ::-webkit-scrollbar-thumb {
+  background: #404040;
+  border-radius: 4px;
+}
+
+.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: #888888;
 }
