@@ -235,7 +235,7 @@ try {
 // email sent
 //$emailSent = sendBookingConfirmationEmail($userDetails, $tempBooking, $transaction_code, $bookingId);
     // Clear session
-    session_unset();
+   // session_unset();
 
     // Success page with better styling
     ?>
@@ -514,9 +514,10 @@ function createNotification($connect, $recipient_id, $recipient_type, $title, $m
     $stmt->close();
     return true;
 }
-    //for email verification, you can add email sending logic here if needed
+//     //for email verification, you can add email sending logic here if needed
 //     function sendBookingConfirmationEmail($userDetails, $bookingDetails, $transactionCode, $bookingId) {
 //     try {
+//         require_once __DIR__ . '/vendor/autoload.php';
 //        //require_once $_SERVER['DOCUMENT_ROOT'] . '/ParaBook/Web/php/env.php';
 //          $mail = new PHPMailer(true);
 //           //Server settings
@@ -606,6 +607,6 @@ function createNotification($connect, $recipient_id, $recipient_type, $title, $m
 //         error_log("Email sending failed: " . $mail->ErrorInfo);
 //         return false;
 //     }
-
+   // }
 
 ?>
