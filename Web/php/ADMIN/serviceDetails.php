@@ -17,14 +17,16 @@
         exit();
     }
 
-    // Fetch service details
+    // Fetch service details including location data
     $query = "
         SELECT cs.*, 
             GROUP_CONCAT(DISTINCT CONCAT(sft.flight_type_name, '|', sft.price) SEPARATOR ';;') as flight_types,
-            GROUP_CONCAT(DISTINCT sop.photo_path SEPARATOR ';;') as office_photos
+            GROUP_CONCAT(DISTINCT sop.photo_path SEPARATOR ';;') as office_photos,
+            sl.latitude, sl.longitude, sl.address, sl.formatted_address, sl.place_id
         FROM company_services cs
         LEFT JOIN service_flight_types sft ON cs.id = sft.service_id
         LEFT JOIN service_office_photos sop ON cs.id = sop.service_id
+        LEFT JOIN service_locations sl ON cs.id = sl.service_id
         WHERE cs.id = ?
         GROUP BY cs.id
     ";
@@ -70,6 +72,16 @@
         $prices = array_column($flightTypes, 'price');
         $minPrice = min($prices);
     }
+
+    // Location data
+    $hasLocation = !empty($service['latitude']) && !empty($service['longitude']);
+    $locationData = [
+        'latitude' => $service['latitude'] ? floatval($service['latitude']) : null,
+        'longitude' => $service['longitude'] ? floatval($service['longitude']) : null,
+        'address' => $service['address'] ?? null,
+        'formatted_address' => $service['formatted_address'] ?? null,
+        'place_id' => $service['place_id'] ?? null
+    ];
     ?>
 
 <!DOCTYPE html>
@@ -80,6 +92,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Service Details - Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
     :root {
         --color-BG: #056cc5;
@@ -294,6 +308,59 @@
         color: #721c24;
     }
 
+    /* Map Section Styles */
+    .location-section {
+        margin-top: 30px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .location-header {
+        background: #f8f9fa;
+        padding: 15px;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .location-header h3 {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .location-header .fas {
+        color: #007bff;
+    }
+
+    #serviceLocationMap {
+        width: 100%;
+        height: 400px;
+        border: none;
+    }
+
+    .location-info {
+        padding: 15px;
+        background: #f8f9fa;
+        border-top: 1px solid #ddd;
+    }
+
+    .location-info p {
+        margin: 5px 0;
+        font-size: 14px;
+    }
+
+    .location-info strong {
+        color: #333;
+    }
+
+    .no-location {
+        padding: 20px;
+        text-align: center;
+        color: #666;
+        font-style: italic;
+    }
+
     * {
         margin: 0;
         padding: 0;
@@ -431,6 +498,33 @@
                     </ul>
                     <?php endif; ?>
                 </div>
+
+                <!-- Location Section -->
+                <div class="location-section">
+                    <div class="location-header">
+                        <h3>
+                            <i class="fas fa-map-marker-alt"></i>
+                            Service Location
+                        </h3>
+                    </div>
+                    <?php if ($hasLocation): ?>
+                    <div id="serviceLocationMap"></div>
+                    <div class="location-info">
+                        <p><strong>Coordinates:</strong> <?php echo $locationData['latitude']; ?>,
+                            <?php echo $locationData['longitude']; ?></p>
+                        <?php if ($locationData['formatted_address']): ?>
+                        <p><strong>Address:</strong> <?php echo htmlspecialchars($locationData['formatted_address']); ?>
+                        </p>
+                        <?php elseif ($locationData['address']): ?>
+                        <p><strong>Address:</strong> <?php echo htmlspecialchars($locationData['address']); ?></p>
+                        <?php endif; ?>
+                    </div>
+                    <?php else: ?>
+                    <div class="no-location">
+                        <p>No location information provided for this service.</p>
+                    </div>
+                    <?php endif; ?>
+                </div>
             </div>
 
             <!-- Right Section -->
@@ -461,6 +555,8 @@
         </div>
     </div>
 
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
     // Image slider functionality
     let currentImageIndex = 0;
@@ -495,6 +591,46 @@
             thumb.classList.toggle('selected', index === currentImageIndex);
         });
     }
+
+    // Map initialization
+    <?php if ($hasLocation): ?>
+    let serviceMap;
+
+    function initializeServiceMap() {
+        const latitude = <?php echo $locationData['latitude']; ?>;
+        const longitude = <?php echo $locationData['longitude']; ?>;
+
+        // Initialize map
+        serviceMap = L.map('serviceLocationMap').setView([latitude, longitude], 15);
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(serviceMap);
+
+        // Add marker for the service location
+        const marker = L.marker([latitude, longitude]).addTo(serviceMap);
+
+        // Add popup with service information
+        const popupContent = `
+            <div style="text-align: center;">
+                <h4><?php echo htmlspecialchars($service['service_title']); ?></h4>
+                <p><strong><?php echo htmlspecialchars($service['company_name']); ?></strong></p>
+                <?php if ($locationData['formatted_address']): ?>
+                    <p><?php echo htmlspecialchars($locationData['formatted_address']); ?></p>
+                <?php endif; ?>
+            </div>
+        `;
+
+        marker.bindPopup(popupContent).openPopup();
+    }
+
+    // Initialize map when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeServiceMap();
+    });
+    <?php endif; ?>
 
     // Admin actions
     function approveService(serviceId) {

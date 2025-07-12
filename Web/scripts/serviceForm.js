@@ -52,6 +52,11 @@ function initServiceForm() {
 
     formSteps.forEach((form, index) => {
       form.classList.toggle("active", index === currentStep - 1);
+
+      // Initialize map when step 3 becomes active (Location step)
+      if (index === 2 && currentStep === 3 && window.locationPicker) {
+        window.locationPicker.showStep3();
+      }
     });
 
     const submitBtn = document.getElementById("submitBtn");
@@ -70,9 +75,14 @@ function initServiceForm() {
       case 2:
         return validateStep2();
       case 3:
-        return validateStep3();
+        // Location step validation
+        return window.locationPicker
+          ? window.locationPicker.validateStep3()
+          : true;
       case 4:
         return validateStep4();
+      case 5:
+        return validateStep5();
       default:
         return true;
     }
@@ -137,7 +147,7 @@ function initServiceForm() {
     return true;
   }
 
-  function validateStep3() {
+  function validateStep4() {
     if (flightTypes.length === 0) {
       alert("Please add at least one flight type with pricing");
       return false;
@@ -145,7 +155,7 @@ function initServiceForm() {
     return true;
   }
 
-  function validateStep4() {
+  function validateStep5() {
     if (officeFiles.length === 0) {
       alert("Please upload at least one office photo");
       return false;
@@ -689,6 +699,12 @@ function loadServiceData(serviceId) {
       $('[name="contact"]').val(service.contact);
       $('[name="panNumber"]').val(service.pan_number);
       $('[name="serviceDescription"]').val(service.service_description);
+
+      // Load location data if available
+      if (service.latitude && service.longitude) {
+        $('[name="latitude"]').val(service.latitude);
+        $('[name="longitude"]').val(service.longitude);
+      }
 
       // Add or update hidden service_id field
       let serviceIdInput = $('[name="service_id"]');

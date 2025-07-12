@@ -125,6 +125,29 @@
     }
 ?>
 
+<?php
+// Add this PHP code at the top of your file after the existing PHP logic
+// Location data fetching
+$hasLocation = false;
+$locationData = [];
+
+if ($serviceId) {
+    // Fetch location data for the service
+    $locationQuery = "SELECT latitude, longitude, address, formatted_address, place_id 
+                      FROM service_locations 
+                      WHERE service_id = ?";
+    $locationStmt = $connect->prepare($locationQuery);
+    $locationStmt->bind_param("i", $serviceId);
+    $locationStmt->execute();
+    $locationResult = $locationStmt->get_result();
+    
+    if ($locationResult->num_rows > 0) {
+        $locationData = $locationResult->fetch_assoc();
+        $hasLocation = true;
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -134,16 +157,19 @@
     <title><?php echo htmlspecialchars($service['service_title'] ?? 'Service Details'); ?></title>
     <link rel="stylesheet" href="Web/css/serviceDesc.css?v=1.0" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <style>
 /* Review Section Styles */
 .review-section {
+    position: relative;
     background: #fff;
     border-radius: 12px;
     padding: 2rem;
     margin: 2rem 0;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     border: 1px solid #e0e0e0;
+    z-index: 1000;
 }
 
 .review-header {
@@ -458,6 +484,140 @@
     border-color: #007bff;
     transition: border-color 0.2s ease;
 }
+
+/*location*/
+.location-section {
+    position: relative;
+    z-index: 0;
+    background: #fff;
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 2rem 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.location-header h3 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+}
+
+.location-info {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.no-location {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+#serviceLocationMap {
+    position: relative;
+    z-index: 1;
+    height: 300px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.book-box {
+    position: fixed;
+    bottom: 0;
+    top: auto;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 0;
+}
+
+@media (max-width: 900px) {
+    .book-box {
+        position: fixed;
+        bottom: 0;
+        top: auto;
+        left: 0;
+        right: 0;
+        width: 100%;
+    }
+}
+
+/* Direction Button Styles - Add to existing <style> section */
+.direction-button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer !important;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    text-decoration: none;
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
+}
+
+.direction-button:hover {
+    background: #0056b3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.direction-button:active {
+    transform: translateY(0);
+}
+
+.direction-button i {
+    font-size: 16px;
+}
+
+.direction-button.loading {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+.direction-button.loading i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Location controls container */
+.location-controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .location-controls {
+        flex-direction: column;
+    }
+
+    .direction-button {
+        width: 100%;
+        justify-content: center;
+    }
+}
 </style>
 
 <body>
@@ -476,6 +636,7 @@
             <div class="company-title">
                 <h1><?php echo htmlspecialchars($service['service_title'] ?? ''); ?></h1>
             </div>
+
             <div class="profile-row">
                 <img src="" alt="Company Logo" class="profile-pic">
                 <div class="profile-info">
@@ -483,10 +644,6 @@
                     <span class="profile-address"><?php echo htmlspecialchars($service['address'] ?? ''); ?></span>
                     <span class="profile-address"><?php echo htmlspecialchars($service['contact'] ?? ''); ?></span>
                 </div>
-            </div>
-            <div class="rating-row">
-                <span class="stars">★★★★☆</span>
-                <span class="reviews">4.0 (120 reviews)</span>
             </div>
             <div class="highlight">
                 <b>Popular choice!</b> This service has excellent customer satisfaction.
@@ -537,6 +694,8 @@
             </div>
         </div>
 
+
+
         <!-- Right Section -->
         <div class="right-section">
             <div class="book-box">
@@ -554,6 +713,38 @@
                 </button>
             </div>
         </div>
+    </div>
+
+    <!-- Location Section -->
+    <div class="location-section">
+        <div class="location-header">
+            <h3>
+                <i class="fas fa-map-marker-alt"></i>
+                Service Location
+            </h3>
+        </div>
+        <?php if ($hasLocation): ?>
+        <div id="serviceLocationMap" style="height: 300px; border-radius: 8px; overflow: hidden;"></div>
+        <div class="location-info">
+            <?php if ($locationData['formatted_address']): ?>
+            <p><strong>Address:</strong> <?php echo htmlspecialchars($locationData['formatted_address']); ?></p>
+            <?php elseif ($locationData['address']): ?>
+            <p><strong>Address:</strong> <?php echo htmlspecialchars($locationData['address']); ?></p>
+            <?php endif; ?>
+
+            <!-- Direction Controls -->
+            <div class="location-controls">
+                <button class="direction-button" id="getDirectionsBtn" onclick="getDirections()">
+                    <i class="fas fa-directions"></i>
+                    Get Directions
+                </button>
+            </div>
+        </div>
+        <?php else: ?>
+        <div class="no-location">
+            <p>No location information provided for this service.</p>
+        </div>
+        <?php endif; ?>
     </div>
 
     <!-- Chat Modal -->
@@ -652,6 +843,7 @@
     window.canReview = <?php echo json_encode($canReview); ?>;
     window.currentUserId = <?php echo json_encode($currentUserId); ?>;
     </script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="Web/scripts/review.js?v=1.0"></script>
     <script>
     // =============================================================================
@@ -1307,6 +1499,390 @@
     window.addEventListener('beforeunload', () => {
         chatClient.disconnect();
     });
+
+
+    // =============================================================================
+    // LOCATION MAP FUNCTIONALITY (OpenStreetMap with Leaflet)
+    // =============================================================================
+    <?php if ($hasLocation): ?>
+    // Initialize OpenStreetMap for service location
+    function initServiceLocationMap() {
+        const latitude = <?php echo $locationData['latitude']; ?>;
+        const longitude = <?php echo $locationData['longitude']; ?>;
+
+        try {
+            // Create map centered on service location
+            const map = L.map('serviceLocationMap').setView([latitude, longitude], 15);
+
+            // Add OpenStreetMap tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Add marker for service location
+            const marker = L.marker([latitude, longitude]).addTo(map);
+
+            // Create popup content without coordinates
+            const popupContent = `
+            <div style="padding: 8px; max-width: 250px;">
+                <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #333;"><?php echo htmlspecialchars($service['service_title'] ?? 'Service Location'); ?></h4>
+                <p style="margin: 0 0 5px 0; font-size: 12px; color: #666; font-weight: 500;"><?php echo htmlspecialchars($service['company_name'] ?? ''); ?></p>
+                <?php if ($locationData['formatted_address']): ?>
+                <p style="margin: 0; font-size: 11px; color: #888; line-height: 1.4;"><?php echo htmlspecialchars($locationData['formatted_address']); ?></p>
+                <?php elseif ($locationData['address']): ?>
+                <p style="margin: 0; font-size: 11px; color: #888; line-height: 1.4;"><?php echo htmlspecialchars($locationData['address']); ?></p>
+                <?php endif; ?>
+            </div>
+        `;
+
+            // Bind popup to marker
+            marker.bindPopup(popupContent);
+
+            // Open popup by default
+            marker.openPopup();
+
+            // Ensure map renders properly
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 100);
+
+        } catch (error) {
+            console.error('Error initializing map:', error);
+            const mapContainer = document.getElementById('serviceLocationMap');
+            if (mapContainer) {
+                mapContainer.innerHTML =
+                    '<div style="padding: 40px; text-align: center; color: #666; background: #f8f9fa; border-radius: 8px;">Unable to load map. Please refresh the page.</div>';
+            }
+        }
+    }
+
+    // Initialize map when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if Leaflet is loaded
+        if (typeof L === 'undefined') {
+            console.error('Leaflet library not loaded');
+            const mapContainer = document.getElementById('serviceLocationMap');
+            if (mapContainer) {
+                mapContainer.innerHTML =
+                    '<div style="padding: 40px; text-align: center; color: #666; background: #f8f9fa; border-radius: 8px;">Map library failed to load.</div>';
+            }
+            return;
+        }
+
+        // Wait for map container to be ready
+        setTimeout(() => {
+            const mapContainer = document.getElementById('serviceLocationMap');
+            if (mapContainer && mapContainer.offsetHeight > 0) {
+                // Use the enhanced map initialization function
+                initServiceLocationMapWithDirections();
+            } else {
+                console.warn('Map container not ready, retrying...');
+                setTimeout(() => {
+                    if (mapContainer) {
+                        initServiceLocationMapWithDirections();
+                    }
+                }, 500);
+            }
+        }, 200);
+
+        // Initialize direction functionality
+        initDirectionFeatures();
+    });
+    /**
+     * Initialize direction-related features
+     */
+    function initDirectionFeatures() {
+        // Add keyboard shortcuts for directions
+        document.addEventListener('keydown', function(e) {
+            // Ctrl+D or Cmd+D for directions
+            if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+                e.preventDefault();
+                getDirections();
+            }
+        });
+
+        // Add click tracking for analytics (optional)
+        const directionBtn = document.getElementById('getDirectionsBtn');
+        if (directionBtn) {
+            directionBtn.addEventListener('click', function() {
+                // Track direction request (you can integrate with your analytics)
+                console.log('Direction requested for service:',
+                    '<?php echo htmlspecialchars($service['service_title'] ?? ''); ?>');
+            });
+        }
+    }
+    <?php endif; ?>
+
+    // =============================================================================
+    // DIRECTION FUNCTIONALITY
+    // =============================================================================
+
+    // Global variables for direction functionality
+    let userLocation = null;
+    let serviceLocation = null;
+
+    // Initialize service location from PHP
+    <?php if ($hasLocation): ?>
+    serviceLocation = {
+        lat: <?php echo $locationData['latitude']; ?>,
+        lng: <?php echo $locationData['longitude']; ?>,
+        address: '<?php echo htmlspecialchars($locationData['formatted_address'] ?? $locationData['address'] ?? ''); ?>'
+    };
+    <?php endif; ?>
+
+    /**
+     * Get user's current location and open directions
+     */
+    function getDirections() {
+        if (!serviceLocation) {
+            alert('Service location not available');
+            return;
+        }
+
+        const button = document.getElementById('getDirectionsBtn');
+        if (!button) return;
+
+        // Show loading state
+        button.classList.add('loading');
+        button.innerHTML = '<i class="fas fa-spinner"></i> Getting Location...';
+        button.disabled = true;
+
+        // Check if geolocation is supported
+        if (!navigator.geolocation) {
+            alert('Geolocation is not supported by this browser');
+            resetDirectionButton();
+            return;
+        }
+
+        // Get user's current location
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                userLocation = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+
+                // Reset button state
+                resetDirectionButton();
+
+                // Open directions in preferred map application
+                openDirections(userLocation, serviceLocation);
+            },
+            function(error) {
+                console.error('Error getting location:', error);
+                resetDirectionButton();
+
+                // Handle different error types
+                let errorMessage = 'Unable to get your location. ';
+                switch (error.code) {
+                    case error.PERMISSION_DENIED:
+                        errorMessage += 'Please allow location access and try again.';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        errorMessage += 'Location information is unavailable.';
+                        break;
+                    case error.TIMEOUT:
+                        errorMessage += 'Location request timed out.';
+                        break;
+                    default:
+                        errorMessage += 'An unknown error occurred.';
+                        break;
+                }
+
+                // Offer alternative - open directions without current location
+                if (confirm(errorMessage + '\n\nWould you like to open directions anyway?')) {
+                    openDirectionsWithoutUserLocation(serviceLocation);
+                }
+            }, {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 300000 // 5 minutes
+            }
+        );
+    }
+
+    /**
+     * Open directions in the most appropriate map application
+     */
+    function openDirections(from, to) {
+        const fromCoords = `${from.lat},${from.lng}`;
+        const toCoords = `${to.lat},${to.lng}`;
+
+        // Detect user's device and preferred map application
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const isAndroid = /Android/.test(navigator.userAgent);
+
+        if (isIOS) {
+            // Try Apple Maps first, fallback to Google Maps
+            const appleMapsUrl = `http://maps.apple.com/?saddr=${fromCoords}&daddr=${toCoords}&dirflg=d`;
+            window.open(appleMapsUrl, '_blank');
+        } else if (isAndroid) {
+            // Try Google Maps app first
+            const googleMapsApp = `google.navigation:q=${toCoords}&mode=d`;
+            const googleMapsWeb = `https://www.google.com/maps/dir/${fromCoords}/${toCoords}`;
+
+            // Try to open in app, fallback to web
+            const link = document.createElement('a');
+            link.href = googleMapsApp;
+            link.click();
+
+            // Fallback to web version after a short delay
+            setTimeout(() => {
+                window.open(googleMapsWeb, '_blank');
+            }, 1000);
+        } else {
+            // Desktop or other devices - use Google Maps web
+            const googleMapsWeb = `https://www.google.com/maps/dir/${fromCoords}/${toCoords}`;
+            window.open(googleMapsWeb, '_blank');
+        }
+    }
+
+    /**
+     * Open directions without user's current location
+     */
+    function openDirectionsWithoutUserLocation(to) {
+        const toCoords = `${to.lat},${to.lng}`;
+
+        // Open Google Maps with destination only
+        const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${toCoords}`;
+        window.open(googleMapsUrl, '_blank');
+    }
+
+    /**
+     * Reset direction button to normal state
+     */
+    function resetDirectionButton() {
+        const button = document.getElementById('getDirectionsBtn');
+        if (button) {
+            button.classList.remove('loading');
+            button.innerHTML = '<i class="fas fa-directions"></i> Get Directions';
+            button.disabled = false;
+        }
+    }
+
+    /**
+     * Share service location
+     */
+    function shareLocation() {
+        if (!serviceLocation) {
+            alert('Service location not available');
+            return;
+        }
+
+        const shareData = {
+            title: '<?php echo htmlspecialchars($service['service_title'] ?? 'Service Location'); ?>',
+            text: `Check out this service location: ${serviceLocation.address}`,
+            url: `https://www.google.com/maps/search/?api=1&query=${serviceLocation.lat},${serviceLocation.lng}`
+        };
+
+        // Try native sharing first (mobile)
+        if (navigator.share) {
+            navigator.share(shareData)
+                .then(() => console.log('Location shared successfully'))
+                .catch(err => console.log('Error sharing location:', err));
+        } else {
+            // Fallback: copy to clipboard
+            const mapUrl =
+                `https://www.google.com/maps/search/?api=1&query=${serviceLocation.lat},${serviceLocation.lng}`;
+
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(mapUrl)
+                    .then(() => {
+                        alert('Location link copied to clipboard!');
+                    })
+                    .catch(err => {
+                        console.error('Could not copy to clipboard:', err);
+                        fallbackCopyToClipboard(mapUrl);
+                    });
+            } else {
+                fallbackCopyToClipboard(mapUrl);
+            }
+        }
+    }
+
+    /**
+     * Fallback copy to clipboard method
+     */
+    function fallbackCopyToClipboard(text) {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        try {
+            document.execCommand('copy');
+            alert('Location link copied to clipboard!');
+        } catch (err) {
+            console.error('Fallback copy failed:', err);
+            // Last resort: show the URL in a prompt
+            prompt('Copy this location link:', text);
+        }
+
+        document.body.removeChild(textArea);
+    }
+
+    // Enhanced map initialization with direction integration
+    <?php if ($hasLocation): ?>
+
+    function initServiceLocationMapWithDirections() {
+        const latitude = <?php echo $locationData['latitude']; ?>;
+        const longitude = <?php echo $locationData['longitude']; ?>;
+
+        try {
+            // Create map centered on service location
+            const map = L.map('serviceLocationMap').setView([latitude, longitude], 15);
+
+            // Add OpenStreetMap tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Add marker for service location
+            const marker = L.marker([latitude, longitude]).addTo(map);
+
+            // Enhanced popup with direction button
+            const popupContent = `
+            <div style="padding: 8px; max-width: 250px;">
+                <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #333;"><?php echo htmlspecialchars($service['service_title'] ?? 'Service Location'); ?></h4>
+                <p style="margin: 0 0 5px 0; font-size: 12px; color: #666; font-weight: 500;"><?php echo htmlspecialchars($service['company_name'] ?? ''); ?></p>
+                <?php if ($locationData['formatted_address']): ?>
+                <p style="margin: 0 0 10px 0; font-size: 11px; color: #888; line-height: 1.4;"><?php echo htmlspecialchars($locationData['formatted_address']); ?></p>
+                <?php elseif ($locationData['address']): ?>
+                <p style="margin: 0 0 10px 0; font-size: 11px; color: #888; line-height: 1.4;"><?php echo htmlspecialchars($locationData['address']); ?></p>
+                <?php endif; ?>
+                <button onclick="getDirections()" style="background: #007bff; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 11px; cursor: pointer;">
+                    <i class="fas fa-directions"></i> Get Directions
+                </button>
+            </div>
+        `;
+
+            // Bind popup to marker
+            marker.bindPopup(popupContent);
+
+            // Open popup by default
+            marker.openPopup();
+
+            // Ensure map renders properly
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 100);
+
+        } catch (error) {
+            console.error('Error initializing map:', error);
+            const mapContainer = document.getElementById('serviceLocationMap');
+            if (mapContainer) {
+                mapContainer.innerHTML =
+                    '<div style="padding: 40px; text-align: center; color: #666; background: #f8f9fa; border-radius: 8px;">Unable to load map. Please refresh the page.</div>';
+            }
+        }
+    }
+    <?php endif; ?>
     </script>
     <?php require('partials/footer.php'); ?>
 </body>

@@ -875,7 +875,7 @@ body {
                 if (status.toLowerCase() === 'cancelled') {
                     $updateBtn.hide();
                     if ($cancelBtn.length) $cancelBtn.hide();
-                } else if (status.toLowerCase() === 'confirmed') {
+                } else if (status.toLowerCase() === 'completed') {
                     // Disable the edit button for confirmed bookings
                     $updateBtn.prop('disabled', true)
                         .addClass('disabled')
