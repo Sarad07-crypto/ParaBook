@@ -163,7 +163,15 @@ body {
   background: #d4edda;
   color: #155724;
 }
-
+.status-completed {
+  color: #4caf50;
+  font-weight: bold;
+  background-color: #e8f5e8;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  text-transform: uppercase;
+}
 .status-pending {
   background: #fff3cd;
   color: #856404;

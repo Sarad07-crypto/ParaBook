@@ -564,10 +564,13 @@
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('signupForm');
+        const submitButton = form.querySelector('input[type="submit"]');
         const messageContainer = document.getElementById('messageContainer');
         const messageText = document.getElementById('messageText');
         const messageBox = document.querySelector('.message-box');
         const closeButton = document.getElementById('closeMessage');
+
+        let isSubmitting = false; // Prevent double submission
 
         // Function to show message
         function showMessage(message, type) {
@@ -590,9 +593,19 @@
 
         // Handle form submission
         form.addEventListener('submit', function(e) {
-            e.preventDefault(); // Prevent default form submission
-            e.stopPropagation(); // Stop event bubbling
-            hideMessage(); // Hide any existing message
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Prevent double submission
+            if (isSubmitting) {
+                console.log('Form already being submitted, ignoring...');
+                return;
+            }
+
+            isSubmitting = true;
+            submitButton.disabled = true;
+            submitButton.value = 'Creating Account...';
+            hideMessage();
 
             const formData = new FormData(form);
 
@@ -603,9 +616,18 @@
                         'X-Requested-With': 'XMLHttpRequest'
                     }
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
-                    if (data.status === 'success') {
+                    console.log('Response data:', data);
+
+                    const isSuccess = data.success === true || data.status === 'success';
+
+                    if (isSuccess) {
                         showMessage(data.message, 'success');
                         form.reset();
 
@@ -616,12 +638,19 @@
                             }
                         }, 2000);
                     } else {
-                        showMessage(data.message, 'error');
+                        const errorMessage = data.message || 'An error occurred. Please try again.';
+                        showMessage(errorMessage, 'error');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     showMessage('An error occurred. Please try again.', 'error');
+                })
+                .finally(() => {
+                    // Re-enable form submission
+                    isSubmitting = false;
+                    submitButton.disabled = false;
+                    submitButton.value = 'Create Account';
                 });
         });
     });
