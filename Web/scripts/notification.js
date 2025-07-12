@@ -264,8 +264,7 @@ function showToast(message, type = "info") {
 // Initialize auto-refresh when the page loads
 document.addEventListener("DOMContentLoaded", function () {
   // Load initial data
-  loadEnvelopeNotifications();
-
+  // loadEnvelopeNotifications();
   // Start auto-refresh (optional)
   // startEnvelopeAutoRefresh();
 });
@@ -514,7 +513,7 @@ function showHeartError(message) {
   `;
 }
 
-// ORIGINAL NOTIFICATION FUNCTIONS (Keep existing)
+// ENHANCED NOTIFICATION FUNCTIONS WITH CLICK HANDLING
 function toggleNotifications(event) {
   event.preventDefault();
   event.stopPropagation();
@@ -582,6 +581,8 @@ async function loadNotifications() {
       notifications = data.notifications || [];
       renderNotifications();
       updateNotificationBadge();
+      // Setup click handlers after rendering notifications
+      setupNotificationClickHandlers();
     } else {
       showError("Failed to load notifications");
     }
@@ -623,7 +624,9 @@ function renderNotifications() {
       return `
       <div class="notification-item ${isUnread ? "unread" : ""}" 
            data-notification-id="${notification.id}"
-           onclick="markAsRead(${notification.id})">
+           data-notification-type="${notification.type || ""}"
+           data-booking-id="${notification.booking_id || ""}"
+           style="cursor: pointer;">
         <div class="notification-content">
           <div class="notification-icon ${notification.type}">
             <i class="${iconClass}"></i>
@@ -641,6 +644,176 @@ function renderNotifications() {
   listElement.innerHTML = notificationHTML;
 }
 
+// Function to handle notification clicks and redirect to service description
+async function handleNotificationClick(notificationElement) {
+  console.log("Notification clicked:", notificationElement);
+
+  const notificationId = notificationElement.dataset.notificationId;
+  const notificationType = notificationElement.dataset.notificationType;
+  const bookingId = notificationElement.dataset.bookingId;
+
+  console.log("Notification ID:", notificationId);
+  console.log("Notification Type:", notificationType);
+  console.log("Booking ID:", bookingId);
+
+  if (!notificationId) {
+    console.error("No notification ID found");
+    return;
+  }
+
+  try {
+    // Show loading indicator
+    console.log("Fetching notification details...");
+
+    // Get notification details from your API
+    const response = await fetch(
+      `Web/php/AJAX/reviewNotificationAPI.php?action=get_notification_details&notification_id=${notificationId}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "same-origin",
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("API Response:", data);
+
+    if (data.success) {
+      const notification = data.notification;
+      console.log("Notification details:", notification);
+
+      // Check if this is a completed booking notification for passenger
+      if (
+        notification.type === "completed" &&
+        notification.recipient_type !== "company" &&
+        notification.service_id
+      ) {
+        console.log(
+          "Navigating to service review for service_id:",
+          notification.service_id
+        );
+
+        // Navigate to service description page with review section
+        navigateToServiceReview(notification.service_id);
+
+        // Mark notification as read after successful navigation
+        await markNotificationAsRead(notificationId);
+
+        // Update the UI to show as read
+        notificationElement.classList.remove("unread");
+        updateNotificationBadge();
+
+        // Close notification dropdown after navigation
+        closeNotifications();
+      } else {
+        console.log("Notification does not match criteria for navigation");
+
+        // Still mark as read even if not navigating
+        await markAsRead(notificationId);
+        notificationElement.classList.remove("unread");
+        updateNotificationBadge();
+
+        // Show message if it's not a reviewable notification
+        if (notification.type !== "completed") {
+          showToast("Notification marked as read", "info");
+        }
+      }
+    } else {
+      console.error("Error fetching notification details:", data.message);
+      showToast("Error loading notification details", "error");
+    }
+  } catch (error) {
+    console.error("Error handling notification click:", error);
+    showToast("Error processing notification", "error");
+  }
+}
+
+// Function to navigate to service review section
+function navigateToServiceReview(serviceId) {
+  if (serviceId) {
+    const url = `/serviceDescription?service_id=${encodeURIComponent(
+      serviceId
+    )}#reviewSection`;
+    console.log("Navigating to:", url);
+    window.location.href = url;
+  } else {
+    console.error("No service ID provided for navigation");
+  }
+}
+
+// Function to mark notification as read using the review API
+async function markNotificationAsRead(notificationId) {
+  try {
+    const response = await fetch("Web/php/AJAX/notificationAPI.php", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: `action=mark_as_read&notification_id=${notificationId}`,
+      credentials: "same-origin",
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      console.log("Notification marked as read");
+      return true;
+    } else {
+      console.error("Failed to mark notification as read:", data.message);
+      return false;
+    }
+  } catch (error) {
+    console.error("Error marking notification as read:", error);
+    return false;
+  }
+}
+
+// Setup click handlers for notifications
+function setupNotificationClickHandlers() {
+  const notificationList = document.getElementById("notification-list");
+
+  if (notificationList) {
+    console.log("Setting up notification click handlers");
+
+    // Remove existing click handlers to avoid duplicates
+    const existingHandler = notificationList.getAttribute("data-click-handler");
+    if (existingHandler) {
+      return; // Already has handler
+    }
+
+    // Mark that handler is set
+    notificationList.setAttribute("data-click-handler", "true");
+
+    // Add event listener using event delegation
+    notificationList.addEventListener("click", function (event) {
+      console.log("Click event triggered on:", event.target);
+
+      const notificationItem = event.target.closest(".notification-item");
+      if (notificationItem) {
+        console.log("Found notification item:", notificationItem);
+
+        // Prevent default action and stop propagation
+        event.preventDefault();
+        event.stopPropagation();
+
+        // Handle the notification click
+        handleNotificationClick(notificationItem);
+      } else {
+        console.log("No notification item found for click");
+      }
+    });
+
+    console.log("Notification click handlers setup complete");
+  } else {
+    console.error("Notification list element not found");
+  }
+}
+
 // Get icon based on notification type
 function getNotificationIcon(type) {
   switch (type) {
@@ -653,6 +826,8 @@ function getNotificationIcon(type) {
     case "booking_rejected":
     case "booking_cancelled":
       return "fas fa-times-circle";
+    case "completed":
+      return "fas fa-star"; // Star icon for completed bookings
     case "payment":
       return "fas fa-credit-card";
     case "system":
@@ -662,7 +837,7 @@ function getNotificationIcon(type) {
   }
 }
 
-// Mark notification as read
+// Enhanced mark as read function for individual notifications
 async function markAsRead(notificationId) {
   try {
     const response = await fetch(
@@ -700,9 +875,15 @@ async function markAsRead(notificationId) {
       const markAllBtn = document.getElementById("mark-all-btn");
       if (markAllBtn)
         markAllBtn.style.display = hasUnread ? "inline-block" : "none";
+
+      return true;
+    } else {
+      console.error("Failed to mark notification as read:", data.message);
+      return false;
     }
   } catch (error) {
     console.error("Error marking notification as read:", error);
+    return false;
   }
 }
 
@@ -847,75 +1028,96 @@ function showError(message) {
   `;
 }
 
-// Load initial notification counts
+// Enhanced load all notification counts function
 async function loadAllNotificationCounts() {
   try {
-    // Load notification count
-    const notificationResponse = await fetch(
-      "Web/php/AJAX/bookingNotificationAPI.php?action=unread_count"
-    );
-    const notificationData = await notificationResponse.json();
+    // Load notification count with better error handling
+    try {
+      const notificationResponse = await fetch(
+        "Web/php/AJAX/bookingNotificationAPI.php?action=unread_count"
+      );
 
-    if (notificationData.success) {
-      const badge = document.getElementById("notification-badge");
-      const unreadCount = notificationData.unread_count || 0;
+      if (!notificationResponse.ok) {
+        console.error(
+          `Notification API error: ${notificationResponse.status} ${notificationResponse.statusText}`
+        );
+      } else {
+        const responseText = await notificationResponse.text();
+        console.log("Notification API raw response:", responseText);
 
-      if (badge && unreadCount > 0) {
-        badge.textContent = unreadCount > 99 ? "99+" : unreadCount;
-        badge.classList.add("show");
+        let notificationData;
+        try {
+          notificationData = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error(
+            "Failed to parse notification response as JSON:",
+            parseError
+          );
+          console.error("Response was:", responseText);
+          return;
+        }
+
+        if (notificationData.success) {
+          const badge = document.getElementById("notification-badge");
+          const unreadCount = notificationData.unread_count || 0;
+
+          if (badge && unreadCount > 0) {
+            badge.textContent = unreadCount > 99 ? "99+" : unreadCount;
+            badge.classList.add("show");
+          } else if (badge) {
+            badge.classList.remove("show");
+          }
+        }
       }
+    } catch (error) {
+      console.error("Error loading notification count:", error);
     }
 
-    // Load message count
-    const messageResponse = await fetch(
-      "Web/php/AJAX/messageAPI.php?action=unread_count"
-    );
-    const messageData = await messageResponse.json();
+    // Load favorites count with better error handling
+    try {
+      const favoritesResponse = await fetch(
+        "Web/php/AJAX/favoritesAPI.php?action=count"
+      );
 
-    if (messageData.success) {
-      const badge = document.getElementById("envelope-badge");
-      const unreadCount = messageData.unread_count || 0;
+      if (!favoritesResponse.ok) {
+        console.error(
+          `Favorites API error: ${favoritesResponse.status} ${favoritesResponse.statusText}`
+        );
+      } else {
+        const responseText = await favoritesResponse.text();
+        console.log("Favorites API raw response:", responseText);
 
-      if (badge && unreadCount > 0) {
-        badge.textContent = unreadCount > 99 ? "99+" : unreadCount;
-        badge.classList.add("show");
+        let favoritesData;
+        try {
+          favoritesData = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error(
+            "Failed to parse favorites response as JSON:",
+            parseError
+          );
+          console.error("Response was:", responseText);
+          return;
+        }
+
+        if (favoritesData.success) {
+          const badge = document.getElementById("heart-badge");
+          const favoriteCount = favoritesData.count || 0;
+
+          if (badge && favoriteCount > 0) {
+            badge.textContent = favoriteCount > 99 ? "99+" : favoriteCount;
+            badge.classList.add("show");
+          } else if (badge) {
+            badge.classList.remove("show");
+          }
+        }
       }
-    }
-
-    // Load favorites count
-    const favoritesResponse = await fetch(
-      "Web/php/AJAX/favoritesAPI.php?action=count"
-    );
-    const favoritesData = await favoritesResponse.json();
-
-    if (favoritesData.success) {
-      const badge = document.getElementById("heart-badge");
-      const favoriteCount = favoritesData.count || 0;
-
-      if (badge && favoriteCount > 0) {
-        badge.textContent = favoriteCount > 99 ? "99+" : favoriteCount;
-        badge.classList.add("show");
-      }
+    } catch (error) {
+      console.error("Error loading favorites count:", error);
     }
   } catch (error) {
-    console.error("Error loading notification counts:", error);
+    console.error("Error in loadAllNotificationCounts:", error);
   }
 }
-
-// Toggle icon function for headphones
-// function toggleIcon(element, iconName) {
-//   if (element.classList.contains("fa-solid")) {
-//     // Switch to outline version
-//     element.classList.remove("fa-solid");
-//     element.classList.add("far");
-//     element.classList.remove("icon-active");
-//   } else {
-//     // Switch to filled version
-//     element.classList.remove("far");
-//     element.classList.add("fa-solid");
-//     element.classList.add("icon-active");
-//   }
-// }
 
 // Avatar dropdown functionality
 function toggleDropdown() {
@@ -939,7 +1141,6 @@ function toggleMobileSearch() {
 
 // Sidebar functionality
 function openSidebar() {
-  // Add your sidebar opening logic here
   console.log("Opening sidebar...");
 }
 
@@ -1005,18 +1206,27 @@ document.addEventListener("click", function (e) {
 });
 
 // Initialize when DOM is loaded
-// Fix for the setInterval call at the end of the file
 document.addEventListener("DOMContentLoaded", function () {
+  console.log("DOM loaded, initializing notification system");
+
   // Load all notification counts on page load
   loadAllNotificationCounts();
 
   // Auto-refresh notification count every 30 seconds
-  // FIXED: Changed from loadNotificationCount to loadAllNotificationCounts
   setInterval(loadAllNotificationCounts, 30000);
 
-  // Initialize other components if needed
+  // Initialize notification system
   console.log("Notification system initialized");
 });
+
+// Also setup handlers if DOM is already loaded
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", function () {
+    console.log("Setting up notification handlers on DOM ready");
+  });
+} else {
+  console.log("DOM already loaded, setting up notification handlers");
+}
 
 // Enhanced error handling for API calls
 async function loadAllNotificationCounts() {

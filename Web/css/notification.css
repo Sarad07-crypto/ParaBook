@@ -446,18 +446,10 @@ body {
   justify-content: center;
   width: 40px;
   height: 40px;
-  border-radius: 50%;
-  background: #f8f9fa;
   color: #6c757d;
   text-decoration: none;
   transition: all 0.3s ease;
   position: relative;
-}
-
-.envelope-bell:hover {
-  background: #e9ecef;
-  color: #495057;
-  text-decoration: none;
 }
 
 .envelope-bell i {
@@ -484,8 +476,8 @@ body {
 
 .envelope-dropdown {
   position: absolute;
-  top: 100%;
-  right: 0;
+  top: 75%;
+  right: 10px;
   width: 380px;
   max-width: 90vw;
   background: white;

@@ -33,6 +33,61 @@
         pointer-events: none;
         cursor: not-allowed;
     }
+
+    .role-select {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        background-color: white;
+        cursor: pointer;
+        transition: border-color 0.3s ease;
+    }
+
+    .role-select:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    }
+
+    .role-select:hover {
+        border-color: #007bff;
+    }
+
+    .admin-detail-value select {
+        margin-top: 5px;
+    }
+
+    /* Enhanced admin detail styling */
+    .admin-detail-item {
+        margin-bottom: 5px;
+        padding: 10px !important;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .admin-detail-label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 5px;
+        font-size: 14px;
+    }
+
+    .admin-detail-value {
+        color: #666;
+        font-size: 14px;
+    }
+
+    .admin-detail-item:last-child {
+        border-bottom: none;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+    }
+
+    .admin-detail-item:last-child .admin-detail-label {
+        color: #007bff;
+        font-weight: 700;
+    }
     </style>
 </head>
 
@@ -443,12 +498,16 @@
     // Admin management functions for main admin only
     function loadPendingAdmins() {
         const loadingSpinner = document.getElementById('loadingSpinner');
-        loadingSpinner.style.display = 'block';
+        if (loadingSpinner) {
+            loadingSpinner.style.display = 'block';
+        }
 
         fetch('Web/php/ADMIN/createAdmins.php?action=getPendingAdmins')
             .then(response => response.json())
             .then(data => {
-                loadingSpinner.style.display = 'none';
+                if (loadingSpinner) {
+                    loadingSpinner.style.display = 'none';
+                }
                 if (data.success) {
                     allAdmins = data.data; // Store all admins
                     displayPendingAdmins(allAdmins);
@@ -458,7 +517,9 @@
                 }
             })
             .catch(error => {
-                loadingSpinner.style.display = 'none';
+                if (loadingSpinner) {
+                    loadingSpinner.style.display = 'none';
+                }
                 showError('Error loading pending admins: ' + error.message);
             });
     }
@@ -574,17 +635,48 @@
             <div class="admin-detail-value">${birthDate}</div>
         </div>
         <div class="admin-detail-item">
+            <div class="admin-detail-label">Current Role</div>
+            <div class="admin-detail-value">${admin.role.replace('_', ' ').toUpperCase()}</div>
+        </div>
+        <div class="admin-detail-item">
             <div class="admin-detail-label">Applied Date</div>
             <div class="admin-detail-value">${applicationDate}</div>
+        </div>
+        <div class="admin-detail-item">
+            <div class="admin-detail-label">Approve As</div>
+            <div class="admin-detail-value">
+                <select id="approveAsRole" class="role-select">
+                    <option value="sub_admin" ${admin.role === 'sub_admin' ? 'selected' : ''}>Sub Admin</option>
+                    <option value="main_admin" ${admin.role === 'main_admin' ? 'selected' : ''}>Main Admin</option>
+                </select>
+            </div>
         </div>
     `;
     }
 
     function approveAdmin() {
-        if (!currentAdminId) return;
+        if (!currentAdminId) {
+            showError('No admin selected');
+            return;
+        }
 
-        if (confirm('Are you sure you want to approve this admin?')) {
-            updateAdminStatus(currentAdminId, 'approve');
+        const roleSelect = document.getElementById('approveAsRole');
+        if (!roleSelect) {
+            showError('Role selection not found');
+            return;
+        }
+
+        const selectedRole = roleSelect.value;
+
+        if (!selectedRole) {
+            showError('Please select a role for approval');
+            return;
+        }
+
+        const roleDisplayName = selectedRole.replace('_', ' ').toUpperCase();
+
+        if (confirm(`Are you sure you want to approve this admin as ${roleDisplayName}?`)) {
+            updateAdminStatus(currentAdminId, 'approve', selectedRole);
         }
     }
 
@@ -596,11 +688,22 @@
         }
     }
 
-    function updateAdminStatus(adminId, action) {
+    function updateAdminStatus(adminId, action, role = null) {
+        // Add loading state to modal buttons
+        const approveBtn = document.querySelector('#adminModal .btn-approve');
+        const rejectBtn = document.querySelector('#adminModal .btn-reject');
+
+        if (approveBtn) approveBtn.disabled = true;
+        if (rejectBtn) rejectBtn.disabled = true;
+
         const formData = new FormData();
         formData.append('action', 'updateAdminStatus');
         formData.append('adminId', adminId);
         formData.append('status', action);
+
+        if (role && action === 'approve') {
+            formData.append('role', role);
+        }
 
         fetch('Web/php/ADMIN/createAdmins.php', {
                 method: 'POST',
@@ -608,6 +711,10 @@
             })
             .then(response => response.json())
             .then(data => {
+                // Re-enable buttons
+                if (approveBtn) approveBtn.disabled = false;
+                if (rejectBtn) rejectBtn.disabled = false;
+
                 if (data.success) {
                     showNotification(data.message, 'success');
                     closeAdminModal();
@@ -617,6 +724,10 @@
                 }
             })
             .catch(error => {
+                // Re-enable buttons
+                if (approveBtn) approveBtn.disabled = false;
+                if (rejectBtn) rejectBtn.disabled = false;
+
                 showError('Error updating admin status: ' + error.message);
             });
     }

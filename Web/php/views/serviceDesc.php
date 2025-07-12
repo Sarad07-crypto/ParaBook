@@ -10,11 +10,9 @@
     
     // Get service_id from URL parameter
     $serviceId = isset($_GET['service_id']) ? intval($_GET['service_id']) : 0;
-    
-    // Debug: Check if service_id is being received
-    error_log("Service ID from URL: " . $serviceId);
-    
+
     if (!$serviceId) {
+        die("no service_id provided");
         header('Location: /error?message=Invalid service ID');
         exit();
     }
@@ -22,49 +20,108 @@
     // Store in session
     $_SESSION['service_id'] = $serviceId;
 
+    // Get current user ID for review checking
+    $currentUserId = $_SESSION['user_id'] ?? null;
+
+    // Function to check if user can review (passenger has completed booking for this specific service)
+    function canUserReview($currentUserId, $serviceId, $connect) {
+        if (!$currentUserId || !$serviceId) {
+            error_log("Missing user ID or service ID");
+            return false;
+        }
+        
+        $stmt = $connect->prepare("
+            SELECT COUNT(*) as booking_count 
+            FROM bookings 
+            WHERE user_id = ? AND service_id = ? AND status = 'completed'
+        ");
+        
+        if ($stmt) {
+            $stmt->bind_param("ii", $currentUserId, $serviceId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $row = $result->fetch_assoc();
+            $stmt->close();
+            
+            error_log("Completed booking count for passenger $currentUserId: " . $row['booking_count']);
+            return $row['booking_count'] > 0;
+        } else {
+            error_log("Failed to prepare booking query: " . $connect->error);
+            return false;
+        }
+    }
+
+    $canReview = canUserReview($currentUserId, $serviceId, $connect);
+    
+    // Debug output
+    error_log("Current Passenger User ID: " . ($currentUserId ?? 'null'));
+    error_log("Service ID: " . $serviceId);
+    error_log("Can Review: " . ($canReview ? 'true' : 'false'));
+    
+    // Additional debug - check if user has completed bookings
+    if ($currentUserId) {
+        $debugStmt = $connect->prepare("SELECT COUNT(*) as total_bookings FROM bookings WHERE user_id = ?");
+        if ($debugStmt) {
+            $debugStmt->bind_param("i", $currentUserId);
+            $debugStmt->execute();
+            $debugResult = $debugStmt->get_result();
+            $debugRow = $debugResult->fetch_assoc();
+            $debugStmt->close();
+            error_log("Total bookings for user $currentUserId: " . $debugRow['total_bookings']);
+        }
+        
+        $completedStmt = $connect->prepare("SELECT COUNT(*) as completed_bookings FROM bookings WHERE user_id = ? AND status = 'completed'");
+        if ($completedStmt) {
+            $completedStmt->bind_param("i", $currentUserId);
+            $completedStmt->execute();
+            $completedResult = $completedStmt->get_result();
+            $completedRow = $completedResult->fetch_assoc();
+            $completedStmt->close();
+            error_log("Completed bookings for user $currentUserId: " . $completedRow['completed_bookings']);
+        }
+    }
+
     try {
-    // 1. Fetch service details
-    $stmt = $connect->prepare("SELECT * FROM company_services WHERE id = ?");
-    $stmt->bind_param("i", $serviceId);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $service = $result->fetch_assoc();
+        // 1. Fetch service details
+        $stmt = $connect->prepare("SELECT * FROM company_services WHERE id = ?");
+        $stmt->bind_param("i", $serviceId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $service = $result->fetch_assoc();
 
-    if (!$service) {
-    header('Location: /error?message=Service not found');
-    exit;
-    }
+        if (!$service) {
+            header('Location: /error?message=Service not found');
+            exit;
+        }
 
-    // 2. Fetch flight types and get minimum price
-    $stmt = $connect->prepare("SELECT flight_type_name AS name, price FROM service_flight_types WHERE service_id = ? ORDER
-    BY price ASC");
-    $stmt->bind_param("i", $serviceId);
-    $stmt->execute();
-    $flightTypes = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        // 2. Fetch flight types and get minimum price
+        $stmt = $connect->prepare("SELECT flight_type_name AS name, price FROM service_flight_types WHERE service_id = ? ORDER BY price ASC");
+        $stmt->bind_param("i", $serviceId);
+        $stmt->execute();
+        $flightTypes = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-    $minPrice = !empty($flightTypes) ? $flightTypes[0]['price'] : 0;
+        $minPrice = !empty($flightTypes) ? $flightTypes[0]['price'] : 0;
 
-    // 3. Fetch office photos
-    $stmt = $connect->prepare("SELECT photo_path FROM service_office_photos WHERE service_id = ? ORDER BY photo_order ASC
-    LIMIT 4");
-    $stmt->bind_param("i", $serviceId);
-    $stmt->execute();
-    $result = $stmt->get_result();
+        // 3. Fetch office photos
+        $stmt = $connect->prepare("SELECT photo_path FROM service_office_photos WHERE service_id = ? ORDER BY photo_order ASC LIMIT 4");
+        $stmt->bind_param("i", $serviceId);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-    $officePhotos = [];
-    while ($row = $result->fetch_assoc()) {
-    $officePhotos[] = $row['photo_path'];
-    }
+        $officePhotos = [];
+        while ($row = $result->fetch_assoc()) {
+            $officePhotos[] = $row['photo_path'];
+        }
 
-    // If no photos, use default placeholder
-    if (empty($officePhotos)) {
-    $officePhotos = ['default-service.jpg'];
-    }
+        // If no photos, use default placeholder
+        if (empty($officePhotos)) {
+            $officePhotos = ['default-service.jpg'];
+        }
 
     } catch (Exception $e) {
-    error_log("Error fetching service data: " . $e->getMessage());
-    header('Location: /error?message=Error loading service');
-    exit;
+        error_log("Error fetching service data: " . $e->getMessage());
+        header('Location: /error?message=Error loading service');
+        exit;
     }
 ?>
 
@@ -78,6 +135,330 @@
     <link rel="stylesheet" href="Web/css/serviceDesc.css?v=1.0" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+<style>
+/* Review Section Styles */
+.review-section {
+    background: #fff;
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 2rem 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e0e0;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.review-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.review-stats {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.overall-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #34495e;
+}
+
+.rating-stars {
+    color: #ffc107;
+    font-size: 1.2rem;
+}
+
+/* Write Review Form */
+.write-review {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.write-review h3 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+
+.rating-input {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.rating-input label {
+    font-weight: 500;
+    color: #34495e;
+}
+
+.star-rating {
+    display: flex;
+    gap: 0.2rem;
+}
+
+.star-rating input {
+    display: none;
+}
+
+.star-rating label {
+    font-size: 1.5rem;
+    color: #ddd;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.star-rating input:checked~label,
+.star-rating label:hover,
+.star-rating label:hover~label {
+    color: #ffc107;
+}
+
+.star-rating label:hover~label {
+    color: #ddd;
+}
+
+.review-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-weight: 500;
+    color: #34495e;
+    margin-bottom: 0.5rem;
+}
+
+.form-group textarea {
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    resize: vertical;
+    min-height: 100px;
+    font-family: inherit;
+}
+
+.form-group textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.submit-review-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+    align-self: flex-start;
+}
+
+.submit-review-btn:hover {
+    background: #0056b3;
+}
+
+.submit-review-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+/* Reviews List */
+.reviews-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.review-item {
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: box-shadow 0.2s;
+}
+
+.review-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.review-user {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #007bff;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.user-info {
+    flex: 1;
+}
+
+.user-name {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.25rem;
+}
+
+.review-date {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.review-rating {
+    color: #ffc107;
+    font-size: 1.1rem;
+}
+
+.review-text {
+    color: #495057;
+    line-height: 1.6;
+    margin-top: 0.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .review-section {
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+
+    .review-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .review-stats {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .write-review {
+        padding: 1rem;
+    }
+
+    .star-rating label {
+        font-size: 1.3rem;
+    }
+}
+
+/* Success Message */
+.success-message {
+    background: #d4edda;
+    color: #155724;
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    border: 1px solid #c3e6cb;
+    display: none;
+}
+
+.success-message.show {
+    display: block;
+}
+
+/* Dark Mode Support */
+.dark-mode .review-section {
+    background: #2c3e50;
+    color: #ecf0f1;
+    border-color: #34495e;
+}
+
+.dark-mode .write-review {
+    background: #34495e;
+}
+
+.dark-mode .form-group textarea {
+    background: #34495e;
+    color: #ecf0f1;
+    border-color: #4a5568;
+}
+
+.dark-mode .review-item {
+    background: #34495e;
+    border-color: #4a5568;
+}
+
+/* Reviewer avatar styling */
+.reviewer-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.reviewer-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e0e0e0;
+    flex-shrink: 0;
+}
+
+.reviewer-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.reviewer-name {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+.review-rating {
+    display: flex;
+    align-items: center;
+}
+
+/* Optional: Hover effect for avatar */
+.reviewer-avatar:hover {
+    border-color: #007bff;
+    transition: border-color 0.2s ease;
+}
+</style>
 
 <body>
     <?php
@@ -93,8 +474,7 @@
         <!-- Left Section -->
         <div class="left-section">
             <div class="company-title">
-                <h1>
-                    <?php echo htmlspecialchars($service['service_title'] ?? ''); ?></h1>
+                <h1><?php echo htmlspecialchars($service['service_title'] ?? ''); ?></h1>
             </div>
             <div class="profile-row">
                 <img src="" alt="Company Logo" class="profile-pic">
@@ -165,11 +545,9 @@
                     <?php echo htmlspecialchars($service['service_title'] ?? 'Service Booking'); ?><br>
                     <span style="font-size:0.98rem;color:rgba(255,255,255,0.8);">Available now • Flexible booking</span>
                 </div>
-                <!-- Replace the existing book-btn line with this corrected version -->
                 <button class="book-btn"
                     onclick="window.location.href='/bookingpassenger?service_id=<?php echo $_SESSION['service_id']; ?>'">Book
                     Now</button>
-                <!-- New Chat Button -->
                 <button class="chat-btn" onclick="openChatModal()"
                     <?php echo isset($_SESSION['user_id']) ? '' : 'disabled title="Login to chat"'; ?>>
                     <i class="fas fa-comments"></i> Send Message
@@ -203,6 +581,78 @@
             </div>
         </div>
     </div>
+
+    <!-- Review Section - MODIFIED: Always show reviews to all users -->
+    <div class="review-section" id="reviewSection">
+        <div class="review-header">
+            <h2 class="review-title">Customer Reviews</h2>
+            <div class="review-stats">
+                <div class="overall-rating">
+                    <span class="rating-stars">★★★★☆</span>
+                    <span>4.2 out of 5</span>
+                </div>
+                <span class="review-count">(Loading...)</span>
+            </div>
+        </div>
+
+        <!-- Write Review Form - Only show to eligible users -->
+        <?php if ($currentUserId && $canReview): ?>
+        <div class="write-review" id="writeReviewForm">
+            <h3>Write a Review</h3>
+            <div class="success-message" id="successMessage" style="display: none;">
+                Thank you for your review! It has been submitted successfully.
+            </div>
+
+            <form class="review-form" id="reviewForm">
+                <div class="rating-input">
+                    <label>Your Rating:</label>
+                    <div class="star-rating">
+                        <input type="radio" id="star5" name="rating" value="5" required>
+                        <label for="star5">★</label>
+                        <input type="radio" id="star4" name="rating" value="4" required>
+                        <label for="star4">★</label>
+                        <input type="radio" id="star3" name="rating" value="3" required>
+                        <label for="star3">★</label>
+                        <input type="radio" id="star2" name="rating" value="2" required>
+                        <label for="star2">★</label>
+                        <input type="radio" id="star1" name="rating" value="1" required>
+                        <label for="star1">★</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="reviewText">Your Review:</label>
+                    <textarea id="reviewText" name="review_text"
+                        placeholder="Share your experience with this service..." required></textarea>
+                </div>
+                <input type="hidden" id="currentServiceId" value="<?php echo htmlspecialchars($serviceId); ?>">
+
+                <button type="submit" class="submit-review-btn" id="submitReviewBtn">Submit Review</button>
+            </form>
+        </div>
+        <?php elseif ($currentUserId && !$canReview): ?>
+        <div class="review-message">
+            <p>You can write a review after completing a booking with this service.</p>
+        </div>
+        <?php elseif (!$currentUserId): ?>
+        <div class="review-message">
+            <p><a href="/login">Login</a> to write a review for this service.</p>
+        </div>
+        <?php endif; ?>
+
+        <!-- Reviews List - ALWAYS SHOWN: This section will always display reviews regardless of user login status -->
+        <div class="reviews-list" id="reviewsList">
+            <div class="loading-reviews">Loading reviews...</div>
+        </div>
+    </div>
+
+    <script>
+    // Pass PHP variables to JavaScript - ALWAYS pass serviceId so reviews load
+    window.serviceId = <?php echo json_encode($serviceId); ?>;
+    window.canReview = <?php echo json_encode($canReview); ?>;
+    window.currentUserId = <?php echo json_encode($currentUserId); ?>;
+    </script>
+    <script src="Web/scripts/review.js?v=1.0"></script>
     <script>
     // =============================================================================
     // SLIDESHOW FUNCTIONALITY
