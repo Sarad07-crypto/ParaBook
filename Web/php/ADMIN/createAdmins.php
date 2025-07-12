@@ -13,7 +13,6 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 
 // Include database connection with error handling
-// Fix the path - use the same pattern as logincheck.php
 $connectionPath = dirname(__FILE__) . '/../connection.php';
 if (!file_exists($connectionPath)) {
     http_response_code(500);
@@ -57,15 +56,49 @@ function checkUserRole() {
     ];
 }
 
-// Check if user is logged in at the top level
-if (!isset($_SESSION['admin_id']) || !isset($_SESSION['admin_role'])) {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'User not logged in']);
-    exit;
+// Function to check if any admin exists in the system
+function hasAnyAdmin($connect) {
+    $conn = $connect;
+    
+    if (!$conn) {
+        error_log("DEBUG: hasAnyAdmin - No database connection");
+        return false;
+    }
+    
+    try {
+        $query = "SELECT COUNT(*) as count FROM admins WHERE status = 'approved'";
+        $result = mysqli_query($conn, $query);
+        
+        if ($result) {
+            $row = mysqli_fetch_assoc($result);
+            error_log("DEBUG: hasAnyAdmin - Found " . $row['count'] . " approved admins");
+            return $row['count'] > 0;
+        }
+        
+    } catch (Exception $e) {
+        error_log("hasAnyAdmin error: " . $e->getMessage());
+    }
+    
+    error_log("DEBUG: hasAnyAdmin - Returning false (no admins found)");
+    return false;
 }
 
-$userRole = $_SESSION['admin_role'];
-$isMainAdmin = ($userRole === 'main_admin');
+// Check if user needs to be logged in based on whether any admin exists
+$hasExistingAdmin = hasAnyAdmin($connect);
+$userRole = null;
+$isMainAdmin = false;
+
+if ($hasExistingAdmin) {
+    // If admins exist, require login for certain operations
+    if (isset($_SESSION['admin_id']) && isset($_SESSION['admin_role'])) {
+        $userRole = $_SESSION['admin_role'];
+        $isMainAdmin = ($userRole === 'main_admin');
+    }
+} else {
+    // If no admins exist, allow registration without login
+    $userRole = null;
+    $isMainAdmin = false;
+}
 
 // Handle role check request - MUST be before any other output
 if (isset($_GET['check_role'])) {
@@ -84,23 +117,20 @@ if (isset($_GET['action'])) {
     header('Content-Type: application/json');
     $action = $_GET['action'];
     
+    // These actions require login and main admin privileges
+    if (!$hasExistingAdmin || !isset($_SESSION['admin_id']) || !$isMainAdmin) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'Access denied. Only main admins can perform this action.']);
+        exit;
+    }
+    
     try {
         switch ($action) {
             case 'getPendingAdmins':
-                if (!$isMainAdmin) {
-                    http_response_code(403);
-                    echo json_encode(['success' => false, 'message' => 'Access denied. Only main admins can view pending admins.']);
-                    exit;
-                }
                 echo json_encode(getPendingAdmins($connect));
                 break;
                 
             case 'getAdminDetails':
-                if (!$isMainAdmin) {
-                    http_response_code(403);
-                    echo json_encode(['success' => false, 'message' => 'Access denied. Only main admins can view admin details.']);
-                    exit;
-                }
                 if (isset($_GET['id'])) {
                     echo json_encode(getAdminDetails($connect, $_GET['id']));
                 } else {
@@ -120,14 +150,14 @@ if (isset($_GET['action'])) {
     exit;
 }
 
-// Handle POST requests for updating admin status
+// Handle POST requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
     
     try {
         if (isset($_POST['action']) && $_POST['action'] === 'updateAdminStatus') {
             // Only allow main admins to update admin status
-            if (!$isMainAdmin) {
+            if (!$hasExistingAdmin || !isset($_SESSION['admin_id']) || !$isMainAdmin) {
                 http_response_code(403);
                 echo json_encode(['success' => false, 'message' => 'Access denied. Only main admins can update admin status.']);
                 exit;
@@ -135,6 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $adminId = $_POST['adminId'] ?? null;
             $status = $_POST['status'] ?? null;
+            $newRole = $_POST['role'] ?? null;
             
             if (!$adminId || !$status) {
                 http_response_code(400);
@@ -142,61 +173,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
             
-            // Get the current admin ID from session
             $approvedBy = $_SESSION['admin_id'];
-            
-            echo json_encode(updateAdminStatus($connect, $adminId, $status, $approvedBy));
+            echo json_encode(updateAdminStatus($connect, $adminId, $status, $approvedBy, $newRole));
             exit;
         }
         
-        // Original registration handling
-        $result = insertAdmin($connect, $_POST);
-        
-        if ($result['success']) {
-            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-                strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-                
-                echo json_encode([
-                    'status' => 'success',
-                    'message' => $result['message'],
-                    'role' => $result['admin_role'],
-                    'admin_id' => $result['admin_id'],
-                    'redirect' => '/adminlogin'
-                ]);
-                
-            } else {
-                $_SESSION['admin_id'] = $result['admin_id'];
-                $_SESSION['admin_role'] = $result['admin_role'];
-                $_SESSION['success_message'] = $result['message'];
-                
-                header('Location: /adminlogin');
-                exit();
-            }
-            
-        } else {
-            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-                strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-                
-                // Set appropriate HTTP status code for different error types
-                if (strpos($result['message'], 'Email already exists') !== false) {
-                    http_response_code(409); // Conflict
-                } elseif (strpos($result['message'], 'required') !== false || 
-                        strpos($result['message'], 'Invalid') !== false) {
-                    http_response_code(400); // Bad Request
-                } else {
-                    http_response_code(500); // Internal Server Error
-                }
-                
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => $result['message']
-                ]);
-            } else {
-                $_SESSION['error_message'] = $result['message'];
-                header('Location: /adminsignup');
-                exit();
-            }
+        // Handle admin registration - THIS IS THE MAIN FIX
+        // Check if this is a registration request (no 'action' parameter or different action)
+        if (!isset($_POST['action']) || $_POST['action'] !== 'updateAdminStatus') {
+            $result = insertAdmin($connect, $_POST);
+            echo json_encode($result); // Return the result directly as insertAdmin already returns proper format
+            exit;
         }
+        
     } catch (Exception $e) {
         http_response_code(500);
         echo json_encode(['success' => false, 'message' => 'Server error: ' . $e->getMessage()]);
@@ -254,12 +243,11 @@ function getAdminDetails($connect, $adminId) {
     }
     
     try {
-        // Validate admin ID
         if (!is_numeric($adminId)) {
             throw new Exception('Invalid admin ID');
         }
         
-        $query = "SELECT id, first_name, last_name, email, contact, gender, date_of_birth, created_at, status 
+        $query = "SELECT id, first_name, last_name, email, contact, gender, date_of_birth, created_at, status, role 
                   FROM admins 
                   WHERE id = ?";
         
@@ -296,7 +284,7 @@ function getAdminDetails($connect, $adminId) {
     }
 }
 
-function updateAdminStatus($connect, $adminId, $status, $approvedBy) {
+function updateAdminStatus($connect, $adminId, $status, $approvedBy, $newRole = null) {
     $conn = $connect;
     
     if (!$conn) {
@@ -307,7 +295,6 @@ function updateAdminStatus($connect, $adminId, $status, $approvedBy) {
     }
     
     try {
-        // Validate inputs
         if (!is_numeric($adminId) || !is_numeric($approvedBy)) {
             throw new Exception('Invalid admin ID or approver ID');
         }
@@ -316,21 +303,38 @@ function updateAdminStatus($connect, $adminId, $status, $approvedBy) {
             throw new Exception('Invalid status');
         }
         
+        if ($newRole !== null && !in_array($newRole, ['main_admin', 'sub_admin'])) {
+            throw new Exception('Invalid role: ' . $newRole);
+        }
+        
         mysqli_begin_transaction($conn);
         
         $newStatus = ($status === 'approve') ? 'approved' : 'rejected';
         $approvedAt = ($status === 'approve') ? date('Y-m-d H:i:s') : null;
         
-        $query = "UPDATE admins 
-                  SET status = ?, approved_by = ?, approved_at = ? 
-                  WHERE id = ? AND status = 'pending'";
-        
-        $stmt = mysqli_prepare($conn, $query);
-        if (!$stmt) {
-            throw new Exception('Prepare failed: ' . mysqli_error($conn));
+        if ($newRole !== null && $status === 'approve') {
+            $query = "UPDATE admins 
+                      SET status = ?, approved_by = ?, approved_at = ?, role = ? 
+                      WHERE id = ? AND status = 'pending'";
+            
+            $stmt = mysqli_prepare($conn, $query);
+            if (!$stmt) {
+                throw new Exception('Prepare failed: ' . mysqli_error($conn));
+            }
+            
+            mysqli_stmt_bind_param($stmt, "sissi", $newStatus, $approvedBy, $approvedAt, $newRole, $adminId);
+        } else {
+            $query = "UPDATE admins 
+                      SET status = ?, approved_by = ?, approved_at = ? 
+                      WHERE id = ? AND status = 'pending'";
+            
+            $stmt = mysqli_prepare($conn, $query);
+            if (!$stmt) {
+                throw new Exception('Prepare failed: ' . mysqli_error($conn));
+            }
+            
+            mysqli_stmt_bind_param($stmt, "sisi", $newStatus, $approvedBy, $approvedAt, $adminId);
         }
-        
-        mysqli_stmt_bind_param($stmt, "sisi", $newStatus, $approvedBy, $approvedAt, $adminId);
         
         if (!mysqli_stmt_execute($stmt)) {
             throw new Exception('Failed to update admin status: ' . mysqli_error($conn));
@@ -345,7 +349,15 @@ function updateAdminStatus($connect, $adminId, $status, $approvedBy) {
         
         mysqli_commit($conn);
         
-        $message = ($status === 'approve') ? 'Admin approved successfully!' : 'Admin rejected successfully!';
+        if ($status === 'approve') {
+            $message = 'Admin approved successfully!';
+            if ($newRole !== null) {
+                $roleDisplayName = str_replace('_', ' ', strtoupper($newRole));
+                $message .= ' Role set to ' . $roleDisplayName . '.';
+            }
+        } else {
+            $message = 'Admin rejected successfully!';
+        }
         
         return [
             'success' => true,
@@ -371,21 +383,20 @@ function insertAdmin($connect, $formData) {
         ];
     }
     
-    mysqli_set_charset($conn, "utf8");
-    
     try {
-        mysqli_begin_transaction($conn);
+        // Extract form data
+        $firstName = trim($formData['firstName']);
+        $lastName = trim($formData['lastName']);
+        $email = trim($formData['email']);
+        $contact = trim($formData['contact']);
+        $password = $formData['password'];
+        $dateOfBirth = $formData['DOB'];
+        $gender = $formData['gender'];
         
-        // Extract and validate form data
-        $firstName = isset($formData['firstName']) ? mysqli_real_escape_string($conn, trim($formData['firstName'])) : '';
-        $lastName = isset($formData['lastName']) ? mysqli_real_escape_string($conn, trim($formData['lastName'])) : '';
-        $email = isset($formData['email']) ? mysqli_real_escape_string($conn, trim($formData['email'])) : '';
-        $contact = isset($formData['contact']) ? mysqli_real_escape_string($conn, trim($formData['contact'])) : '';
-        $password = isset($formData['password']) ? $formData['password'] : '';
-        $dateOfBirth = isset($formData['DOB']) ? mysqli_real_escape_string($conn, $formData['DOB']) : '';
-        $gender = isset($formData['gender']) ? mysqli_real_escape_string($conn, $formData['gender']) : '';
+        // Debug logging
+        error_log("DEBUG: Attempting to register admin with email: " . $email);
         
-        // Validation
+        // Basic validation
         if (empty($firstName) || empty($lastName) || empty($email) || 
             empty($contact) || empty($password) || empty($dateOfBirth) || empty($gender)) {
             throw new Exception('All fields are required');
@@ -395,87 +406,111 @@ function insertAdmin($connect, $formData) {
             throw new Exception('Invalid email format');
         }
         
-        if (!preg_match('/^9\d{9}$/', $contact)) {
-            throw new Exception('Invalid contact number format');
+        // Start transaction to ensure atomicity
+        mysqli_begin_transaction($conn);
+        
+        // Check if email already exists - BEFORE any insert
+        $checkEmailQuery = "SELECT email FROM admins WHERE email = ?";
+        $checkStmt = mysqli_prepare($conn, $checkEmailQuery);
+        if (!$checkStmt) {
+            mysqli_rollback($conn);
+            throw new Exception('Failed to prepare email check query: ' . mysqli_error($conn));
         }
         
-        if (!preg_match('/^(?!.*\s)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$&!.])[A-Za-z\d@$&!.]{8,}$/', $password)) {
-            throw new Exception('Password does not meet requirements');
+        mysqli_stmt_bind_param($checkStmt, "s", $email);
+        mysqli_stmt_execute($checkStmt);
+        $result = mysqli_stmt_get_result($checkStmt);
+        
+        // Check if any rows were returned
+        if (mysqli_num_rows($result) > 0) {
+            mysqli_stmt_close($checkStmt);
+            mysqli_rollback($conn);
+            
+            // Get the existing email for debugging
+            $existingEmail = mysqli_fetch_assoc($result)['email'];
+            error_log("DEBUG: Email already exists in database: " . $existingEmail);
+            
+            throw new Exception('Email already exists. Please use a different email address.');
         }
         
-        if (!in_array($gender, ['Male', 'Female'])) {
-            throw new Exception('Invalid gender selection');
-        }
+        mysqli_stmt_close($checkStmt);
         
-        // Check if email already exists
-        $emailCheckQuery = "SELECT id FROM admins WHERE email = ?";
-        $emailCheckStmt = mysqli_prepare($conn, $emailCheckQuery);
-        if (!$emailCheckStmt) {
-            throw new Exception('Prepare failed: ' . mysqli_error($conn));
-        }
-        
-        mysqli_stmt_bind_param($emailCheckStmt, "s", $email);
-        mysqli_stmt_execute($emailCheckStmt);
-        $emailResult = mysqli_stmt_get_result($emailCheckStmt);
-        
-        if (mysqli_num_rows($emailResult) > 0) {
-            mysqli_stmt_close($emailCheckStmt);
-            throw new Exception('Email already exists');
-        }
-        mysqli_stmt_close($emailCheckStmt);
-        
-        // Check if main admin exists
-        $mainAdminQuery = "SELECT COUNT(*) as count FROM admins WHERE role = 'main_admin'";
-        $mainAdminResult = mysqli_query($conn, $mainAdminQuery);
-        if (!$mainAdminResult) {
-            throw new Exception('Query failed: ' . mysqli_error($conn));
-        }
-        
-        $mainAdminRow = mysqli_fetch_assoc($mainAdminResult);
-        $hasMainAdmin = $mainAdminRow['count'] > 0;
-        
-        $role = $hasMainAdmin ? 'sub_admin' : 'main_admin';
-        $status = $hasMainAdmin ? 'pending' : 'approved';
-        
+        // Hash password
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
         
-        $insertQuery = "INSERT INTO admins (first_name, last_name, email, contact, password, date_of_birth, gender, role, status, approved_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
-        $insertStmt = mysqli_prepare($conn, $insertQuery);
+        // Determine role and status based on whether any admin exists
+        $hasExistingAdmin = hasAnyAdmin($connect);
+        $role = $hasExistingAdmin ? 'sub_admin' : 'main_admin';
+        $status = $hasExistingAdmin ? 'pending' : 'approved';
+        $approvedAt = null;
         
-        if (!$insertStmt) {
-            throw new Exception('Prepare failed: ' . mysqli_error($conn));
+        if (!$hasExistingAdmin) {
+            // First admin - auto-approve
+            $approvedAt = date('Y-m-d H:i:s');
         }
         
-        $approvedAt = $hasMainAdmin ? null : date('Y-m-d H:i:s');
-        
-        mysqli_stmt_bind_param($insertStmt, "ssssssssss", 
-            $firstName, $lastName, $email, $contact, $hashedPassword, 
-            $dateOfBirth, $gender, $role, $status, $approvedAt);
+        // Insert admin with role and status
+        if ($approvedAt !== null) {
+            $insertQuery = "INSERT INTO admins (first_name, last_name, email, contact, password, date_of_birth, gender, role, status, approved_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $insertStmt = mysqli_prepare($conn, $insertQuery);
+            
+            if (!$insertStmt) {
+                mysqli_rollback($conn);
+                throw new Exception('Failed to prepare insert statement: ' . mysqli_error($conn));
+            }
+            
+            mysqli_stmt_bind_param($insertStmt, "ssssssssss", 
+                $firstName, $lastName, $email, $contact, $hashedPassword, $dateOfBirth, $gender, $role, $status, $approvedAt);
+        } else {
+            // For pending admins, don't set approved_at
+            $insertQuery = "INSERT INTO admins (first_name, last_name, email, contact, password, date_of_birth, gender, role, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $insertStmt = mysqli_prepare($conn, $insertQuery);
+            
+            if (!$insertStmt) {
+                mysqli_rollback($conn);
+                throw new Exception('Failed to prepare insert statement: ' . mysqli_error($conn));
+            }
+            
+            mysqli_stmt_bind_param($insertStmt, "sssssssss", 
+                $firstName, $lastName, $email, $contact, $hashedPassword, $dateOfBirth, $gender, $role, $status);
+        }
         
         if (!mysqli_stmt_execute($insertStmt)) {
+            mysqli_rollback($conn);
             throw new Exception('Failed to insert admin: ' . mysqli_error($conn));
         }
         
         $adminId = mysqli_insert_id($conn);
         mysqli_stmt_close($insertStmt);
         
+        // Commit transaction
         mysqli_commit($conn);
         
-        $message = $hasMainAdmin ? 
-            'Registration successful! Your account is pending approval by the main admin.' :
-            'Registration successful! You have been assigned as the main admin.';
+        error_log("DEBUG: Admin successfully registered with ID: " . $adminId);
+        
+        $message = $hasExistingAdmin ? 
+            'Admin registration submitted successfully. Awaiting approval from main admin.' : 
+            'Admin registered successfully and approved automatically.';
         
         return [
             'success' => true,
+            'status' => 'success',
             'message' => $message,
-            'admin_role' => $role,
-            'admin_id' => $adminId
+            'admin_id' => $adminId,
+            'redirect' => '/adminlogin'
         ];
         
     } catch (Exception $e) {
-        mysqli_rollback($conn);
+        // Rollback transaction on any error
+        if (isset($conn)) {
+            mysqli_rollback($conn);
+        }
+        
+        error_log("DEBUG: Error in insertAdmin: " . $e->getMessage());
+        
         return [
             'success' => false,
+            'status' => 'error',
             'message' => $e->getMessage()
         ];
     }
@@ -509,7 +544,6 @@ function getAdminStats($connect) {
         }
         
     } catch (Exception $e) {
-        // Log error if needed
         error_log("getAdminStats error: " . $e->getMessage());
     }
     

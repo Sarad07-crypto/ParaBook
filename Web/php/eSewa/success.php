@@ -9,6 +9,8 @@ use PHPMailer\PHPMailer\Exception;
 
 session_start();
 
+    // Get service_id from URL parameter
+    $serviceId = isset($_GET['service_id']) ? intval($_GET['service_id']) : 0;
 try {
     // Include database connection
     include "../connection.php";
@@ -128,15 +130,16 @@ try {
     // Insert confirmed booking into bookings table
     $insertBooking = $connect->prepare("
         INSERT INTO bookings (
-            booking_no, user_id, date, pickup, flight_type, weight, age, 
+            booking_no, user_id, service_id, date, pickup, flight_type, weight, age, 
             medical_condition, total_amount, status, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())
     ");
 
     $insertBooking->bind_param(
-        "sisssdisd", 
+        "siisssdisd", 
         $tempBooking['booking_no'],      // s - string
         $tempBooking['user_id'],         // i - integer
+        $tempBooking['service_id'],      // i - integer (NEW)
         $tempBooking['date'],            // s - string
         $tempBooking['pickup'],          // s - string
         $tempBooking['flight_type_name'], // s - string

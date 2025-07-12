@@ -4,10 +4,29 @@
   box-sizing: border-box;
 }
 
+/* CSS Variables for better dark mode management */
+:root {
+  --primary-color: #667eea;
+  --primary-color-dark: #5a6fd8;
+  --bg-light: #f5f7fa;
+  --bg-dark: #1a1a1a;
+  --card-bg-light: #ffffff;
+  --card-bg-dark: #2d2d2d;
+  --text-primary-light: #333;
+  --text-primary-dark: #ffffff;
+  --text-secondary-light: #666;
+  --text-secondary-dark: #b3b3b3;
+  --border-light: #e1e5e9;
+  --border-dark: #404040;
+  --shadow-light: rgba(0, 0, 0, 0.05);
+  --shadow-dark: rgba(0, 0, 0, 0.3);
+}
+
 body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f5f7fa;
-  color: #333;
+  background-color: var(--bg-light);
+  color: var(--text-primary-light);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .header h1 {
@@ -26,11 +45,12 @@ body {
 }
 
 .controls {
-  background: white;
+  background: var(--card-bg-light);
   padding: 1.5rem;
   border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 10px var(--shadow-light);
   margin-bottom: 2rem;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .controls-grid {
@@ -49,21 +69,25 @@ body {
   font-weight: 600;
   margin-bottom: 0.5rem;
   color: #555;
+  transition: color 0.3s ease;
 }
 
 .control-group input,
 .control-group select {
   padding: 0.75rem;
-  border: 2px solid #e1e5e9;
+  border: 2px solid var(--border-light);
   border-radius: 8px;
   font-size: 0.9rem;
-  transition: border-color 0.3s ease;
+  transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+  background-color: var(--card-bg-light);
+  color: var(--text-primary-light);
 }
 
 .control-group input:focus,
 .control-group select:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .stats {
@@ -74,29 +98,32 @@ body {
 }
 
 .stat-card {
-  background: white;
+  background: var(--card-bg-light);
   padding: 1.5rem;
   border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 10px var(--shadow-light);
   text-align: center;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .stat-number {
   font-size: 2rem;
   font-weight: bold;
-  color: #667eea;
+  color: var(--primary-color);
 }
 
 .stat-label {
-  color: #666;
+  color: var(--text-secondary-light);
   margin-top: 0.5rem;
+  transition: color 0.3s ease;
 }
 
 .bookings-container {
-  background: white;
+  background: var(--card-bg-light);
   border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 10px var(--shadow-light);
   overflow: hidden;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .bookings-header {
@@ -106,15 +133,18 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .bookings-header h2 {
-  color: #333;
+  color: var(--text-primary-light);
+  transition: color 0.3s ease;
 }
 
 .pagination-info {
-  color: #666;
+  color: var(--text-secondary-light);
   font-size: 0.9rem;
+  transition: color 0.3s ease;
 }
 
 .booking-table {
@@ -129,12 +159,14 @@ body {
   font-weight: 600;
   color: #555;
   border-bottom: 2px solid #e9ecef;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .booking-table td {
   padding: 1rem;
   border-bottom: 1px solid #f0f0f0;
   vertical-align: top;
+  transition: border-color 0.3s ease;
 }
 
 .booking-row {
@@ -147,7 +179,7 @@ body {
 
 .booking-number {
   font-weight: bold;
-  color: #667eea;
+  color: var(--primary-color);
   font-family: "Courier New", monospace;
 }
 
@@ -157,13 +189,22 @@ body {
   font-size: 0.8rem;
   font-weight: 600;
   text-transform: uppercase;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .status-confirmed {
   background: #d4edda;
   color: #155724;
 }
-
+.status-completed {
+  color: #4caf50;
+  font-weight: bold;
+  background-color: #e8f5e8;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  text-transform: uppercase;
+}
 .status-pending {
   background: #fff3cd;
   color: #856404;
@@ -180,6 +221,7 @@ body {
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-size: 0.8rem;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .actions {
@@ -199,7 +241,7 @@ body {
 }
 
 .btn-primary {
-  background: #667eea;
+  background: var(--primary-color);
   color: white;
 }
 
@@ -225,12 +267,13 @@ body {
   gap: 0.5rem;
   padding: 1.5rem;
   background: #f8f9fa;
+  transition: background-color 0.3s ease;
 }
 
 .pagination button {
   padding: 0.5rem 1rem;
   border: 1px solid #dee2e6;
-  background: white;
+  background: var(--card-bg-light);
   color: #6c757d;
   border-radius: 6px;
   cursor: pointer;
@@ -238,15 +281,15 @@ body {
 }
 
 .pagination button:hover {
-  background: #667eea;
+  background: var(--primary-color);
   color: white;
-  border-color: #667eea;
+  border-color: var(--primary-color);
 }
 
 .pagination button.active {
-  background: #667eea;
+  background: var(--primary-color);
   color: white;
-  border-color: #667eea;
+  border-color: var(--primary-color);
 }
 
 .pagination button:disabled {
@@ -258,15 +301,252 @@ body {
 .no-bookings {
   text-align: center;
   padding: 3rem;
-  color: #666;
+  color: var(--text-secondary-light);
+  transition: color 0.3s ease;
 }
 
 .loading {
   text-align: center;
   padding: 2rem;
-  color: #667eea;
+  color: var(--primary-color);
 }
 
+/* ========================================
+   DARK MODE STYLES
+   ======================================== */
+
+.dark-mode {
+  --bg-light: var(--bg-dark);
+  --card-bg-light: var(--card-bg-dark);
+  --text-primary-light: var(--text-primary-dark);
+  --text-secondary-light: var(--text-secondary-dark);
+  --border-light: var(--border-dark);
+  --shadow-light: var(--shadow-dark);
+}
+
+.dark-mode body {
+  background-color: var(--bg-dark);
+  color: var(--text-primary-dark);
+}
+
+/* Dark mode controls */
+.dark-mode .controls {
+  background-color: var(--card-bg-dark);
+  box-shadow: 0 2px 10px var(--shadow-dark);
+  border: 1px solid var(--border-dark);
+}
+
+.dark-mode .control-group label {
+  color: var(--text-secondary-dark);
+}
+
+.dark-mode .control-group input,
+.dark-mode .control-group select {
+  background-color: #1e1e1e;
+  color: var(--text-primary-dark);
+  border: 2px solid var(--border-dark);
+}
+
+.dark-mode .control-group input:focus,
+.dark-mode .control-group select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+.dark-mode .control-group input::placeholder,
+.dark-mode .control-group select::placeholder {
+  color: #888;
+}
+
+/* Dark mode stats */
+.dark-mode .stat-card {
+  background-color: var(--card-bg-dark);
+  box-shadow: 0 2px 10px var(--shadow-dark);
+  border: 1px solid var(--border-dark);
+}
+
+.dark-mode .stat-number {
+  color: var(--primary-color);
+}
+
+.dark-mode .stat-label {
+  color: var(--text-secondary-dark);
+}
+
+/* Dark mode bookings container */
+.dark-mode .bookings-container {
+  background-color: var(--card-bg-dark);
+  box-shadow: 0 2px 10px var(--shadow-dark);
+  border: 1px solid var(--border-dark);
+}
+
+.dark-mode .bookings-header {
+  background-color: #1e1e1e;
+  border-bottom: 1px solid var(--border-dark);
+}
+
+.dark-mode .bookings-header h2 {
+  color: var(--text-primary-dark);
+}
+
+.dark-mode .pagination-info {
+  color: var(--text-secondary-dark);
+}
+
+/* Dark mode table */
+.dark-mode .booking-table th {
+  background-color: #1e1e1e;
+  color: var(--text-secondary-dark);
+  border-bottom: 2px solid var(--border-dark);
+}
+
+.dark-mode .booking-table td {
+  background-color: var(--card-bg-dark);
+  color: var(--text-primary-dark);
+  border-bottom: 1px solid var(--border-dark);
+}
+
+.dark-mode .booking-row:hover {
+  background-color: #3a3a3a;
+}
+
+.dark-mode .booking-number {
+  color: var(--primary-color);
+}
+
+/* Dark mode status badges with improved contrast */
+.dark-mode .status-confirmed {
+  background: #1a5e1a;
+  color: #4ade80;
+  border: 1px solid #22c55e;
+}
+
+.dark-mode .status-pending {
+  background: #5d4e00;
+  color: #fbbf24;
+  border: 1px solid #f59e0b;
+}
+
+.dark-mode .status-cancelled {
+  background: #5e1a1a;
+  color: #f87171;
+  border: 1px solid #ef4444;
+}
+
+.dark-mode .flight-type {
+  background: #1e3a8a;
+  color: #60a5fa;
+  border: 1px solid #3b82f6;
+}
+
+/* Dark mode buttons */
+.dark-mode .btn-primary {
+  background: var(--primary-color);
+  color: white;
+}
+
+.dark-mode .btn-primary:hover {
+  background: var(--primary-color-dark);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.dark-mode .btn-secondary {
+  background: #4b5563;
+  color: white;
+}
+
+.dark-mode .btn-secondary:hover {
+  background: #374151;
+  box-shadow: 0 4px 12px rgba(75, 85, 99, 0.3);
+}
+
+.dark-mode .btn-danger {
+  background: #dc2626;
+  color: white;
+}
+
+.dark-mode .btn-danger:hover {
+  background: #b91c1c;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+/* Dark mode pagination */
+.dark-mode .pagination {
+  background-color: #1e1e1e;
+  border-top: 1px solid var(--border-dark);
+}
+
+.dark-mode .pagination button {
+  background-color: var(--card-bg-dark);
+  color: var(--text-secondary-dark);
+  border: 1px solid var(--border-dark);
+}
+
+.dark-mode .pagination button:hover:not(:disabled) {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.dark-mode .pagination button.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.dark-mode .pagination button:disabled {
+  background: #1a1a1a;
+  color: #555;
+  border-color: #333;
+  cursor: not-allowed;
+}
+
+/* Dark mode empty states */
+.dark-mode .no-bookings {
+  color: var(--text-secondary-dark);
+}
+
+.dark-mode .loading {
+  color: var(--primary-color);
+}
+
+/* Dark mode scrollbar styling */
+.dark-mode ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dark-mode ::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+.dark-mode ::-webkit-scrollbar-thumb {
+  background: var(--border-dark);
+  border-radius: 4px;
+}
+
+.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Dark mode select dropdown styling */
+.dark-mode .control-group select option {
+  background-color: var(--card-bg-dark);
+  color: var(--text-primary-dark);
+}
+
+/* Dark mode focus states */
+.dark-mode *:focus {
+  outline: none;
+}
+
+.dark-mode .control-group input:focus,
+.dark-mode .control-group select:focus {
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+/* Dark mode responsive adjustments */
 @media (max-width: 768px) {
   .container {
     padding: 1rem;
@@ -283,5 +563,19 @@ body {
 
   .actions {
     flex-direction: column;
+  }
+
+  /* Dark mode mobile specific */
+  .dark-mode .booking-table th,
+  .dark-mode .booking-table td {
+    padding: 0.5rem;
+  }
+  
+  .dark-mode .controls {
+    margin-bottom: 1rem;
+  }
+  
+  .dark-mode .stats {
+    margin-bottom: 1rem;
   }
 }

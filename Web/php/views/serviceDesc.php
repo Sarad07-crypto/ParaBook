@@ -10,11 +10,9 @@
     
     // Get service_id from URL parameter
     $serviceId = isset($_GET['service_id']) ? intval($_GET['service_id']) : 0;
-    
-    // Debug: Check if service_id is being received
-    error_log("Service ID from URL: " . $serviceId);
-    
+
     if (!$serviceId) {
+        die("no service_id provided");
         header('Location: /error?message=Invalid service ID');
         exit();
     }
@@ -22,50 +20,132 @@
     // Store in session
     $_SESSION['service_id'] = $serviceId;
 
+    // Get current user ID for review checking
+    $currentUserId = $_SESSION['user_id'] ?? null;
+
+    // Function to check if user can review (passenger has completed booking for this specific service)
+    function canUserReview($currentUserId, $serviceId, $connect) {
+        if (!$currentUserId || !$serviceId) {
+            error_log("Missing user ID or service ID");
+            return false;
+        }
+        
+        $stmt = $connect->prepare("
+            SELECT COUNT(*) as booking_count 
+            FROM bookings 
+            WHERE user_id = ? AND service_id = ? AND status = 'completed'
+        ");
+        
+        if ($stmt) {
+            $stmt->bind_param("ii", $currentUserId, $serviceId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $row = $result->fetch_assoc();
+            $stmt->close();
+            
+            error_log("Completed booking count for passenger $currentUserId: " . $row['booking_count']);
+            return $row['booking_count'] > 0;
+        } else {
+            error_log("Failed to prepare booking query: " . $connect->error);
+            return false;
+        }
+    }
+
+    $canReview = canUserReview($currentUserId, $serviceId, $connect);
+    
+    // Debug output
+    error_log("Current Passenger User ID: " . ($currentUserId ?? 'null'));
+    error_log("Service ID: " . $serviceId);
+    error_log("Can Review: " . ($canReview ? 'true' : 'false'));
+    
+    // Additional debug - check if user has completed bookings
+    if ($currentUserId) {
+        $debugStmt = $connect->prepare("SELECT COUNT(*) as total_bookings FROM bookings WHERE user_id = ?");
+        if ($debugStmt) {
+            $debugStmt->bind_param("i", $currentUserId);
+            $debugStmt->execute();
+            $debugResult = $debugStmt->get_result();
+            $debugRow = $debugResult->fetch_assoc();
+            $debugStmt->close();
+            error_log("Total bookings for user $currentUserId: " . $debugRow['total_bookings']);
+        }
+        
+        $completedStmt = $connect->prepare("SELECT COUNT(*) as completed_bookings FROM bookings WHERE user_id = ? AND status = 'completed'");
+        if ($completedStmt) {
+            $completedStmt->bind_param("i", $currentUserId);
+            $completedStmt->execute();
+            $completedResult = $completedStmt->get_result();
+            $completedRow = $completedResult->fetch_assoc();
+            $completedStmt->close();
+            error_log("Completed bookings for user $currentUserId: " . $completedRow['completed_bookings']);
+        }
+    }
+
     try {
-    // 1. Fetch service details
-    $stmt = $connect->prepare("SELECT * FROM company_services WHERE id = ?");
-    $stmt->bind_param("i", $serviceId);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $service = $result->fetch_assoc();
+        // 1. Fetch service details
+        $stmt = $connect->prepare("SELECT * FROM company_services WHERE id = ?");
+        $stmt->bind_param("i", $serviceId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $service = $result->fetch_assoc();
 
-    if (!$service) {
-    header('Location: /error?message=Service not found');
-    exit;
-    }
+        if (!$service) {
+            header('Location: /error?message=Service not found');
+            exit;
+        }
 
-    // 2. Fetch flight types and get minimum price
-    $stmt = $connect->prepare("SELECT flight_type_name AS name, price FROM service_flight_types WHERE service_id = ? ORDER
-    BY price ASC");
-    $stmt->bind_param("i", $serviceId);
-    $stmt->execute();
-    $flightTypes = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        // 2. Fetch flight types and get minimum price
+        $stmt = $connect->prepare("SELECT flight_type_name AS name, price FROM service_flight_types WHERE service_id = ? ORDER BY price ASC");
+        $stmt->bind_param("i", $serviceId);
+        $stmt->execute();
+        $flightTypes = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-    $minPrice = !empty($flightTypes) ? $flightTypes[0]['price'] : 0;
+        $minPrice = !empty($flightTypes) ? $flightTypes[0]['price'] : 0;
 
-    // 3. Fetch office photos
-    $stmt = $connect->prepare("SELECT photo_path FROM service_office_photos WHERE service_id = ? ORDER BY photo_order ASC
-    LIMIT 4");
-    $stmt->bind_param("i", $serviceId);
-    $stmt->execute();
-    $result = $stmt->get_result();
+        // 3. Fetch office photos
+        $stmt = $connect->prepare("SELECT photo_path FROM service_office_photos WHERE service_id = ? ORDER BY photo_order ASC LIMIT 4");
+        $stmt->bind_param("i", $serviceId);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-    $officePhotos = [];
-    while ($row = $result->fetch_assoc()) {
-    $officePhotos[] = $row['photo_path'];
-    }
+        $officePhotos = [];
+        while ($row = $result->fetch_assoc()) {
+            $officePhotos[] = $row['photo_path'];
+        }
 
-    // If no photos, use default placeholder
-    if (empty($officePhotos)) {
-    $officePhotos = ['default-service.jpg'];
-    }
+        // If no photos, use default placeholder
+        if (empty($officePhotos)) {
+            $officePhotos = ['default-service.jpg'];
+        }
 
     } catch (Exception $e) {
-    error_log("Error fetching service data: " . $e->getMessage());
-    header('Location: /error?message=Error loading service');
-    exit;
+        error_log("Error fetching service data: " . $e->getMessage());
+        header('Location: /error?message=Error loading service');
+        exit;
     }
+?>
+
+<?php
+// Add this PHP code at the top of your file after the existing PHP logic
+// Location data fetching
+$hasLocation = false;
+$locationData = [];
+
+if ($serviceId) {
+    // Fetch location data for the service
+    $locationQuery = "SELECT latitude, longitude, address, formatted_address, place_id 
+                      FROM service_locations 
+                      WHERE service_id = ?";
+    $locationStmt = $connect->prepare($locationQuery);
+    $locationStmt->bind_param("i", $serviceId);
+    $locationStmt->execute();
+    $locationResult = $locationStmt->get_result();
+    
+    if ($locationResult->num_rows > 0) {
+        $locationData = $locationResult->fetch_assoc();
+        $hasLocation = true;
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -77,7 +157,468 @@
     <title><?php echo htmlspecialchars($service['service_title'] ?? 'Service Details'); ?></title>
     <link rel="stylesheet" href="Web/css/serviceDesc.css?v=1.0" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
+<style>
+/* Review Section Styles */
+.review-section {
+    position: relative;
+    background: #fff;
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 2rem 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e0e0;
+    z-index: 1000;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.review-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.review-stats {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.overall-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #34495e;
+}
+
+.rating-stars {
+    color: #ffc107;
+    font-size: 1.2rem;
+}
+
+/* Write Review Form */
+.write-review {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.write-review h3 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+
+.rating-input {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.rating-input label {
+    font-weight: 500;
+    color: #34495e;
+}
+
+.star-rating {
+    display: flex;
+    gap: 0.2rem;
+}
+
+.star-rating input {
+    display: none;
+}
+
+.star-rating label {
+    font-size: 1.5rem;
+    color: #ddd;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.star-rating input:checked~label,
+.star-rating label:hover,
+.star-rating label:hover~label {
+    color: #ffc107;
+}
+
+.star-rating label:hover~label {
+    color: #ddd;
+}
+
+.review-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-weight: 500;
+    color: #34495e;
+    margin-bottom: 0.5rem;
+}
+
+.form-group textarea {
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    resize: vertical;
+    min-height: 100px;
+    font-family: inherit;
+}
+
+.form-group textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.submit-review-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+    align-self: flex-start;
+}
+
+.submit-review-btn:hover {
+    background: #0056b3;
+}
+
+.submit-review-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+/* Reviews List */
+.reviews-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.review-item {
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: box-shadow 0.2s;
+}
+
+.review-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.review-user {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #007bff;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.user-info {
+    flex: 1;
+}
+
+.user-name {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.25rem;
+}
+
+.review-date {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.review-rating {
+    color: #ffc107;
+    font-size: 1.1rem;
+}
+
+.review-text {
+    color: #495057;
+    line-height: 1.6;
+    margin-top: 0.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .review-section {
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+
+    .review-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .review-stats {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .write-review {
+        padding: 1rem;
+    }
+
+    .star-rating label {
+        font-size: 1.3rem;
+    }
+}
+
+/* Success Message */
+.success-message {
+    background: #d4edda;
+    color: #155724;
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    border: 1px solid #c3e6cb;
+    display: none;
+}
+
+.success-message.show {
+    display: block;
+}
+
+/* Dark Mode Support */
+.dark-mode .review-section {
+    background: #2c3e50;
+    color: #ecf0f1;
+    border-color: #34495e;
+}
+
+.dark-mode .write-review {
+    background: #34495e;
+}
+
+.dark-mode .form-group textarea {
+    background: #34495e;
+    color: #ecf0f1;
+    border-color: #4a5568;
+}
+
+.dark-mode .review-item {
+    background: #34495e;
+    border-color: #4a5568;
+}
+
+/* Reviewer avatar styling */
+.reviewer-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.reviewer-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e0e0e0;
+    flex-shrink: 0;
+}
+
+.reviewer-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.reviewer-name {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+.review-rating {
+    display: flex;
+    align-items: center;
+}
+
+/* Optional: Hover effect for avatar */
+.reviewer-avatar:hover {
+    border-color: #007bff;
+    transition: border-color 0.2s ease;
+}
+
+/*location*/
+.location-section {
+    position: relative;
+    z-index: 0;
+    background: #fff;
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 2rem 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.location-header h3 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+}
+
+.location-info {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.no-location {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+#serviceLocationMap {
+    position: relative;
+    z-index: 1;
+    height: 300px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.book-box {
+    position: fixed;
+    bottom: 0;
+    top: auto;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 0;
+}
+
+@media (max-width: 900px) {
+    .book-box {
+        position: fixed;
+        bottom: 0;
+        top: auto;
+        left: 0;
+        right: 0;
+        width: 100%;
+    }
+}
+
+/* Direction Button Styles - Add to existing <style> section */
+.direction-button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer !important;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    text-decoration: none;
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
+}
+
+.direction-button:hover {
+    background: #0056b3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.direction-button:active {
+    transform: translateY(0);
+}
+
+.direction-button i {
+    font-size: 16px;
+}
+
+.direction-button.loading {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+.direction-button.loading i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Location controls container */
+.location-controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .location-controls {
+        flex-direction: column;
+    }
+
+    .direction-button {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
 
 <body>
     <?php
@@ -93,9 +634,9 @@
         <!-- Left Section -->
         <div class="left-section">
             <div class="company-title">
-                <h1>
-                    <?php echo htmlspecialchars($service['service_title'] ?? ''); ?></h1>
+                <h1><?php echo htmlspecialchars($service['service_title'] ?? ''); ?></h1>
             </div>
+
             <div class="profile-row">
                 <img src="" alt="Company Logo" class="profile-pic">
                 <div class="profile-info">
@@ -103,10 +644,6 @@
                     <span class="profile-address"><?php echo htmlspecialchars($service['address'] ?? ''); ?></span>
                     <span class="profile-address"><?php echo htmlspecialchars($service['contact'] ?? ''); ?></span>
                 </div>
-            </div>
-            <div class="rating-row">
-                <span class="stars">★★★★☆</span>
-                <span class="reviews">4.0 (120 reviews)</span>
             </div>
             <div class="highlight">
                 <b>Popular choice!</b> This service has excellent customer satisfaction.
@@ -157,6 +694,8 @@
             </div>
         </div>
 
+
+
         <!-- Right Section -->
         <div class="right-section">
             <div class="book-box">
@@ -165,17 +704,47 @@
                     <?php echo htmlspecialchars($service['service_title'] ?? 'Service Booking'); ?><br>
                     <span style="font-size:0.98rem;color:rgba(255,255,255,0.8);">Available now • Flexible booking</span>
                 </div>
-                <!-- Replace the existing book-btn line with this corrected version -->
                 <button class="book-btn"
                     onclick="window.location.href='/bookingpassenger?service_id=<?php echo $_SESSION['service_id']; ?>'">Book
                     Now</button>
-                <!-- New Chat Button -->
                 <button class="chat-btn" onclick="openChatModal()"
                     <?php echo isset($_SESSION['user_id']) ? '' : 'disabled title="Login to chat"'; ?>>
                     <i class="fas fa-comments"></i> Send Message
                 </button>
             </div>
         </div>
+    </div>
+
+    <!-- Location Section -->
+    <div class="location-section">
+        <div class="location-header">
+            <h3>
+                <i class="fas fa-map-marker-alt"></i>
+                Service Location
+            </h3>
+        </div>
+        <?php if ($hasLocation): ?>
+        <div id="serviceLocationMap" style="height: 300px; border-radius: 8px; overflow: hidden;"></div>
+        <div class="location-info">
+            <?php if ($locationData['formatted_address']): ?>
+            <p><strong>Address:</strong> <?php echo htmlspecialchars($locationData['formatted_address']); ?></p>
+            <?php elseif ($locationData['address']): ?>
+            <p><strong>Address:</strong> <?php echo htmlspecialchars($locationData['address']); ?></p>
+            <?php endif; ?>
+
+            <!-- Direction Controls -->
+            <div class="location-controls">
+                <button class="direction-button" id="getDirectionsBtn" onclick="getDirections()">
+                    <i class="fas fa-directions"></i>
+                    Get Directions
+                </button>
+            </div>
+        </div>
+        <?php else: ?>
+        <div class="no-location">
+            <p>No location information provided for this service.</p>
+        </div>
+        <?php endif; ?>
     </div>
 
     <!-- Chat Modal -->
@@ -203,6 +772,79 @@
             </div>
         </div>
     </div>
+
+    <!-- Review Section - MODIFIED: Always show reviews to all users -->
+    <div class="review-section" id="reviewSection">
+        <div class="review-header">
+            <h2 class="review-title">Customer Reviews</h2>
+            <div class="review-stats">
+                <div class="overall-rating">
+                    <span class="rating-stars">★★★★☆</span>
+                    <span>4.2 out of 5</span>
+                </div>
+                <span class="review-count">(Loading...)</span>
+            </div>
+        </div>
+
+        <!-- Write Review Form - Only show to eligible users -->
+        <?php if ($currentUserId && $canReview): ?>
+        <div class="write-review" id="writeReviewForm">
+            <h3>Write a Review</h3>
+            <div class="success-message" id="successMessage" style="display: none;">
+                Thank you for your review! It has been submitted successfully.
+            </div>
+
+            <form class="review-form" id="reviewForm">
+                <div class="rating-input">
+                    <label>Your Rating:</label>
+                    <div class="star-rating">
+                        <input type="radio" id="star5" name="rating" value="5" required>
+                        <label for="star5">★</label>
+                        <input type="radio" id="star4" name="rating" value="4" required>
+                        <label for="star4">★</label>
+                        <input type="radio" id="star3" name="rating" value="3" required>
+                        <label for="star3">★</label>
+                        <input type="radio" id="star2" name="rating" value="2" required>
+                        <label for="star2">★</label>
+                        <input type="radio" id="star1" name="rating" value="1" required>
+                        <label for="star1">★</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="reviewText">Your Review:</label>
+                    <textarea id="reviewText" name="review_text"
+                        placeholder="Share your experience with this service..." required></textarea>
+                </div>
+                <input type="hidden" id="currentServiceId" value="<?php echo htmlspecialchars($serviceId); ?>">
+
+                <button type="submit" class="submit-review-btn" id="submitReviewBtn">Submit Review</button>
+            </form>
+        </div>
+        <?php elseif ($currentUserId && !$canReview): ?>
+        <div class="review-message">
+            <p>You can write a review after completing a booking with this service.</p>
+        </div>
+        <?php elseif (!$currentUserId): ?>
+        <div class="review-message">
+            <p><a href="/login">Login</a> to write a review for this service.</p>
+        </div>
+        <?php endif; ?>
+
+        <!-- Reviews List - ALWAYS SHOWN: This section will always display reviews regardless of user login status -->
+        <div class="reviews-list" id="reviewsList">
+            <div class="loading-reviews">Loading reviews...</div>
+        </div>
+    </div>
+
+    <script>
+    // Pass PHP variables to JavaScript - ALWAYS pass serviceId so reviews load
+    window.serviceId = <?php echo json_encode($serviceId); ?>;
+    window.canReview = <?php echo json_encode($canReview); ?>;
+    window.currentUserId = <?php echo json_encode($currentUserId); ?>;
+    </script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="Web/scripts/review.js?v=1.0"></script>
     <script>
     // =============================================================================
     // SLIDESHOW FUNCTIONALITY
@@ -857,6 +1499,390 @@
     window.addEventListener('beforeunload', () => {
         chatClient.disconnect();
     });
+
+
+    // =============================================================================
+    // LOCATION MAP FUNCTIONALITY (OpenStreetMap with Leaflet)
+    // =============================================================================
+    <?php if ($hasLocation): ?>
+    // Initialize OpenStreetMap for service location
+    function initServiceLocationMap() {
+        const latitude = <?php echo $locationData['latitude']; ?>;
+        const longitude = <?php echo $locationData['longitude']; ?>;
+
+        try {
+            // Create map centered on service location
+            const map = L.map('serviceLocationMap').setView([latitude, longitude], 15);
+
+            // Add OpenStreetMap tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Add marker for service location
+            const marker = L.marker([latitude, longitude]).addTo(map);
+
+            // Create popup content without coordinates
+            const popupContent = `
+            <div style="padding: 8px; max-width: 250px;">
+                <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #333;"><?php echo htmlspecialchars($service['service_title'] ?? 'Service Location'); ?></h4>
+                <p style="margin: 0 0 5px 0; font-size: 12px; color: #666; font-weight: 500;"><?php echo htmlspecialchars($service['company_name'] ?? ''); ?></p>
+                <?php if ($locationData['formatted_address']): ?>
+                <p style="margin: 0; font-size: 11px; color: #888; line-height: 1.4;"><?php echo htmlspecialchars($locationData['formatted_address']); ?></p>
+                <?php elseif ($locationData['address']): ?>
+                <p style="margin: 0; font-size: 11px; color: #888; line-height: 1.4;"><?php echo htmlspecialchars($locationData['address']); ?></p>
+                <?php endif; ?>
+            </div>
+        `;
+
+            // Bind popup to marker
+            marker.bindPopup(popupContent);
+
+            // Open popup by default
+            marker.openPopup();
+
+            // Ensure map renders properly
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 100);
+
+        } catch (error) {
+            console.error('Error initializing map:', error);
+            const mapContainer = document.getElementById('serviceLocationMap');
+            if (mapContainer) {
+                mapContainer.innerHTML =
+                    '<div style="padding: 40px; text-align: center; color: #666; background: #f8f9fa; border-radius: 8px;">Unable to load map. Please refresh the page.</div>';
+            }
+        }
+    }
+
+    // Initialize map when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if Leaflet is loaded
+        if (typeof L === 'undefined') {
+            console.error('Leaflet library not loaded');
+            const mapContainer = document.getElementById('serviceLocationMap');
+            if (mapContainer) {
+                mapContainer.innerHTML =
+                    '<div style="padding: 40px; text-align: center; color: #666; background: #f8f9fa; border-radius: 8px;">Map library failed to load.</div>';
+            }
+            return;
+        }
+
+        // Wait for map container to be ready
+        setTimeout(() => {
+            const mapContainer = document.getElementById('serviceLocationMap');
+            if (mapContainer && mapContainer.offsetHeight > 0) {
+                // Use the enhanced map initialization function
+                initServiceLocationMapWithDirections();
+            } else {
+                console.warn('Map container not ready, retrying...');
+                setTimeout(() => {
+                    if (mapContainer) {
+                        initServiceLocationMapWithDirections();
+                    }
+                }, 500);
+            }
+        }, 200);
+
+        // Initialize direction functionality
+        initDirectionFeatures();
+    });
+    /**
+     * Initialize direction-related features
+     */
+    function initDirectionFeatures() {
+        // Add keyboard shortcuts for directions
+        document.addEventListener('keydown', function(e) {
+            // Ctrl+D or Cmd+D for directions
+            if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+                e.preventDefault();
+                getDirections();
+            }
+        });
+
+        // Add click tracking for analytics (optional)
+        const directionBtn = document.getElementById('getDirectionsBtn');
+        if (directionBtn) {
+            directionBtn.addEventListener('click', function() {
+                // Track direction request (you can integrate with your analytics)
+                console.log('Direction requested for service:',
+                    '<?php echo htmlspecialchars($service['service_title'] ?? ''); ?>');
+            });
+        }
+    }
+    <?php endif; ?>
+
+    // =============================================================================
+    // DIRECTION FUNCTIONALITY
+    // =============================================================================
+
+    // Global variables for direction functionality
+    let userLocation = null;
+    let serviceLocation = null;
+
+    // Initialize service location from PHP
+    <?php if ($hasLocation): ?>
+    serviceLocation = {
+        lat: <?php echo $locationData['latitude']; ?>,
+        lng: <?php echo $locationData['longitude']; ?>,
+        address: '<?php echo htmlspecialchars($locationData['formatted_address'] ?? $locationData['address'] ?? ''); ?>'
+    };
+    <?php endif; ?>
+
+    /**
+     * Get user's current location and open directions
+     */
+    function getDirections() {
+        if (!serviceLocation) {
+            alert('Service location not available');
+            return;
+        }
+
+        const button = document.getElementById('getDirectionsBtn');
+        if (!button) return;
+
+        // Show loading state
+        button.classList.add('loading');
+        button.innerHTML = '<i class="fas fa-spinner"></i> Getting Location...';
+        button.disabled = true;
+
+        // Check if geolocation is supported
+        if (!navigator.geolocation) {
+            alert('Geolocation is not supported by this browser');
+            resetDirectionButton();
+            return;
+        }
+
+        // Get user's current location
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                userLocation = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+
+                // Reset button state
+                resetDirectionButton();
+
+                // Open directions in preferred map application
+                openDirections(userLocation, serviceLocation);
+            },
+            function(error) {
+                console.error('Error getting location:', error);
+                resetDirectionButton();
+
+                // Handle different error types
+                let errorMessage = 'Unable to get your location. ';
+                switch (error.code) {
+                    case error.PERMISSION_DENIED:
+                        errorMessage += 'Please allow location access and try again.';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        errorMessage += 'Location information is unavailable.';
+                        break;
+                    case error.TIMEOUT:
+                        errorMessage += 'Location request timed out.';
+                        break;
+                    default:
+                        errorMessage += 'An unknown error occurred.';
+                        break;
+                }
+
+                // Offer alternative - open directions without current location
+                if (confirm(errorMessage + '\n\nWould you like to open directions anyway?')) {
+                    openDirectionsWithoutUserLocation(serviceLocation);
+                }
+            }, {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 300000 // 5 minutes
+            }
+        );
+    }
+
+    /**
+     * Open directions in the most appropriate map application
+     */
+    function openDirections(from, to) {
+        const fromCoords = `${from.lat},${from.lng}`;
+        const toCoords = `${to.lat},${to.lng}`;
+
+        // Detect user's device and preferred map application
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const isAndroid = /Android/.test(navigator.userAgent);
+
+        if (isIOS) {
+            // Try Apple Maps first, fallback to Google Maps
+            const appleMapsUrl = `http://maps.apple.com/?saddr=${fromCoords}&daddr=${toCoords}&dirflg=d`;
+            window.open(appleMapsUrl, '_blank');
+        } else if (isAndroid) {
+            // Try Google Maps app first
+            const googleMapsApp = `google.navigation:q=${toCoords}&mode=d`;
+            const googleMapsWeb = `https://www.google.com/maps/dir/${fromCoords}/${toCoords}`;
+
+            // Try to open in app, fallback to web
+            const link = document.createElement('a');
+            link.href = googleMapsApp;
+            link.click();
+
+            // Fallback to web version after a short delay
+            setTimeout(() => {
+                window.open(googleMapsWeb, '_blank');
+            }, 1000);
+        } else {
+            // Desktop or other devices - use Google Maps web
+            const googleMapsWeb = `https://www.google.com/maps/dir/${fromCoords}/${toCoords}`;
+            window.open(googleMapsWeb, '_blank');
+        }
+    }
+
+    /**
+     * Open directions without user's current location
+     */
+    function openDirectionsWithoutUserLocation(to) {
+        const toCoords = `${to.lat},${to.lng}`;
+
+        // Open Google Maps with destination only
+        const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${toCoords}`;
+        window.open(googleMapsUrl, '_blank');
+    }
+
+    /**
+     * Reset direction button to normal state
+     */
+    function resetDirectionButton() {
+        const button = document.getElementById('getDirectionsBtn');
+        if (button) {
+            button.classList.remove('loading');
+            button.innerHTML = '<i class="fas fa-directions"></i> Get Directions';
+            button.disabled = false;
+        }
+    }
+
+    /**
+     * Share service location
+     */
+    function shareLocation() {
+        if (!serviceLocation) {
+            alert('Service location not available');
+            return;
+        }
+
+        const shareData = {
+            title: '<?php echo htmlspecialchars($service['service_title'] ?? 'Service Location'); ?>',
+            text: `Check out this service location: ${serviceLocation.address}`,
+            url: `https://www.google.com/maps/search/?api=1&query=${serviceLocation.lat},${serviceLocation.lng}`
+        };
+
+        // Try native sharing first (mobile)
+        if (navigator.share) {
+            navigator.share(shareData)
+                .then(() => console.log('Location shared successfully'))
+                .catch(err => console.log('Error sharing location:', err));
+        } else {
+            // Fallback: copy to clipboard
+            const mapUrl =
+                `https://www.google.com/maps/search/?api=1&query=${serviceLocation.lat},${serviceLocation.lng}`;
+
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(mapUrl)
+                    .then(() => {
+                        alert('Location link copied to clipboard!');
+                    })
+                    .catch(err => {
+                        console.error('Could not copy to clipboard:', err);
+                        fallbackCopyToClipboard(mapUrl);
+                    });
+            } else {
+                fallbackCopyToClipboard(mapUrl);
+            }
+        }
+    }
+
+    /**
+     * Fallback copy to clipboard method
+     */
+    function fallbackCopyToClipboard(text) {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        try {
+            document.execCommand('copy');
+            alert('Location link copied to clipboard!');
+        } catch (err) {
+            console.error('Fallback copy failed:', err);
+            // Last resort: show the URL in a prompt
+            prompt('Copy this location link:', text);
+        }
+
+        document.body.removeChild(textArea);
+    }
+
+    // Enhanced map initialization with direction integration
+    <?php if ($hasLocation): ?>
+
+    function initServiceLocationMapWithDirections() {
+        const latitude = <?php echo $locationData['latitude']; ?>;
+        const longitude = <?php echo $locationData['longitude']; ?>;
+
+        try {
+            // Create map centered on service location
+            const map = L.map('serviceLocationMap').setView([latitude, longitude], 15);
+
+            // Add OpenStreetMap tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Add marker for service location
+            const marker = L.marker([latitude, longitude]).addTo(map);
+
+            // Enhanced popup with direction button
+            const popupContent = `
+            <div style="padding: 8px; max-width: 250px;">
+                <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #333;"><?php echo htmlspecialchars($service['service_title'] ?? 'Service Location'); ?></h4>
+                <p style="margin: 0 0 5px 0; font-size: 12px; color: #666; font-weight: 500;"><?php echo htmlspecialchars($service['company_name'] ?? ''); ?></p>
+                <?php if ($locationData['formatted_address']): ?>
+                <p style="margin: 0 0 10px 0; font-size: 11px; color: #888; line-height: 1.4;"><?php echo htmlspecialchars($locationData['formatted_address']); ?></p>
+                <?php elseif ($locationData['address']): ?>
+                <p style="margin: 0 0 10px 0; font-size: 11px; color: #888; line-height: 1.4;"><?php echo htmlspecialchars($locationData['address']); ?></p>
+                <?php endif; ?>
+                <button onclick="getDirections()" style="background: #007bff; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 11px; cursor: pointer;">
+                    <i class="fas fa-directions"></i> Get Directions
+                </button>
+            </div>
+        `;
+
+            // Bind popup to marker
+            marker.bindPopup(popupContent);
+
+            // Open popup by default
+            marker.openPopup();
+
+            // Ensure map renders properly
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 100);
+
+        } catch (error) {
+            console.error('Error initializing map:', error);
+            const mapContainer = document.getElementById('serviceLocationMap');
+            if (mapContainer) {
+                mapContainer.innerHTML =
+                    '<div style="padding: 40px; text-align: center; color: #666; background: #f8f9fa; border-radius: 8px;">Unable to load map. Please refresh the page.</div>';
+            }
+        }
+    }
+    <?php endif; ?>
     </script>
     <?php require('partials/footer.php'); ?>
 </body>

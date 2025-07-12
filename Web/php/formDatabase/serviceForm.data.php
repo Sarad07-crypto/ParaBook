@@ -29,6 +29,11 @@ try {
         }
     }
 
+    // Validate location data
+    if (empty($_POST['latitude']) || empty($_POST['longitude'])) {
+        throw new Exception('Location coordinates are required');
+    }
+
     if (empty($_POST['flightTypes']) || !is_array($_POST['flightTypes'])) {
         throw new Exception('Flight types must be an array');
     }
@@ -134,6 +139,49 @@ try {
         }
 
         $service_id = $connect->insert_id;
+    }
+
+    // Handle service location data
+    $latitude = floatval($_POST['latitude']);
+    $longitude = floatval($_POST['longitude']);
+    $location_address = $_POST['address'] ?? null; // Full address from form
+    $formatted_address = isset($_POST['formatted_address']) ? $_POST['formatted_address'] : $_POST['address']; // Formatted address or fallback to form address
+    $place_id = isset($_POST['place_id']) ? $_POST['place_id'] : null; // Place ID from map service
+
+    if ($is_update) {
+        // Update existing location or insert if doesn't exist
+        $stmt = $connect->prepare("SELECT id FROM service_locations WHERE service_id = ?");
+        $stmt->bind_param("i", $service_id);
+        $stmt->execute();
+        $location_exists = $stmt->get_result()->fetch_assoc();
+
+        if ($location_exists) {
+            // Update existing location
+            $stmt = $connect->prepare("UPDATE service_locations SET 
+                latitude = ?, longitude = ?, address = ?, formatted_address = ?, place_id = ?
+                WHERE service_id = ?");
+            $stmt->bind_param("ddsssi", $latitude, $longitude, $location_address, $formatted_address, $place_id, $service_id);
+        } else {
+            // Insert new location record
+            $stmt = $connect->prepare("INSERT INTO service_locations 
+                (service_id, latitude, longitude, address, formatted_address, place_id) 
+                VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("iddsss", $service_id, $latitude, $longitude, $location_address, $formatted_address, $place_id);
+        }
+
+        if (!$stmt->execute()) {
+            throw new Exception('Failed to save location data: ' . $stmt->error);
+        }
+    } else {
+        // Insert new location for new service
+        $stmt = $connect->prepare("INSERT INTO service_locations 
+            (service_id, latitude, longitude, address, formatted_address, place_id) 
+            VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("iddsss", $service_id, $latitude, $longitude, $location_address, $formatted_address, $place_id);
+
+        if (!$stmt->execute()) {
+            throw new Exception('Failed to insert location data: ' . $stmt->error);
+        }
     }
 
     // Handle flight types
@@ -267,7 +315,13 @@ try {
     echo json_encode([
         'success' => true,
         'message' => $is_update ? 'Service updated successfully' : 'Service created successfully',
-        'service_id' => $service_id
+        'service_id' => $service_id,
+        'location_data' => [
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'address' => $location_address,
+            'formatted_address' => $formatted_address
+        ]
     ]);
 
 } catch (Exception $e) {

@@ -202,6 +202,7 @@
     <script src="Web/scripts/notification.js?v=1.0"></script>
     <?php if ($accType === 'passenger'): ?>
     <script src="Web/scripts/favorite.js?v=1.0"></script>
+    <script src="Web/scripts/notificationHandler.js?v=1.0"></script>
     <?php endif; ?>
     <script>
     // Optimized Message Notification System for Company Dashboard
@@ -359,12 +360,32 @@
             }
 
             if (icon) {
-                icon.className = this.totalUnread > 0 ? 'fas fa-envelope' : 'far fa-envelope';
-                icon.style.color = this.totalUnread > 0 ? '#007bff' : '';
+                // Only update icon if dropdown is not open
+                if (!this.isDropdownOpen) {
+                    icon.className = this.totalUnread > 0 ? 'fas fa-envelope' : 'far fa-envelope';
+                    icon.style.color = this.totalUnread > 0 ? '#007bff' : '';
+                }
             }
 
             if (markAllBtn) {
                 markAllBtn.style.display = this.totalUnread > 0 ? 'block' : 'none';
+            }
+        }
+
+        setDropdownState(isOpen) {
+            this.isDropdownOpen = isOpen;
+            const icon = document.getElementById('envelope-icon');
+
+            if (icon) {
+                if (isOpen) {
+                    // Force solid blue icon when dropdown is open
+                    icon.className = 'fas fa-envelope';
+                    icon.style.color = '#007bff';
+                } else {
+                    // Update icon based on unread count when dropdown is closed
+                    icon.className = this.totalUnread > 0 ? 'fas fa-envelope' : 'far fa-envelope';
+                    icon.style.color = this.totalUnread > 0 ? '#007bff' : '';
+                }
             }
         }
 
@@ -574,7 +595,8 @@
         }
     }
 
-    // Global functions for envelope dropdown
+    let envelopeDropdownOpen = false;
+
     function toggleEnvelopeNotifications(event) {
         event.preventDefault();
         const dropdown = document.getElementById('envelope-dropdown');
@@ -582,16 +604,28 @@
         if (dropdown.style.display === 'block') {
             closeEnvelopeNotifications();
         } else {
+            // Open dropdown
             dropdown.style.display = 'block';
+
+            // Update dropdown state in message system
             if (window.messageSystem) {
+                window.messageSystem.setDropdownState(true);
                 window.messageSystem.loadConversations();
             }
         }
     }
 
+
     function closeEnvelopeNotifications() {
         const dropdown = document.getElementById('envelope-dropdown');
-        if (dropdown) dropdown.style.display = 'none';
+        if (dropdown) {
+            dropdown.style.display = 'none';
+
+            // Update dropdown state in message system
+            if (window.messageSystem) {
+                window.messageSystem.setDropdownState(false);
+            }
+        }
     }
 
     function refreshEnvelopeNotifications() {

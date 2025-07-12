@@ -21,10 +21,12 @@ try {
         throw new Exception('Database connection failed');
     }
 
-    // For admin dashboard, fetch basic service info for listing
+    // For admin dashboard, fetch basic service info for listing including location data
     $query = "
-        SELECT cs.id, cs.service_title, cs.company_name, cs.status, cs.created_at
+        SELECT cs.id, cs.service_title, cs.company_name, cs.status, cs.created_at,
+               sl.latitude, sl.longitude, sl.address, sl.formatted_address, sl.place_id
         FROM company_services cs
+        LEFT JOIN service_locations sl ON cs.id = sl.service_id
         ORDER BY cs.created_at DESC
     ";
 
@@ -41,7 +43,14 @@ try {
             'service_title' => $row['service_title'] ?? '',
             'company_name' => $row['company_name'] ?? '',
             'status' => $row['status'] ?? 'pending',
-            'created_at' => $row['created_at'] ?? null
+            'created_at' => $row['created_at'] ?? null,
+            'location' => [
+                'latitude' => $row['latitude'] ? floatval($row['latitude']) : null,
+                'longitude' => $row['longitude'] ? floatval($row['longitude']) : null,
+                'address' => $row['address'] ?? null,
+                'formatted_address' => $row['formatted_address'] ?? null,
+                'place_id' => $row['place_id'] ?? null
+            ]
         ];
     }
 

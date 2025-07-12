@@ -32,8 +32,7 @@ body {
         </div>
         <div class="sidebar-section sidebar-links">
             <a href="/home">Home</a>
-            <a href="#">Flight Management</a>
-            <a href="#">Bookings</a>
+            <a href="/bookingcompany">Bookings</a>
             <a href="/statistics">Analytics</a>
             <a href="#">Revenue</a>
         </div>
@@ -44,7 +43,6 @@ body {
     <!-- Navigation Bar -->
     <div class="nav-bar">
         <a href="/home">Home</a>
-        <a href="#">Flight Management</a>
         <a href="/bookingcompany">Bookings</a>
         <a href="/statistics">Analytics</a>
         <a href="#">Revenue</a>

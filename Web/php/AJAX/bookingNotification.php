@@ -550,5 +550,165 @@ class BookingNotificationSystem {
             return [];
         }
     }
+        
+    public function sendReviewNotification($bookingId, $userId, $serviceName = null) {
+        try {
+            // Get booking info if service name not provided
+            if (!$serviceName) {
+                $bookingInfo = $this->getBookingInfo($bookingId);
+                $serviceName = $bookingInfo['service_name'] ?? 'service';
+            }
+            
+            // Send review notification to user
+            $this->createNotification([
+                'recipient_id' => $userId,
+                'recipient_type' => 'user',
+                'title' => 'Leave a Review',
+                'message' => "Your booking has been completed. Please consider leaving a review.",
+                'type' => 'review',
+                'icon' => 'fas fa-star',
+                'booking_id' => $bookingId
+            ]);
+            
+            return true;
+            
+        } catch (Exception $e) {
+            error_log("Review notification error: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Send review reminder notification (can be called after a few days)
+     */
+    public function sendReviewReminder($bookingId, $userId, $serviceName = null) {
+        try {
+            // Check if user has already left a review
+            $hasReview = $this->checkUserHasReview($userId, $bookingId);
+            
+            if ($hasReview) {
+                return false; // Don't send reminder if review already exists
+            }
+            
+            // Get booking info if service name not provided
+            if (!$serviceName) {
+                $bookingInfo = $this->getBookingInfo($bookingId);
+                $serviceName = $bookingInfo['service_name'] ?? 'service';
+            }
+            
+            // Send review reminder notification
+            $this->createNotification([
+                'recipient_id' => $userId,
+                'recipient_type' => 'user',
+                'title' => 'Review Reminder',
+                'message' => "Don't forget to leave a review for {$serviceName}. Your feedback helps other passengers make better choices.",
+                'type' => 'review',
+                'icon' => 'fas fa-star',
+                'booking_id' => $bookingId
+            ]);
+            
+            return true;
+            
+        } catch (Exception $e) {
+            error_log("Review reminder error: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Check if user has already left a review for a booking
+     */
+    private function checkUserHasReview($userId, $bookingId) {
+        try {
+            // Get service_id from booking
+            $bookingInfo = $this->getBookingInfo($bookingId);
+            if (!$bookingInfo) {
+                return false;
+            }
+            
+            $serviceId = $bookingInfo['service_id'];
+            if (!$serviceId) {
+                return false;
+            }
+            
+            // Check if review exists
+            $stmt = $this->db->prepare("
+                SELECT id FROM reviews 
+                WHERE user_id = ? AND service_id = ?
+            ");
+            
+            if (!$stmt) {
+                return false;
+            }
+            
+            $stmt->bind_param("ii", $userId, $serviceId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            $hasReview = $result->num_rows > 0;
+            $stmt->close();
+            
+            return $hasReview;
+            
+        } catch (Exception $e) {
+            error_log("Check user review error: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Get enhanced booking info with service details
+     */
+    public function getEnhancedBookingInfo($bookingId) {
+        try {
+            // First try regular bookings table
+            $stmt = $this->db->prepare("
+                SELECT b.*, s.company_name as service_name, s.id as service_id
+                FROM bookings b
+                LEFT JOIN services s ON b.service_id = s.id
+                WHERE b.booking_id = ?
+            ");
+            
+            if ($stmt) {
+                $stmt->bind_param("i", $bookingId);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                
+                if ($result->num_rows > 0) {
+                    $bookingInfo = $result->fetch_assoc();
+                    $stmt->close();
+                    return $bookingInfo;
+                }
+                $stmt->close();
+            }
+            
+            // Try temp_bookings table
+            $stmt = $this->db->prepare("
+                SELECT tb.*, s.company_name as service_name, s.id as service_id
+                FROM temp_bookings tb
+                LEFT JOIN services s ON tb.service_id = s.id
+                WHERE tb.temp_id = ?
+            ");
+            
+            if ($stmt) {
+                $stmt->bind_param("i", $bookingId);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                
+                if ($result->num_rows > 0) {
+                    $bookingInfo = $result->fetch_assoc();
+                    $stmt->close();
+                    return $bookingInfo;
+                }
+                $stmt->close();
+            }
+            
+            return null;
+            
+        } catch (Exception $e) {
+            error_log("Get enhanced booking info error: " . $e->getMessage());
+            return null;
+        }
+    }
 }
 ?>

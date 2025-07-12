@@ -535,6 +535,207 @@ body {
         gap: 10px;
     }
 }
+/* Dark Mode Styles */
+.dark-mode {
+    --primary-color: #4a9eff;
+    --gradient: linear-gradient(90deg, #3a7bd5, #00d2ff);
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: #ffffff;
+}
+
+.dark-mode body {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: #ffffff;
+}
+
+.dark-mode .booking-lookup-card {
+    background: #2c2c54;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+}
+
+.dark-mode .card-header {
+    background: var(--gradient);
+}
+
+.dark-mode .card-header::before {
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
+}
+
+.dark-mode .card-body {
+    background:rgba(31, 41, 55, 0.95);
+}
+
+.dark-mode .info-section {
+    background:rgba(20, 27, 37, 0.95);
+    border-left: 4px solid var(--primary-color);
+}
+
+.dark-mode .info-section h3 {
+    color: #ffffff;
+}
+
+.dark-mode .info-section p {
+    color: #b8b8b8;
+}
+
+.dark-mode .form-group label {
+    color: #ffffff;
+}
+
+.dark-mode .form-group input {
+    background: #1a1a2e;
+    border: 2px solid #404040;
+    color: #ffffff;
+}
+
+.dark-mode .form-group input:focus {
+    background: #2c2c54;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(74, 158, 255, 0.2);
+}
+
+.dark-mode .form-group input::placeholder {
+    color: #888;
+}
+
+.dark-mode .lookup-btn {
+    background: var(--gradient);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .lookup-btn:hover {
+    box-shadow: 0 10px 25px rgba(74, 158, 255, 0.4);
+}
+
+.dark-mode .help-section {
+    border-top: 1px solid #404040;
+}
+
+.dark-mode .help-section p {
+    color: #b8b8b8;
+}
+
+.dark-mode .help-link {
+    color: var(--primary-color);
+    border: 1px solid transparent;
+}
+
+.dark-mode .help-link:hover {
+    background: var(--primary-color);
+    color: #ffffff;
+}
+
+.dark-mode .error-message {
+    background: #4a1a1a;
+    color: #ff6b6b;
+    border: 1px solid #6b2c2c;
+}
+
+.dark-mode .success-message {
+    background: #1a4a1a;
+    color: #51cf66;
+    border: 1px solid #2c6b2c;
+}
+
+.dark-mode .booking-result {
+    background: #1a1a2e;
+    border: 2px solid #404040;
+}
+
+.dark-mode .booking-header {
+    border-bottom: 2px solid #404040;
+}
+
+.dark-mode .booking-header h2 {
+    color: var(--primary-color);
+}
+
+.dark-mode .booking-id {
+    color: #ffffff;
+}
+
+.dark-mode .detail-item {
+    background: #2c2c54;
+    border: 1px solid #404040;
+}
+
+.dark-mode .detail-item label {
+    color: #b8b8b8;
+}
+
+.dark-mode .detail-item span {
+    color: #ffffff;
+}
+
+.dark-mode .status-confirmed {
+    background: #1a4a1a;
+    color: #51cf66;
+}
+
+.dark-mode .status-pending {
+    background: #4a4a1a;
+    color: #ffd43b;
+}
+
+.dark-mode .status-cancelled {
+    background: #4a1a1a;
+    color: #ff6b6b;
+}
+
+.dark-mode .btn-primary {
+    background: var(--gradient);
+}
+
+.dark-mode .btn-secondary {
+    background: #495057;
+}
+
+.dark-mode .btn-danger {
+    background: #dc3545;
+}
+
+.dark-mode .action-btn:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+}
+
+.dark-mode .new-search-btn {
+    background: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+
+.dark-mode .new-search-btn:hover {
+    background: var(--primary-color);
+    color: #ffffff;
+}
+
+.dark-mode .new-search-btn.disabled,
+.dark-mode .new-search-btn:disabled {
+    background-color: #495057 !important;
+    border-color: #495057 !important;
+    color: #888 !important;
+}
+
+.dark-mode .new-search-btn.disabled:hover,
+.dark-mode .new-search-btn:disabled:hover {
+    background-color: #495057 !important;
+    border-color: #495057 !important;
+}
+
+.dark-mode .debug-info {
+    background: #4a4a1a;
+    border: 1px solid #666633;
+}
+
+.dark-mode .debug-info h4 {
+    color: #ffd43b;
+}
+
+.dark-mode .debug-info pre {
+    background: #1a1a2e;
+    color: #ffffff;
+}
+
 </style>
 
 <body>
@@ -875,7 +1076,7 @@ body {
                 if (status.toLowerCase() === 'cancelled') {
                     $updateBtn.hide();
                     if ($cancelBtn.length) $cancelBtn.hide();
-                } else if (status.toLowerCase() === 'confirmed') {
+                } else if (status.toLowerCase() === 'completed') {
                     // Disable the edit button for confirmed bookings
                     $updateBtn.prop('disabled', true)
                         .addClass('disabled')
