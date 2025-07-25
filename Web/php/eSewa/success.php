@@ -9,7 +9,6 @@ require_once __DIR__ . '/../../vendor/autoload.php';
   use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
-
 session_start();
 
     // Get service_id from URL parameter
@@ -383,7 +382,7 @@ if (!$result) {
             countdownElement.textContent = countdown;
             if (countdown <= 0) {
                 clearInterval(timer);
-              //  $emailSent = sendBookingConfirmationEmail($userDetails, $tempBooking, $transaction_code, $bookingId);
+                //  $emailSent = sendBookingConfirmationEmail($userDetails, $tempBooking, $transaction_code, $bookingId);
                 window.location.href = '/home';
             }
         }, 1000);
@@ -536,7 +535,7 @@ function sendBookingConfirmationEmail($userDetails, $tempBooking, $transaction_c
         $mail->Host       = 'smtp.gmail.com';
         $mail->SMTPAuth   = true;
         $mail->Username   = 'saradcr7adhikari@gmail.com'; 
-        $mail->Password   = $_ENV['Password']; // Use environment variable for security
+        $mail->Password   = '';   
         $mail->SMTPSecure = 'tls';
         $mail->Port       = 587;
 

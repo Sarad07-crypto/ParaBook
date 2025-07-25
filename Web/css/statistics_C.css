@@ -195,6 +195,9 @@ body {
   box-shadow: var(--card-shadow);
   transition: background-color 0.3s;
 }
+.chart-card.full-width {
+  width: 100;
+}
 
 .dark-mode .chart-card {
   background: #2d2d2d;

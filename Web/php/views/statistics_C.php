@@ -9,25 +9,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Statistics</title>
+    <title>Company Statistics</title>
     <link rel="stylesheet" href="Web/css/views.css?v=1.0" />
     <link rel="stylesheet" href="Web/css/statistics_C.css?v=1.0" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-</head>
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Company Statistics Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <!-- Add your existing CSS file here -->
     <style>
-    /* Additional styles for new components */
+    /* Updated service item layout */
     .services-list {
-        max-height: 300px;
-        overflow-y: auto;
+        width: 100%;
+        padding: 40px;
+    }
+
+    .service-item {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        margin: 8px 0;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        opacity: 0;
+        animation: slideIn 0.5s ease forwards;
+    }
+
+    .service-item:not(:last-child) {
+        border-bottom: 1px solid #ddd;
+    }
+
+    .service-info {
+        flex: 1;
+        margin-right: 15px;
+        /* Add some space between service info and rating */
+    }
+
+    .service-title {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 4px;
+    }
+
+    .service-company {
+        font-size: 0.9em;
+        color: #7f8c8d;
+        margin-bottom: 4px;
+    }
+
+    /* Rating styles - positioned on the right */
+    .service-rating {
+        flex-shrink: 0;
+        /* Prevent rating from shrinking */
+        text-align: right;
+    }
+
+    .service-rating .fas.fa-star,
+    .service-rating .fas.fa-star-half-alt {
+        color: #f1c40f;
+        /* Yellow color for filled stars */
+    }
+
+    .service-rating .far.fa-star {
+        color: #bdc3c7;
+        /* Light gray for empty stars */
+    }
+
+    .service-rating .rating-text {
+        color: #7f8c8d;
+        font-size: 0.9em;
+        margin-left: 5px;
     }
 
     .service-item,
@@ -61,11 +112,6 @@
         color: #7f8c8d;
     }
 
-    .service-id {
-        font-weight: 600;
-        color: #3498db;
-    }
-
     .flight-type-stats {
         text-align: right;
     }
@@ -79,11 +125,6 @@
     .flight-type-total {
         font-size: 0.9em;
         color: #7f8c8d;
-    }
-
-    .flight-types-chart {
-        max-height: 300px;
-        overflow-y: auto;
     }
 
     .no-flights {
@@ -151,9 +192,6 @@
                 </div>
                 <div class="stat-value">0</div>
                 <div class="stat-label">Total Bookings</div>
-                <div class="stat-change positive">
-                    <i class="fas fa-arrow-up"></i> Loading...
-                </div>
             </div>
 
             <div class="stat-card">
@@ -162,11 +200,8 @@
                         <i class="fas fa-dollar-sign"></i>
                     </div>
                 </div>
-                <div class="stat-value">$0</div>
+                <div class="stat-value">Rs.0</div>
                 <div class="stat-label">Total Revenue</div>
-                <div class="stat-change positive">
-                    <i class="fas fa-arrow-up"></i> Loading...
-                </div>
             </div>
 
             <div class="stat-card">
@@ -176,10 +211,7 @@
                     </div>
                 </div>
                 <div class="stat-value">0</div>
-                <div class="stat-label">Total Flights</div>
-                <div class="stat-change positive">
-                    <i class="fas fa-arrow-up"></i> Loading...
-                </div>
+                <div class="stat-label">Total Completed Flights</div>
             </div>
 
             <div class="stat-card">
@@ -190,13 +222,10 @@
                 </div>
                 <div class="stat-value">0.0</div>
                 <div class="stat-label">Average Rating</div>
-                <div class="stat-change positive">
-                    <i class="fas fa-arrow-up"></i> Loading...
-                </div>
             </div>
         </div>
 
-        <!-- Charts Section -->
+        <!-- Charts Section: Display horizontally -->
         <div class="charts-section">
             <div class="chart-card">
                 <h3 class="chart-title">
@@ -211,7 +240,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="chart-card">
                 <h3 class="chart-title">
                     <i class="fas fa-chart-pie"></i> Flight Types & Prices
