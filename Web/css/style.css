@@ -318,8 +318,7 @@ body.dark-mode .dropdown-menu {
   background: #23272a !important;
   color: #e0e0e0 !important;
   border: none !important;
-  outline: 2px solid #23272a !important;
-  outline-offset: -2px;
+
 }
 
 body.dark-mode .nav-bar a,
@@ -745,6 +744,28 @@ body.dark-mode .switch-text {
   font-size: 16px;
   color: #007bff;
   font-weight: bold;
+}
+/* 🌙 DARK MODE STYLES */
+.dark-mode .company-header h1 {
+  color: #e0e0e0;
+}
+
+.dark-mode .company-results {
+  color: #aaa;
+}
+
+.dark-mode .company-sort label {
+  color: #e0e0e0;
+}
+
+.dark-mode .sort-select {
+  background: #2d2d2d;
+  color: #4a9eff;
+  border: 1px solid #444;
+}
+
+.dark-mode .company-sort i {
+  color: #4a9eff;
 }
 
 @media (max-width: 600px) {

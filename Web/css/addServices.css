@@ -1,7 +1,9 @@
+/* Original styles remain unchanged */
 .btn-wrapper {
   width: 100%;
   height: 80px;
 }
+
 .fixed-add-btn {
   position: relative;
   top: 20px;
@@ -569,4 +571,331 @@ body {
 .status-badge.rejected {
   background: #dc3545;
   color: white;
+}
+
+/* ========================================
+   DARK MODE STYLES
+   ======================================== */
+
+.dark-mode {
+  --primary-dark: #1a1a1a;
+  --secondary-dark: #2d2d2d;
+  --tertiary-dark: #3d3d3d;
+  --text-primary-dark: #ffffff;
+  --text-secondary-dark: #b0b0b0;
+  --text-muted-dark: #888888;
+  --border-dark: #404040;
+  --shadow-dark: rgba(0, 0, 0, 0.5);
+  --blue-dark: #4a9eff;
+  --blue-hover-dark: #3a8eef;
+}
+
+/* Dark mode body and global styles */
+.dark-mode body {
+  background-color: var(--primary-dark);
+  color: var(--text-primary-dark);
+}
+
+.dark-mode :root {
+  --primary: #1a1a1a;
+  --secondary: #4a9eff;
+  --grey: #888888;
+  --white: #ffffff;
+  --black: #1a1a1a;
+}
+
+/* Dark mode company cards */
+.dark-mode .company-card {
+  background: var(--secondary-dark);
+  box-shadow: 0 4px 12px var(--shadow-dark);
+  border: 1px solid var(--border-dark);
+}
+
+.dark-mode .company-title {
+  color: var(--text-primary-dark);
+}
+
+.dark-mode .company-info {
+  color: var(--text-secondary-dark);
+}
+
+.dark-mode .company-desc {
+  color: var(--text-secondary-dark);
+}
+
+/* Dark mode add company card */
+.dark-mode .add-company-card {
+  background: var(--secondary-dark);
+  border: 2px dashed var(--blue-dark);
+  color: var(--text-primary-dark);
+}
+
+.dark-mode .add-company-card:hover {
+  background: var(--tertiary-dark);
+  border-color: var(--blue-hover-dark);
+}
+
+.dark-mode .add-company-icon {
+  color: var(--blue-dark);
+}
+
+.dark-mode .add-company-text {
+  color: var(--text-primary-dark);
+}
+
+/* Dark mode modal */
+.dark-mode .modal {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.dark-mode .modal-content {
+  background: var(--secondary-dark);
+  color: var(--text-primary-dark);
+  border: 1px solid var(--border-dark);
+}
+
+.dark-mode .close-btn {
+  color: var(--text-primary-dark);
+}
+
+.dark-mode .close-btn:hover {
+  color: var(--blue-dark);
+}
+
+/* Dark mode form elements */
+.dark-mode .form-step input,
+.dark-mode .form-step textarea,
+.dark-mode .form-step select {
+  background: var(--tertiary-dark);
+  color: var(--text-primary-dark);
+  border: 1px solid var(--border-dark);
+}
+
+.dark-mode .form-step input:focus,
+.dark-mode .form-step textarea:focus,
+.dark-mode .form-step select:focus {
+  border-color: var(--blue-dark);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+}
+
+.dark-mode .form-step input::placeholder,
+.dark-mode .form-step textarea::placeholder {
+  color: var(--text-muted-dark);
+}
+
+/* Dark mode input groups */
+.dark-mode .input-group label {
+  color: var(--text-primary-dark);
+}
+
+.dark-mode .input-group input,
+.dark-mode .input-group textarea {
+  background: var(--tertiary-dark);
+  color: var(--text-primary-dark);
+  border: 1px solid var(--border-dark);
+}
+
+.dark-mode .input-group input:focus,
+.dark-mode .input-group textarea:focus {
+  border-color: var(--blue-dark);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+}
+
+/* Dark mode progress elements */
+.dark-mode .progress-step .bx {
+  background-color: var(--secondary-dark);
+  border-color: var(--border-dark);
+  color: var(--text-muted-dark);
+}
+
+.dark-mode .progress-step .bx.active {
+  border-color: var(--blue-dark);
+  color: var(--blue-dark);
+}
+
+.dark-mode .progress-container::after {
+  background-color: var(--border-dark);
+}
+
+.dark-mode .progress {
+  background-color: var(--blue-dark);
+}
+
+.dark-mode .progress-step {
+  color: var(--text-secondary-dark);
+}
+
+/* Dark mode buttons */
+.dark-mode .btn {
+  background-color: var(--blue-dark);
+  color: var(--text-primary-dark);
+  border: 1px solid var(--blue-dark);
+}
+
+.dark-mode .btn:hover {
+  background-color: var(--blue-hover-dark);
+  border-color: var(--blue-hover-dark);
+}
+
+.dark-mode .btn.disabled {
+  background-color: var(--border-dark);
+  border-color: var(--border-dark);
+  color: var(--text-muted-dark);
+}
+
+.dark-mode .btn-container .btn {
+  background-color: var(--blue-dark);
+  border-color: var(--blue-dark);
+}
+
+/* Dark mode tabs */
+.dark-mode .service-tabs {
+  border-bottom: 2px solid var(--border-dark);
+}
+
+.dark-mode .tab-btn {
+  color: var(--text-secondary-dark);
+}
+
+.dark-mode .tab-btn:hover {
+  background: var(--tertiary-dark);
+  color: var(--text-primary-dark);
+}
+
+.dark-mode .tab-btn.active {
+  background: var(--blue-dark);
+  color: var(--text-primary-dark);
+  border-bottom: 2px solid var(--blue-dark);
+}
+
+.dark-mode .count-badge {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dark-mode .tab-btn.active .count-badge {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Dark mode section headers */
+.dark-mode .section-header h2 {
+  color: var(--text-primary-dark);
+}
+
+.dark-mode .section-header p {
+  color: var(--text-secondary-dark);
+}
+
+/* Dark mode empty states */
+.dark-mode .empty-state {
+  color: var(--text-muted-dark);
+}
+
+.dark-mode .empty-state h3 {
+  color: var(--text-secondary-dark);
+}
+
+.dark-mode .empty-state p {
+  color: var(--text-muted-dark);
+}
+
+/* Dark mode image preview */
+.dark-mode .image-preview {
+  border: 2px dashed var(--border-dark);
+  background: var(--tertiary-dark);
+}
+
+.dark-mode .counter {
+  color: var(--text-muted-dark);
+}
+
+/* Dark mode required indicator */
+.dark-mode .required {
+  color: #ff6b6b;
+}
+
+/* Dark mode status badges maintain their original colors for clarity */
+.dark-mode .status-badge.approved {
+  background: #28a745;
+  color: white;
+}
+
+.dark-mode .status-badge.pending {
+  background: #ffc107;
+  color: #333;
+}
+
+.dark-mode .status-badge.rejected {
+  background: #dc3545;
+  color: white;
+}
+
+/* Dark mode fixed add button */
+.dark-mode .fixed-add-btn {
+  background: var(--blue-dark);
+  box-shadow: 0 4px 15px rgba(74, 158, 255, 0.3);
+}
+
+.dark-mode .fixed-add-btn:hover {
+  background: var(--blue-hover-dark);
+  box-shadow: 0 6px 20px rgba(74, 158, 255, 0.4);
+}
+
+/* Dark mode text elements */
+.dark-mode .bx {
+  color: var(--text-primary-dark);
+}
+
+/* Dark mode scrollbar (webkit browsers) */
+.dark-mode ::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dark-mode ::-webkit-scrollbar-track {
+  background: var(--secondary-dark);
+}
+
+.dark-mode ::-webkit-scrollbar-thumb {
+  background: var(--border-dark);
+  border-radius: 4px;
+}
+
+.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted-dark);
+}
+
+/* Dark mode select options */
+.dark-mode select option {
+  background: var(--tertiary-dark);
+  color: var(--text-primary-dark);
+}
+
+/* Dark mode file input styling */
+.dark-mode input[type="file"] {
+  color: var(--text-primary-dark);
+}
+
+.dark-mode input[type="file"]::-webkit-file-upload-button {
+  background: var(--blue-dark);
+  color: var(--text-primary-dark);
+  border: 1px solid var(--blue-dark);
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.dark-mode input[type="file"]::-webkit-file-upload-button:hover {
+  background: var(--blue-hover-dark);
+}
+
+/* Dark mode responsive adjustments */
+@media (max-width: 768px) {
+  .dark-mode .fixed-add-btn {
+    box-shadow: 0 4px 15px rgba(74, 158, 255, 0.3);
+  }
+  
+  .dark-mode .fixed-add-btn:hover {
+    box-shadow: 0 6px 20px rgba(74, 158, 255, 0.4);
+  }
 }

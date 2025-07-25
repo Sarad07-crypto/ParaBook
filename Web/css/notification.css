@@ -995,3 +995,271 @@ body {
   position: relative;
   display: inline-block;
 }
+
+/* DARK MODE STYLES */
+.dark-mode {
+  color: #e0e0e0;
+}
+
+.dark-mode body {
+  background: #1a1a1a;
+  color: #e0e0e0;
+}
+
+.dark-mode .header-container {
+  background: #2d2d2d;
+  color: #e0e0e0;
+}
+
+/* Notification bells */
+.dark-mode .notification-bell {
+  color: #ccc;
+}
+
+.dark-mode .notification-bell:hover {
+  color: #4a9eff;
+}
+
+.dark-mode .notification-bell.active {
+  color: #4a9eff;
+}
+
+.dark-mode .envelope-bell {
+  background: #2d2d2d;
+  color: #ccc;
+}
+
+.dark-mode .envelope-bell:hover {
+  background: #3a3a3a;
+  color: #e0e0e0;
+}
+
+.dark-mode .heart-bell {
+  color: #ccc;
+}
+
+.dark-mode .heart-bell:hover {
+  color: #ff6b9d;
+}
+
+.dark-mode .heart-bell.active {
+  color: #ff6b9d;
+}
+
+/* Badges */
+.dark-mode .notification-badge {
+  border-color: #2d2d2d;
+}
+
+.dark-mode .envelope-badge {
+  background: #dc3545;
+}
+
+.dark-mode .heart-badge {
+  background: #ff6b9d;
+  border-color: #2d2d2d;
+}
+
+/* Dropdowns */
+.dark-mode .notification-dropdown,
+.dark-mode .envelope-dropdown,
+.dark-mode .heart-dropdown {
+  background: #2d2d2d;
+  border-color: #444;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.dark-mode #heart-dropdown {
+  background: #2d2d2d;
+  border-color: #444;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* Headers */
+.dark-mode .notification-header,
+.dark-mode .envelope-header,
+.dark-mode .heart-header {
+  background: #1a1a1a;
+  border-bottom-color: #444;
+  color: #e0e0e0;
+}
+
+.dark-mode .notification-header h3,
+.dark-mode .envelope-header h3,
+.dark-mode .heart-header h3 {
+  color: #e0e0e0;
+}
+
+/* Action buttons */
+.dark-mode .mark-all-btn,
+.dark-mode .refresh-btn,
+.dark-mode .envelope-mark-all-btn,
+.dark-mode .envelope-refresh-btn,
+.dark-mode .heart-refresh-btn {
+  color: #4a9eff;
+}
+
+.dark-mode .mark-all-btn:hover,
+.dark-mode .refresh-btn:hover,
+.dark-mode .envelope-mark-all-btn:hover,
+.dark-mode .envelope-refresh-btn:hover,
+.dark-mode .heart-refresh-btn:hover {
+  background: rgba(74, 158, 255, 0.2);
+}
+
+.dark-mode .heart-clear-btn {
+  color: #ff6b9d;
+}
+
+.dark-mode .heart-clear-btn:hover {
+  background: rgba(255, 107, 157, 0.2);
+}
+
+.dark-mode .close-notification,
+.dark-mode .close-envelope,
+.dark-mode .close-heart {
+  color: #ccc;
+}
+
+.dark-mode .close-notification:hover,
+.dark-mode .close-envelope:hover,
+.dark-mode .close-heart:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Notification items */
+.dark-mode .notification-item {
+  border-bottom-color: #444;
+}
+
+.dark-mode .notification-item:hover {
+  background: #3a3a3a;
+}
+
+.dark-mode .notification-item.unread {
+  background: #1e3a5f;
+  border-left-color: #4a9eff;
+}
+
+.dark-mode .notification-message {
+  color: #e0e0e0;
+}
+
+.dark-mode .notification-time {
+  color: #aaa;
+}
+
+/* Envelope items */
+.dark-mode .envelope-item {
+  border-bottom-color: #444;
+}
+
+.dark-mode .envelope-item:hover {
+  background: #3a3a3a;
+}
+
+.dark-mode .envelope-item.unread {
+  background: #1e3a5f;
+  border-left-color: #4a9eff;
+}
+
+.dark-mode .envelope-item.unread:hover {
+  background: #2a4a6f;
+}
+
+.dark-mode .envelope-sender {
+  color: #e0e0e0;
+}
+
+.dark-mode .envelope-time {
+  color: #aaa;
+}
+
+.dark-mode .envelope-service small {
+  color: #aaa;
+}
+
+.dark-mode .envelope-preview {
+  color: #ccc;
+}
+
+.dark-mode .conversation-unread-badge {
+  background: #4a9eff;
+  color: white;
+}
+
+.dark-mode .envelope-action-btn {
+  color: #ccc;
+}
+
+.dark-mode .envelope-action-btn:hover:not(:disabled) {
+  color: #4a9eff;
+  background: rgba(74, 158, 255, 0.1);
+}
+
+.dark-mode .envelope-action-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.dark-mode .loading-envelope,
+.dark-mode .envelope-empty,
+.dark-mode .no-notifications {
+  color: #aaa;
+}
+
+.dark-mode .retry-btn {
+  background: #4a9eff;
+  color: white;
+}
+
+.dark-mode .retry-btn:hover {
+  background: #007bff;
+}
+
+/* Heart dropdown items */
+.dark-mode .favorite-notification {
+  background: #2d2d2d;
+  color: #e0e0e0;
+}
+
+.dark-mode .favorite-notification:hover {
+  background: #3a3a3a;
+}
+
+.dark-mode .favorite-notification .remove-favorite {
+  color: #ff6b9d;
+}
+
+.dark-mode .favorite-notification .remove-favorite:hover {
+  color: #e91e63;
+}
+
+.dark-mode .empty-favorites i {
+  color: #ff6b9d;
+}
+
+.dark-mode .empty-favorites {
+  color: #aaa;
+}
+
+/* Toast notifications */
+.dark-mode .notification.success {
+  background: #2e7d32;
+  color: white;
+}
+
+.dark-mode .notification.error {
+  background: #c62828;
+  color: white;
+}
+
+.dark-mode .notification.info {
+  background: #1565c0;
+  color: white;
+}
+
+.dark-mode .favorite-notification p {
+  color: #e0e0e0;
+}

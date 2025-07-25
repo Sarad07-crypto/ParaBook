@@ -1,15 +1,22 @@
 <?php
 // Enable error reporting for debugging
+//require_once $_SERVER['DOCUMENT_ROOT'] . '/ParaBook/Web/vendor/autoload.php';
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-
+define('ROOT_PATH', dirname(__DIR__, 1));
+//require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/../../vendor/autoload.php';
+  use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
 session_start();
 
     // Get service_id from URL parameter
-    $serviceId = isset($_GET['service_id']) ? intval($_GET['service_id']) : 0;
+    $serviceId = isset($_GET['service_id']) ? intval($_GET['service_id']) :0 ;
 try {
     // Include database connection
     include "../connection.php";
+    echo "<h1>eSewa Payment Success Service id is $serviceId</h1>";
     
     // eSewa sends data as base64 encoded JSON in 'data' parameter
     $encoded_data = $_GET['data'] ?? $_POST['data'] ?? '';
@@ -77,7 +84,6 @@ try {
     $tempBookingStmt->bind_param("s", $transaction_uuid);
     $tempBookingStmt->execute();
     $tempBookingResult = $tempBookingStmt->get_result();
-
     if ($tempBookingResult->num_rows === 0) {
         throw new Exception('Booking not found for transaction UUID: ' . $transaction_uuid);
     }
@@ -128,7 +134,7 @@ try {
         INSERT INTO bookings (
             booking_no, user_id, service_id, date, pickup, flight_type, weight, age, 
             medical_condition, total_amount, status, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'complete', NOW())
     ");
 
     $insertBooking->bind_param(
@@ -224,16 +230,22 @@ try {
     $companyUsersStmt->close();
 
     // Delete temporary booking
-    $deleteTempStmt = $connect->prepare("DELETE FROM temp_bookings WHERE booking_no = ?");
-    $deleteTempStmt->bind_param("s", $tempBooking['booking_no']);
+    $deleteTempStmt = $connect->prepare("DELETE  FROM temp_bookings");
+ 
     $deleteTempStmt->execute();
     $deleteTempStmt->close();
 
     // Commit transaction
     $connect->commit();
+// email sent
+$emailSent = sendBookingConfirmationEmail($userDetails, $tempBooking, $transaction_code, $bookingId);
+   $result = sendBookingConfirmationEmail(...);
+if (!$result) {
+    echo "<p style='color:red'>Failed to send confirmation email. Check your PHP error log.</p>";
+}
 
-    // Clear session
-    session_unset();
+// Clear session
+   // session_unset();
 
     // Success page with better styling
     ?>
@@ -340,6 +352,7 @@ try {
                 <li>Bring a valid ID for verification</li>
                 <li>Check your notifications for updates on your booking</li>
                 <li>Our team has been notified and will contact you if needed</li>
+                <li> User email is <?php echo( $userDetails['email']) ?> </li>
             </ul>
         </div>
 
@@ -369,6 +382,7 @@ try {
             countdownElement.textContent = countdown;
             if (countdown <= 0) {
                 clearInterval(timer);
+              //  $emailSent = sendBookingConfirmationEmail($userDetails, $tempBooking, $transaction_code, $bookingId);
                 window.location.href = '/home';
             }
         }, 1000);
@@ -511,5 +525,93 @@ function createNotification($connect, $recipient_id, $recipient_type, $title, $m
     
     $stmt->close();
     return true;
+}
+function sendBookingConfirmationEmail($userDetails, $tempBooking, $transaction_code, $bookingId) {
+    try {
+        $mail = new PHPMailer(true);
+        // SMTP settings
+        $mail->isSMTP();
+        $mail->Host       = 'smtp.gmail.com';
+        $mail->SMTPAuth   = true;
+        $mail->Username   = 'saradcr7adhikari@gmail.com'; 
+        $mail->Password   = '';   
+        $mail->SMTPSecure = 'tls';
+        $mail->Port       = 587;
+
+        $mail->setFrom('noreply@parabook.com', 'Parabook');
+        $mail->addAddress($userDetails['email']);
+        $mail->isHTML(true);
+        $mail->Subject = "Booking Confirmation - Parabook #{$tempBooking['booking_no']}";
+
+        $customerName = trim(($userDetails['firstName'] ?? '') . ' ' . ($userDetails['lastName'] ?? ''));
+        $mail->Body = "
+    <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset='UTF-8'>
+            <title>Booking Confirmation</title>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: #007bff; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+                .content { background: #f9f9f9; padding: 20px; border-radius: 0 0 8px 8px; }
+                .booking-details { background: white; padding: 15px; border-radius: 5px; margin: 20px 0; }
+                .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 5px; margin: 20px 0; }
+                .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <h1>🎉 Booking Confirmed!</h1>
+                    <p>Your paragliding adventure is confirmed</p>
+                </div>
+                
+                <div class='content'>
+                    <div class='success'>
+                        <h3>✅ Payment Successful</h3>
+                        <p>Dear " . htmlspecialchars($customerName) . ",</p>
+                        <p>Thank you for choosing Parabook! Your booking has been confirmed and payment has been processed successfully.</p>
+                    </div>
+                    
+                    <div class='booking-details'>
+                        <h3>📋 Booking Details</h3>
+                        <table style='width: 100%; border-collapse: collapse;'>
+                            <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Booking Number:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" . htmlspecialchars($tempBooking['booking_no']) . "</td></tr>
+                            <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Amount Paid:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>Rs. " . number_format($tempBooking['total_amount'], 2) . "</td></tr>
+                            <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Date:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" . htmlspecialchars($tempBooking['date']) . "</td></tr>
+                            <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Pickup Location:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" . htmlspecialchars($tempBooking['pickup']) . "</td></tr>
+                            <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Flight Type:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" . htmlspecialchars($tempBooking['flight_type_name']) . "</td></tr>
+                        </table>
+                    </div>
+                    
+                    <div style='background: #e7f3ff; padding: 15px; border-radius: 5px; margin: 20px 0;'>
+                        <h4>📋 Important Instructions:</h4>
+                        <ul>
+                            <li>Save this email and your booking number for future reference</li>
+                            <li>Arrive at the pickup location 15 minutes before your scheduled time</li>
+                            <li>Bring a valid government-issued ID for verification</li>
+                            <li>Wear comfortable clothing and closed-toe shoes</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class='footer'>
+                    <p>Thank you for choosing Parabook!</p>
+                    <p><small>© 2015 - 2025 ParaBook® Global Inc.</small></p>
+                </div>
+            </div>
+        </body>
+        </html>";
+
+
+
+        $mail->send();
+        error_log("Booking confirmation email sent to: " . $userDetails['email']);
+        return true;
+    } catch (Exception $e) {
+        error_log("Email sending failed: " . $e->getMessage());
+        return false;
+    }
 }
 ?>
