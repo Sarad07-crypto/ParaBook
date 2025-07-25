@@ -645,9 +645,6 @@ if ($serviceId) {
                     <span class="profile-address"><?php echo htmlspecialchars($service['contact'] ?? ''); ?></span>
                 </div>
             </div>
-            <div class="highlight">
-                <b>Popular choice!</b> This service has excellent customer satisfaction.
-            </div>
 
             <!-- Enhanced Dynamic Image Slider -->
             <div class="slider-area">
@@ -1524,17 +1521,17 @@ if ($serviceId) {
             const marker = L.marker([latitude, longitude]).addTo(map);
 
             // Create popup content without coordinates
-            const popupContent = `
-            <div style="padding: 8px; max-width: 250px;">
-                <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #333;"><?php echo htmlspecialchars($service['service_title'] ?? 'Service Location'); ?></h4>
-                <p style="margin: 0 0 5px 0; font-size: 12px; color: #666; font-weight: 500;"><?php echo htmlspecialchars($service['company_name'] ?? ''); ?></p>
-                <?php if ($locationData['formatted_address']): ?>
-                <p style="margin: 0; font-size: 11px; color: #888; line-height: 1.4;"><?php echo htmlspecialchars($locationData['formatted_address']); ?></p>
-                <?php elseif ($locationData['address']): ?>
-                <p style="margin: 0; font-size: 11px; color: #888; line-height: 1.4;"><?php echo htmlspecialchars($locationData['address']); ?></p>
-                <?php endif; ?>
-            </div>
-        `;
+            //     const popupContent = `
+            //     <div style="padding: 8px; max-width: 250px;">
+            //         <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #333;"><?php echo htmlspecialchars($service['service_title'] ?? 'Service Location'); ?></h4>
+            //         <p style="margin: 0 0 5px 0; font-size: 12px; color: #666; font-weight: 500;"><?php echo htmlspecialchars($service['company_name'] ?? ''); ?></p>
+            //         <?php if ($locationData['formatted_address']): ?>
+            //         <p style="margin: 0; font-size: 11px; color: #888; line-height: 1.4;"><?php echo htmlspecialchars($locationData['formatted_address']); ?></p>
+            //         <?php elseif ($locationData['address']): ?>
+            //         <p style="margin: 0; font-size: 11px; color: #888; line-height: 1.4;"><?php echo htmlspecialchars($locationData['address']); ?></p>
+            //         <?php endif; ?>
+            //     </div>
+            // `;
 
             // Bind popup to marker
             marker.bindPopup(popupContent);
@@ -1847,10 +1844,10 @@ if ($serviceId) {
             const marker = L.marker([latitude, longitude]).addTo(map);
 
             // Enhanced popup with direction button
+            // <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #333;"><?php echo htmlspecialchars($service['service_title'] ?? 'Service Location'); ?></h4>
             const popupContent = `
             <div style="padding: 8px; max-width: 250px;">
-                <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #333;"><?php echo htmlspecialchars($service['service_title'] ?? 'Service Location'); ?></h4>
-                <p style="margin: 0 0 5px 0; font-size: 12px; color: #666; font-weight: 500;"><?php echo htmlspecialchars($service['company_name'] ?? ''); ?></p>
+                <h4 style="margin: 0 0 5px 0; font-size: 16px; color: #666; font-weight: 500;"><?php echo htmlspecialchars($service['company_name'] ?? ''); ?></h4>
                 <?php if ($locationData['formatted_address']): ?>
                 <p style="margin: 0 0 10px 0; font-size: 11px; color: #888; line-height: 1.4;"><?php echo htmlspecialchars($locationData['formatted_address']); ?></p>
                 <?php elseif ($locationData['address']): ?>
