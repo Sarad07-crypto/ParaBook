@@ -534,7 +534,7 @@ function sendBookingConfirmationEmail($userDetails, $tempBooking, $transaction_c
         $mail->Host       = 'smtp.gmail.com';
         $mail->SMTPAuth   = true;
         $mail->Username   = 'saradcr7adhikari@gmail.com'; 
-        $mail->Password   = 'ktdm dmmt dwmu dzzz';   
+        $mail->Password   = '';   
         $mail->SMTPSecure = 'tls';
         $mail->Port       = 587;
 
