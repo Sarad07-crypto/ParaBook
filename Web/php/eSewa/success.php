@@ -6,10 +6,10 @@ ini_set('display_errors', 1);
 define('ROOT_PATH', dirname(__DIR__, 1));
 //require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/../../vendor/autoload.php';
-  use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\SMTP;
-use PHPMailer\PHPMailer\Exception;
-session_start();
+    use PHPMailer\PHPMailer\PHPMailer;
+    use PHPMailer\PHPMailer\SMTP;
+    use PHPMailer\PHPMailer\Exception;
+    session_start();
 
     // Get service_id from URL parameter
     $serviceId = isset($_GET['service_id']) ? intval($_GET['service_id']) :0 ;
@@ -382,7 +382,7 @@ if (!$result) {
             countdownElement.textContent = countdown;
             if (countdown <= 0) {
                 clearInterval(timer);
-              //  $emailSent = sendBookingConfirmationEmail($userDetails, $tempBooking, $transaction_code, $bookingId);
+                //  $emailSent = sendBookingConfirmationEmail($userDetails, $tempBooking, $transaction_code, $bookingId);
                 window.location.href = '/home';
             }
         }, 1000);
@@ -533,8 +533,8 @@ function sendBookingConfirmationEmail($userDetails, $tempBooking, $transaction_c
         $mail->isSMTP();
         $mail->Host       = 'smtp.gmail.com';
         $mail->SMTPAuth   = true;
-        $mail->Username   = 'saradcr7adhikari@gmail.com'; 
-        $mail->Password   = '';   
+        $mail->Username = 'saradcr7adhikari@gmail.com';
+        $mail->Password = 'femosrdqlzvdyxgg';
         $mail->SMTPSecure = 'tls';
         $mail->Port       = 587;
 
