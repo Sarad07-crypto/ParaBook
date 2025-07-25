@@ -9,6 +9,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
   use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
+
 session_start();
 
     // Get service_id from URL parameter
@@ -528,13 +529,14 @@ function createNotification($connect, $recipient_id, $recipient_type, $title, $m
 }
 function sendBookingConfirmationEmail($userDetails, $tempBooking, $transaction_code, $bookingId) {
     try {
+        // require_once ROOT_PATH . '\Parabook\Web\php\env.php';
         $mail = new PHPMailer(true);
         // SMTP settings
         $mail->isSMTP();
         $mail->Host       = 'smtp.gmail.com';
         $mail->SMTPAuth   = true;
         $mail->Username   = 'saradcr7adhikari@gmail.com'; 
-        $mail->Password   = '';   
+        $mail->Password   = $_ENV['Password']; // Use environment variable for security
         $mail->SMTPSecure = 'tls';
         $mail->Port       = 587;
 
