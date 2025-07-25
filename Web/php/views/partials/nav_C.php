@@ -33,8 +33,7 @@ body {
         <div class="sidebar-section sidebar-links">
             <a href="/home">Home</a>
             <a href="/bookingcompany">Bookings</a>
-            <a href="/statistics">Analytics</a>
-            <a href="#">Revenue</a>
+            <a href="/statisticsCompany">Statistics</a>
         </div>
         <div class="sidebar-section">
             <button class="logout-btn" onclick="window.location.href='/logout'">Log out</button>
@@ -44,8 +43,7 @@ body {
     <div class="nav-bar">
         <a href="/home">Home</a>
         <a href="/bookingcompany">Bookings</a>
-        <a href="/statistics">Analytics</a>
-        <a href="#">Revenue</a>
+        <a href="/statisticsCompany">Statistics</a>
     </div>
     <script src="Web/scripts/views.js"></script>
 </body>
