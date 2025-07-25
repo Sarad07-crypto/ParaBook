@@ -9,7 +9,7 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 
 require 'Web/php/connection.php';
-
+$serviceeid = $_SESSION['service_id'] ?? 20; // Default to 20 if not set
 if ($connect->connect_error) {
     die("Connection failed: " . $connect->connect_error);
 }
@@ -275,11 +275,16 @@ try {
     error_log("TEMP_BOOKINGS COLUMNS: " . implode(', ', $columns));
 
     // Enhanced temporary booking insertion
-    $sql = "INSERT INTO temp_bookings (
-        booking_no, user_id, full_name, email, phone, nationality, 
-        date, pickup, flight_type_id, flight_type_name, weight, age, 
-        gender, notes, total_amount, payment_status, created_at, expires_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW(), DATE_ADD(NOW(), INTERVAL 1 HOUR))";
+    // $sql = "INSERT INTO temp_bookings (
+    //     booking_no, user_id ,service_id, full_name,email, phone, nationality, 
+    //     date, pickup, flight_type_id, flight_type_name, weight, age, 
+    //     gender, notes, total_amount, payment_status, created_at, expires_at
+    // ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW(), DATE_ADD(NOW(), INTERVAL 1 HOUR))";
+$sql = "INSERT INTO temp_bookings (
+    booking_no, user_id, service_id, full_name, email, phone, nationality, 
+    date, pickup, flight_type_id, flight_type_name, weight, age, 
+    gender, notes, total_amount, payment_status, created_at, expires_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW(), DATE_ADD(NOW(), INTERVAL 1 HOUR))";
 
     error_log("INSERT SQL: " . $sql);
 
@@ -293,7 +298,8 @@ try {
     // Enhanced parameter binding with detailed logging
     $bindParams = [
         $bookingNo,           // s - booking_no
-        $userid,              // i - user_id  
+        $userid,  
+        $serviceeid,            // i - user_id  
         $formData['mainName'], // s - full_name
         $formData['mainEmail'], // s - email
         $formData['mainPhone'], // s - phone
@@ -315,14 +321,15 @@ try {
         error_log("Param " . ($i + 1) . ": " . (is_null($value) ? 'NULL' : "'$value'"));
     }
 
-    // Bind parameters
+
     $bindResult = $tempBookingStmt->bind_param(
-        "sissssssisdissd",
-        $bookingNo, $userid, $formData['mainName'], $formData['mainEmail'], 
-        $formData['mainPhone'], $formData['mainNationality'], $formData['mainDate'], 
-        $formData['mainPickup'], $flightTypeId, $flightTypeName, $weightValue, 
-        $ageValue, $formData['gender'], $formData['mainNotes'], $totalAmount
-    );
+    "siissssssssissss",
+    $bookingNo, $userid, $serviceeid, $formData['mainName'], $formData['mainEmail'], 
+    $formData['mainPhone'], $formData['mainNationality'], $formData['mainDate'], 
+    $formData['mainPickup'], $flightTypeId, $flightTypeName, $weightValue, 
+    $ageValue, $formData['gender'], $formData['mainNotes'], $totalAmount
+);
+   
 
     if (!$bindResult) {
         $error = 'Parameter binding failed: ' . $tempBookingStmt->error;
@@ -422,7 +429,7 @@ try {
     $_SESSION['booking_error'] = 'A server error occurred. Please try again later.';
     header('Location: /booking');
     exit;
-    
+   
 } finally {
     // Clean up resources
     if (isset($tempBookingStmt) && $tempBookingStmt) {
