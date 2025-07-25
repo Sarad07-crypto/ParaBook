@@ -6,10 +6,10 @@ ini_set('display_errors', 1);
 define('ROOT_PATH', dirname(__DIR__, 1));
 //require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/../../vendor/autoload.php';
-    use PHPMailer\PHPMailer\PHPMailer;
-    use PHPMailer\PHPMailer\SMTP;
-    use PHPMailer\PHPMailer\Exception;
-    session_start();
+  use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
+session_start();
 
     // Get service_id from URL parameter
     $serviceId = isset($_GET['service_id']) ? intval($_GET['service_id']) :0 ;
@@ -528,13 +528,14 @@ function createNotification($connect, $recipient_id, $recipient_type, $title, $m
 }
 function sendBookingConfirmationEmail($userDetails, $tempBooking, $transaction_code, $bookingId) {
     try {
+        // require_once ROOT_PATH . '\Parabook\Web\php\env.php';
         $mail = new PHPMailer(true);
         // SMTP settings
         $mail->isSMTP();
         $mail->Host       = 'smtp.gmail.com';
         $mail->SMTPAuth   = true;
-        $mail->Username = 'saradcr7adhikari@gmail.com';
-        $mail->Password = 'femosrdqlzvdyxgg';
+        $mail->Username   = 'saradcr7adhikari@gmail.com'; 
+        $mail->Password   = '';   
         $mail->SMTPSecure = 'tls';
         $mail->Port       = 587;
 
