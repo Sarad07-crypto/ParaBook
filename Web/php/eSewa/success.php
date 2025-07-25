@@ -528,14 +528,15 @@ function createNotification($connect, $recipient_id, $recipient_type, $title, $m
 }
 function sendBookingConfirmationEmail($userDetails, $tempBooking, $transaction_code, $bookingId) {
     try {
-        // require_once ROOT_PATH . '\Parabook\Web\php\env.php';
+         require_once '../env.php';
+    
         $mail = new PHPMailer(true);
         // SMTP settings
         $mail->isSMTP();
         $mail->Host       = 'smtp.gmail.com';
         $mail->SMTPAuth   = true;
-        $mail->Username   = 'saradcr7adhikari@gmail.com'; 
-        $mail->Password   = '';   
+        $mail->Username   = $MAIL; 
+        $mail->Password   = $PASSWORD;   
         $mail->SMTPSecure = 'tls';
         $mail->Port       = 587;
 
