@@ -52,6 +52,8 @@
         
         // for statistics
         '/statistics' => PHP . 'views/statistics.php',
+        '/statisticsPassenger' => PHP . 'views/statistics_P.php',
+        '/statisticsCompany' => PHP . 'views/statistics_C.php',
         
         '/completeProfile' => PHP . 'views/complete.profile.php',
         
