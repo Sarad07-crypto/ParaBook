@@ -374,6 +374,7 @@ try {
             countdownElement.textContent = countdown;
             if (countdown <= 0) {
                 clearInterval(timer);
+                //$emailSent = sendBookingConfirmationEmail($userDetails, $tempBooking, $transaction_code, $bookingId);
                 window.location.href = '/home';
             }
         }, 1000);

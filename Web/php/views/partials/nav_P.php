@@ -24,14 +24,9 @@ body {
     <div class="sidebar-section sidebar-links">
         <a href="/home">Home</a>
         <a href="/bookingcheck">Bookings</a>
-        <a href="#">Statistics</a>
+        <a href="/statisticsPassenger">Statistics</a>
     </div>
     <div class="sidebar-section">
-        <a href="#" style="text-decoration: none;">Notifications</a><br>
-        <a href="#" style="text-decoration: none;">Messages</a><br>
-        <a href="#" style="text-decoration: none;">Reports</a><br>
-        <a href="#" style="text-decoration: none;">Support</a>
-        <span class="switch-text">Company Dashboard</span>
         <button class="logout-btn" onclick="window.location.href='/logout'">Log out</button>
     </div>
 </div>
@@ -39,6 +34,6 @@ body {
 <div class="nav-bar">
     <a href="/home">Home</a>
     <a href="/bookingcheck">Bookings</a>
-    <a href="#">Statistics</a>
+    <a href="/statisticsPassenger">Statistics</a>
 </div>
 <script src="Web/scripts/views.js"></script>
