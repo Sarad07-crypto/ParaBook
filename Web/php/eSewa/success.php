@@ -1,10 +1,9 @@
 <?php
-// Enable error reporting for debugging
-//require_once $_SERVER['DOCUMENT_ROOT'] . '/ParaBook/Web/vendor/autoload.php';
+
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 define('ROOT_PATH', dirname(__DIR__, 1));
-//require_once __DIR__ . '/vendor/autoload.php';
+
 require_once __DIR__ . '/../../vendor/autoload.php';
   use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
@@ -12,11 +11,11 @@ use PHPMailer\PHPMailer\Exception;
 session_start();
 
     // Get service_id from URL parameter
-    $serviceId = isset($_GET['service_id']) ? intval($_GET['service_id']) :0 ;
+    
 try {
     // Include database connection
     include "../connection.php";
-    echo "<h1>eSewa Payment Success Service id is $serviceId</h1>";
+ 
     
     // eSewa sends data as base64 encoded JSON in 'data' parameter
     $encoded_data = $_GET['data'] ?? $_POST['data'] ?? '';

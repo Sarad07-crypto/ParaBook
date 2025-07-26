@@ -1,3 +1,17 @@
+<?php
+session_start();
+?>
+
+
+
+
+
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -436,6 +450,24 @@
       background: #2d1b1b;
       border-color: #5a2626;
     }
+    .current-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
   </style>
 </head>
 <body>
@@ -470,7 +502,8 @@
         </div>
 
         <div class="avatar-upload">
-          <div class="current-avatar">U</div>
+          <div class="current-avatar"> <?php   ?>
+          <img src="<?php echo '/Assets/uploads/avatars/' . htmlspecialchars($_SESSION['avatar']); ?>" alt="Avatar" class="avatar-img"></div>
           <div>
             <button class="upload-btn">Change Avatar</button>
             <p style="font-size: 12px; color: #666; margin: 5px 0 0 0;">Max file size: 5MB</p>
@@ -480,49 +513,22 @@
         <div class="form-row">
           <div class="form-group">
             <label>First Name</label>
-            <input type="text" value="John" placeholder="Enter your first name">
+            <input type="text" value="<?php echo ($_SESSION ['firstName']) ?>" placeholder="Enter your first name">
           </div>
           <div class="form-group">
             <label>Last Name</label>
-            <input type="text" value="Doe" placeholder="Enter your last name">
+            <input type="text" value="<?php echo( $_SESSION ['lastName']) ?>" placeholder="Enter your last name">
           </div>
         </div>
 
-        <div class="form-group">
-          <label>Email Address</label>
-          <input type="email" value="john.doe@example.com" placeholder="Enter your email">
-        </div>
-
+      
         <div class="form-group">
           <label>Phone Number</label>
           <input type="tel" value="+1 (555) 123-4567" placeholder="Enter your phone number">
         </div>
 
-        <div class="form-group">
-          <label>Bio</label>
-          <textarea placeholder="Tell us about yourself...">Software developer passionate about creating innovative solutions.</textarea>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Country</label>
-            <select>
-              <option>United States</option>
-              <option>Canada</option>
-              <option>United Kingdom</option>
-              <option>Australia</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Time Zone</label>
-            <select>
-              <option>UTC-8 (PST)</option>
-              <option>UTC-5 (EST)</option>
-              <option>UTC+0 (GMT)</option>
-              <option>UTC+1 (CET)</option>
-            </select>
-          </div>
-        </div>
+      
+      
 
         <button class="btn">Save Changes</button>
       </div>
@@ -555,27 +561,9 @@
           <input type="password" placeholder="Confirm new password">
         </div>
 
-        <div class="preference-item">
-          <div class="preference-info">
-            <h4>Two-Factor Authentication</h4>
-            <p>Add an extra layer of security to your account</p>
-          </div>
-          <label class="toggle-switch">
-            <input type="checkbox">
-            <span class="slider"></span>
-          </label>
-        </div>
+      
 
-        <div class="preference-item">
-          <div class="preference-info">
-            <h4>Login Alerts</h4>
-            <p>Get notified when someone logs into your account</p>
-          </div>
-          <label class="toggle-switch">
-            <input type="checkbox" checked>
-            <span class="slider"></span>
-          </label>
-        </div>
+       
 
         <button class="btn">Update Password</button>
         <button class="btn btn-secondary">View Login History</button>
