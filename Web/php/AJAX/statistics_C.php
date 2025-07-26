@@ -106,19 +106,18 @@ try {
     $total_flights = $flights_result->fetch_assoc()['total_flights'] ?? 0;
     $stmt->close();
 
-    // 4. Get Average Rating
-    $rating_query = "
-        SELECT AVG(COALESCE(r.rating, 0)) as avg_rating 
-        FROM bookings b 
-        INNER JOIN company_services cs ON b.service_id = cs.id 
-        LEFT JOIN reviews r ON (r.service_id = cs.id AND r.user_id = b.user_id)
-        WHERE cs.user_id = ? AND b.status = 'completed' $date_condition
+    // 4. Get Total Cancelled Bookings
+    $cancelled_query = "
+    SELECT COUNT(*) as total_cancelled 
+    FROM bookings b 
+    INNER JOIN company_services cs ON b.service_id = cs.id 
+    WHERE cs.user_id = ? AND b.status = 'cancelled' $date_condition
     ";
-    $stmt = $connect->prepare($rating_query);
+    $stmt = $connect->prepare($cancelled_query);
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
-    $rating_result = $stmt->get_result();
-    $avg_rating = round($rating_result->fetch_assoc()['avg_rating'] ?? 0, 1);
+    $cancelled_result = $stmt->get_result();
+    $total_cancelled = $cancelled_result->fetch_assoc()['total_cancelled'] ?? 0;
     $stmt->close();
 
     // 5. Get All Services with titles and ratings
@@ -225,9 +224,9 @@ try {
     $booking_change = rand(5, 25); // Placeholder - implement actual calculation
     $revenue_change = rand(8, 30);
     $flight_change = rand(-5, 20);
-    $rating_change = rand(-2, 5) / 10;
+    $cancelled_change = rand(-10, 15); // Change for cancelled bookings
 
-    // Prepare response
+    // Update the response data structure
     $response = [
         'success' => true,
         'time_filter' => $time_filter,
@@ -236,12 +235,12 @@ try {
                 'total_bookings' => intval($total_bookings),
                 'total_revenue' => floatval($total_revenue),
                 'total_flights' => intval($total_flights),
-                'avg_rating' => floatval($avg_rating),
+                'total_cancelled' => intval($total_cancelled), // Changed from avg_rating
                 'changes' => [
                     'bookings' => $booking_change,
                     'revenue' => $revenue_change,
                     'flights' => $flight_change,
-                    'rating' => $rating_change
+                    'cancelled' => $cancelled_change // Changed from rating
                 ]
             ],
             'services' => $services,

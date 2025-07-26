@@ -60,29 +60,54 @@ function showLoadingAnimation(period) {
   });
 }
 
-// Load statistics from API
+// FIXED: Load statistics from API with better error handling and debugging
 async function loadStatistics(timeFilter) {
   try {
+    console.log(`Loading statistics for filter: ${timeFilter}`);
+
     const response = await fetch(
       `Web/php/AJAX/statistics_C.php?time_filter=${timeFilter}`
     );
+
+    // Check if response is ok
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
     const result = await response.json();
+
+    // FIXED: Enhanced debugging - log the entire response
+    console.log("API Response:", result);
 
     if (result.success) {
       currentData = result.data;
+
+      // FIXED: Log the statistics data specifically
+      console.log("Statistics data:", result.data.statistics);
+      console.log(
+        "Total cancelled:",
+        result.data.statistics?.total_cancelled,
+        typeof result.data.statistics?.total_cancelled
+      );
+
       updateDashboard(result.data, timeFilter);
     } else {
       console.error("API Error:", result.error);
+      if (result.debug_error) {
+        console.error("Debug Error:", result.debug_error);
+      }
       showError("Failed to load statistics: " + result.error);
     }
   } catch (error) {
     console.error("Network Error:", error);
-    showError("Network error occurred while loading data");
+    showError("Network error occurred while loading data: " + error.message);
   }
 }
 
 // Update dashboard with new data
 function updateDashboard(data, timeFilter) {
+  console.log("Updating dashboard with data:", data);
+
   // Update main statistics
   updateMainStats(data.statistics);
 
@@ -101,14 +126,31 @@ function updateDashboard(data, timeFilter) {
   }, 1000);
 }
 
-// Update main statistics cards
+// FIXED: Update main statistics cards with better error handling
 function updateMainStats(stats) {
+  console.log("Updating main stats with:", stats);
+
+  if (!stats) {
+    console.error("No statistics data provided");
+    return;
+  }
+
   const statElements = document.querySelectorAll(".stat-value");
   const changes = stats.changes || {};
 
-  // Total Bookings
+  console.log("Found stat elements:", statElements.length);
+  console.log("Stats object:", {
+    total_bookings: stats.total_bookings,
+    total_revenue: stats.total_revenue,
+    total_flights: stats.total_flights,
+    total_cancelled: stats.total_cancelled,
+  });
+
+  // FIXED: Total Bookings - ensure it's a valid number
   if (statElements[0]) {
-    animateValue(statElements[0], 0, stats.total_bookings, 1000);
+    const bookings = parseInt(stats.total_bookings) || 0;
+    console.log("Animating bookings:", bookings);
+    animateValue(statElements[0], 0, bookings, 1000);
     updateChangeIndicator(
       statElements[0].parentElement,
       changes.bookings || 0,
@@ -116,9 +158,11 @@ function updateMainStats(stats) {
     );
   }
 
-  // Total Revenue - FIXED: Changed to Rs. instead of $
+  // FIXED: Total Revenue - ensure it's a valid number
   if (statElements[1]) {
-    animateValue(statElements[1], 0, stats.total_revenue, 1000, true);
+    const revenue = parseFloat(stats.total_revenue) || 0;
+    console.log("Animating revenue:", revenue);
+    animateValue(statElements[1], 0, revenue, 1000, true);
     updateChangeIndicator(
       statElements[1].parentElement,
       changes.revenue || 0,
@@ -126,9 +170,11 @@ function updateMainStats(stats) {
     );
   }
 
-  // Total Flights
+  // FIXED: Total Flights - ensure it's a valid number
   if (statElements[2]) {
-    animateValue(statElements[2], 0, stats.total_flights, 1000);
+    const flights = parseInt(stats.total_flights) || 0;
+    console.log("Animating flights:", flights);
+    animateValue(statElements[2], 0, flights, 1000);
     updateChangeIndicator(
       statElements[2].parentElement,
       changes.flights || 0,
@@ -136,18 +182,55 @@ function updateMainStats(stats) {
     );
   }
 
-  // Average Rating
+  // FIXED: Total Cancelled Bookings - with extensive debugging
   if (statElements[3]) {
-    animateValue(statElements[3], 0, stats.avg_rating, 1000, false, 1);
+    const cancelledRaw = stats.total_cancelled;
+    console.log(
+      "Raw cancelled value:",
+      cancelledRaw,
+      "Type:",
+      typeof cancelledRaw
+    );
+
+    // FIXED: Handle various data types and edge cases
+    let cancelled = 0;
+    if (cancelledRaw === null || cancelledRaw === undefined) {
+      cancelled = 0;
+      console.log("Cancelled was null/undefined, set to 0");
+    } else if (typeof cancelledRaw === "string") {
+      if (cancelledRaw.trim() === "" || cancelledRaw.toLowerCase() === "nan") {
+        cancelled = 0;
+        console.log("Cancelled was empty string or NaN, set to 0");
+      } else {
+        cancelled = parseInt(cancelledRaw) || 0;
+        console.log("Parsed cancelled from string:", cancelled);
+      }
+    } else if (typeof cancelledRaw === "number") {
+      if (isNaN(cancelledRaw)) {
+        cancelled = 0;
+        console.log("Cancelled was NaN number, set to 0");
+      } else {
+        cancelled = Math.floor(cancelledRaw);
+        console.log("Used cancelled as number:", cancelled);
+      }
+    } else {
+      cancelled = 0;
+      console.log("Cancelled was unknown type, set to 0");
+    }
+
+    console.log("Final cancelled value to animate:", cancelled);
+    animateValue(statElements[3], 0, cancelled, 1000);
     updateChangeIndicator(
       statElements[3].parentElement,
-      changes.rating || 0,
-      "rating"
+      changes.cancelled || 0,
+      "cancelled"
     );
+  } else {
+    console.error("Fourth stat element not found for cancelled bookings");
   }
 }
 
-// FIXED: Animate number values with Rs. instead of $
+// FIXED: Animate number values with better error handling
 function animateValue(
   element,
   start,
@@ -156,9 +239,31 @@ function animateValue(
   isCurrency = false,
   decimals = 0
 ) {
+  console.log(
+    `Animating value from ${start} to ${end}, currency: ${isCurrency}`
+  );
+
+  // FIXED: Validate inputs
+  if (!element) {
+    console.error("Element not provided to animateValue");
+    return;
+  }
+
+  const startValue = parseFloat(start) || 0;
+  const endValue = parseFloat(end) || 0;
+
+  if (isNaN(startValue) || isNaN(endValue)) {
+    console.error("Invalid start or end values:", start, end);
+    // Fallback to direct assignment
+    if (isCurrency) {
+      element.textContent = "Rs." + Math.floor(endValue || 0).toLocaleString();
+    } else {
+      element.textContent = Math.floor(endValue || 0).toLocaleString();
+    }
+    return;
+  }
+
   const startTime = Date.now();
-  const startValue = start;
-  const endValue = end;
 
   function updateValue() {
     const currentTime = Date.now();
@@ -167,13 +272,18 @@ function animateValue(
 
     const current = startValue + (endValue - startValue) * progress;
 
-    if (isCurrency) {
-      // FIXED: Changed from $ to Rs.
-      element.textContent = "Rs." + Math.floor(current).toLocaleString();
-    } else if (decimals > 0) {
-      element.textContent = current.toFixed(decimals);
-    } else {
-      element.textContent = Math.floor(current).toLocaleString();
+    try {
+      if (isCurrency) {
+        element.textContent = "Rs." + Math.floor(current).toLocaleString();
+      } else if (decimals > 0) {
+        element.textContent = current.toFixed(decimals);
+      } else {
+        element.textContent = Math.floor(current).toLocaleString();
+      }
+    } catch (error) {
+      console.error("Error updating element text:", error);
+      // Fallback
+      element.textContent = Math.floor(current);
     }
 
     if (progress < 1) {
@@ -184,23 +294,34 @@ function animateValue(
   updateValue();
 }
 
-// Update change indicator
+// FIXED: Update change indicator with validation
 function updateChangeIndicator(cardElement, change, type) {
-  const changeElement = cardElement.querySelector(".stat-change");
-  if (!changeElement) return;
+  if (!cardElement) {
+    console.error("Card element not provided to updateChangeIndicator");
+    return;
+  }
 
-  const isPositive = change >= 0;
-  const changeText = Math.abs(change);
+  const changeElement = cardElement.querySelector(".stat-change");
+  if (!changeElement) {
+    console.log("Change element not found for type:", type);
+    return;
+  }
+
+  // FIXED: Ensure change is a valid number
+  const changeValue = parseFloat(change) || 0;
+  const isPositive = changeValue >= 0;
+  const changeText = Math.abs(changeValue);
 
   changeElement.className = `stat-change ${
     isPositive ? "positive" : "negative"
   }`;
 
   let changeString = "";
-  if (type === "rating") {
-    changeString = `${isPositive ? "+" : ""}${change.toFixed(
-      1
-    )} from last ${currentFilter}`;
+  if (type === "cancelled") {
+    // For cancelled bookings, we might want to show it differently
+    changeString = `${
+      isPositive ? "+" : ""
+    }${changeText} from last ${currentFilter}`;
   } else {
     changeString = `${
       isPositive ? "+" : ""
@@ -221,7 +342,10 @@ function updateServicesList(services) {
   );
   const servicesChart = chartElements[0]; // First chart for services
 
-  if (!servicesChart) return;
+  if (!servicesChart) {
+    console.error("Services chart container not found");
+    return;
+  }
 
   if (!services || services.length === 0) {
     servicesChart.innerHTML = `
@@ -289,7 +413,7 @@ function generateStarRating(rating, ratingCount) {
   return starsHTML;
 }
 
-// FIXED: Updated flight types chart function with centered layout (no legend)
+// FIXED: Updated flight types chart function with better error handling
 function updateFlightTypesChart(flightTypes) {
   const chartElements = document.querySelectorAll(
     ".chart-card .chart-placeholder"
@@ -318,11 +442,11 @@ function updateFlightTypesChart(flightTypes) {
     return;
   }
 
-  // Calculate total for percentages
-  const totalFlights = flightTypes.reduce(
-    (sum, type) => sum + (type.count || 0),
-    0
-  );
+  // FIXED: Calculate total for percentages with better validation
+  const totalFlights = flightTypes.reduce((sum, type) => {
+    const count = parseInt(type.count) || 0;
+    return sum + count;
+  }, 0);
 
   if (totalFlights === 0) {
     flightTypesChart.innerHTML = `
@@ -335,7 +459,7 @@ function updateFlightTypesChart(flightTypes) {
     return;
   }
 
-  // FIXED: Create centered chart container with proper padding
+  // Create centered chart container with proper padding
   flightTypesChart.innerHTML = `
     <div style="
       display: flex; 
@@ -367,21 +491,22 @@ function updateFlightTypesChart(flightTypes) {
       return;
     }
 
-    // Prepare data for Chart.js - ensure all values are numbers
-    const labels = flightTypes.map((type) => type.type || "Unknown");
-    const data = flightTypes.map((type) => parseInt(type.count) || 0);
-
-    // Filter out zero values
+    // FIXED: Prepare data for Chart.js with better validation
     const validData = [];
     const validLabels = [];
     const validFlightTypes = [];
 
-    flightTypes.forEach((type, index) => {
+    flightTypes.forEach((type) => {
       const count = parseInt(type.count) || 0;
-      if (count > 0) {
+      if (count > 0 && type.type) {
         validData.push(count);
-        validLabels.push(type.type || "Unknown");
-        validFlightTypes.push(type);
+        validLabels.push(type.type);
+        validFlightTypes.push({
+          ...type,
+          count: count,
+          avg_price: parseFloat(type.avg_price) || 0,
+          total_amount: parseFloat(type.total_amount) || 0,
+        });
       }
     });
 
@@ -415,7 +540,7 @@ function updateFlightTypesChart(flightTypes) {
               borderWidth: 2,
               hoverBorderWidth: 3,
               hoverBorderColor: "#fff",
-              hoverBackgroundColor: colors.map((color) => color + "CC"), // Add transparency on hover
+              hoverBackgroundColor: colors.map((color) => color + "CC"),
             },
           ],
         },
@@ -424,7 +549,7 @@ function updateFlightTypesChart(flightTypes) {
           maintainAspectRatio: true,
           plugins: {
             legend: {
-              display: false, // Hide legend completely
+              display: false,
             },
             tooltip: {
               enabled: true,
@@ -440,17 +565,15 @@ function updateFlightTypesChart(flightTypes) {
 
                   const lines = [`${label}: ${value} flights (${percentage}%)`];
 
-                  if (flightType.avg_price) {
+                  if (flightType.avg_price > 0) {
                     lines.push(
-                      `Avg Price: Rs.${parseFloat(flightType.avg_price).toFixed(
-                        2
-                      )}`
+                      `Avg Price: Rs.${flightType.avg_price.toFixed(2)}`
                     );
                   }
 
-                  if (flightType.total_amount) {
+                  if (flightType.total_amount > 0) {
                     lines.push(
-                      `Total Revenue: Rs.${parseInt(
+                      `Total Revenue: Rs.${Math.floor(
                         flightType.total_amount
                       ).toLocaleString()}`
                     );
@@ -475,12 +598,10 @@ function updateFlightTypesChart(flightTypes) {
             easing: "easeInOutQuart",
           },
           layout: {
-            padding: 20, // Add padding inside the chart
+            padding: 20,
           },
         },
       });
-
-      // No legend creation since we removed it
     } catch (error) {
       console.error("Error creating chart:", error);
       flightTypesChart.innerHTML = `
@@ -491,7 +612,7 @@ function updateFlightTypesChart(flightTypes) {
         </div>
       `;
     }
-  }, 100); // Small delay to ensure DOM is ready
+  }, 100);
 }
 
 // Generate colors for pie chart slices
@@ -519,77 +640,20 @@ function generateColors(count) {
     if (i < baseColors.length) {
       colors.push(baseColors[i]);
     } else {
-      // Generate additional colors using HSL if needed
-      const hue = (i * 137.508) % 360; // Golden angle approximation for good color distribution
+      const hue = (i * 137.508) % 360;
       colors.push(`hsl(${hue}, 70%, 50%)`);
     }
   }
   return colors;
 }
 
-// FIXED: Create custom legend with flight type details - beside chart
-function createCustomLegend(flightTypes, colors, totalFlights) {
-  const legendContainer = document.getElementById("chartLegend");
-  if (!legendContainer) return;
-
-  let legendHTML =
-    '<div class="flight-types-legend" style="display: flex; flex-direction: row; gap: 10px; height: 100%;">';
-  legendHTML +=
-    '<h4 style="margin: 0 0 15px 0; color: #2c3e50; font-size: 1.1em;">Flight Distribution</h4>';
-
-  flightTypes.forEach((type, index) => {
-    const count = parseInt(type.count) || 0;
-    const percentage =
-      totalFlights > 0 ? ((count / totalFlights) * 100).toFixed(1) : 0;
-    const avgPrice = parseFloat(type.avg_price) || 0;
-    const totalAmount = parseInt(type.total_amount) || 0;
-
-    legendHTML += `
-      <div class="legend-item" style="
-        display: flex; 
-        align-items: center; 
-        padding: 12px; 
-        background: rgba(255,255,255,0.5); 
-        border-radius: 8px;
-        animation: slideIn 0.5s ease forwards;
-        animation-delay: ${index * 0.1}s;
-        opacity: 0;
-        border-left: 4px solid ${colors[index]};
-      ">
-        <div class="legend-color" style="
-          width: 16px; 
-          height: 16px; 
-          background-color: ${colors[index]}; 
-          border-radius: 50%; 
-          margin-right: 12px;
-          flex-shrink: 0;
-        "></div>
-        <div class="legend-info" style="flex: 1;">
-          <div class="legend-title" style="font-weight: 600; color: #2c3e50; margin-bottom: 4px; font-size: 0.95em;">
-            ${type.type || "Unknown"}
-          </div>
-          <div class="legend-details" style="font-size: 0.8em; color: #7f8c8d; line-height: 1.3;">
-            ${count} flights (${percentage}%)
-            ${avgPrice > 0 ? `<br>Avg: Rs.${avgPrice.toFixed(2)}` : ""}
-            ${
-              totalAmount > 0
-                ? `<br>Total: Rs.${totalAmount.toLocaleString()}`
-                : ""
-            }
-          </div>
-        </div>
-      </div>
-    `;
-  });
-
-  legendHTML += "</div>";
-  legendContainer.innerHTML = legendHTML;
-}
-
 // Update today's flights
 function updateTodaysFlights(flights) {
   const flightList = document.querySelector(".flight-list");
-  if (!flightList) return;
+  if (!flightList) {
+    console.error("Flight list container not found");
+    return;
+  }
 
   if (!flights || flights.length === 0) {
     flightList.innerHTML = `
@@ -673,12 +737,13 @@ function getStatusText(status) {
 
 // Show completion message
 function showCompletionMessage(period) {
-  // This function can be used to show any final animations or confirmations
   console.log(`Dashboard updated for period: ${period}`);
 }
 
-// Show error message
+// FIXED: Show error message with better error handling
 function showError(message) {
+  console.error("Dashboard Error:", message);
+
   // Reset loading animations
   document.querySelectorAll(".stat-value").forEach((element) => {
     element.textContent = "0";
@@ -693,8 +758,6 @@ function showError(message) {
             </div>
         `;
   });
-
-  console.error("Dashboard Error:", message);
 }
 
 // Add hover effects to cards when DOM is loaded
@@ -715,6 +778,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // Auto-refresh data every 5 minutes for today's filter
 setInterval(() => {
   if (currentFilter === "today") {
+    console.log("Auto-refreshing dashboard data");
     loadStatistics("today");
   }
 }, 300000); // 5 minutes
@@ -722,7 +786,7 @@ setInterval(() => {
 // Refresh today's flights every 30 seconds when on today filter
 setInterval(() => {
   if (currentFilter === "today" && currentData) {
-    // Only refresh today's flights, not all data
+    console.log("Auto-refreshing today's flights");
     fetch(`Web/php/AJAX/statistics_C.php?time_filter=today`)
       .then((response) => response.json())
       .then((result) => {
