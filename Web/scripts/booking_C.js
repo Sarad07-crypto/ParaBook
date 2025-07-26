@@ -330,3 +330,5 @@ window.onerror = function (message, source, lineno, colno, error) {
 };
 
 console.log("=== JAVASCRIPT LOADED ===");
+
+// for view, update, complete model

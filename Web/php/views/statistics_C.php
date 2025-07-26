@@ -217,11 +217,11 @@
             <div class="stat-card">
                 <div class="stat-header">
                     <div class="stat-icon">
-                        <i class="fas fa-star"></i>
+                        <i class="fas fa-times-circle"></i>
                     </div>
                 </div>
-                <div class="stat-value">0.0</div>
-                <div class="stat-label">Average Rating</div>
+                <div class="stat-value">0</div>
+                <div class="stat-label">Total Cancelled Bookings</div>
             </div>
         </div>
 
