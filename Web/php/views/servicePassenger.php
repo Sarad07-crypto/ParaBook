@@ -43,10 +43,11 @@
                 <label style="margin-left: 24px;">
                     Sort by:
                     <select class="sort-select">
-                        <option value="rating">Rating</option>
-                        <option value="price">Price</option>
-                        <option value="reviews">Reviews</option>
-                        <option value="name">Name</option>
+                        <option value="name">Company Name (A-Z)</option>
+                        <option value="price">Price (Low to High)</option>
+                        <option value="price-max">Price (High to Low)</option>
+                        <option value="reviews">Most Flights</option>
+                        <option value="rating">Highest Rating</option>
                     </select>
                 </label>
             </div>

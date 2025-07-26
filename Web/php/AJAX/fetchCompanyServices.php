@@ -29,11 +29,16 @@ try {
 
     $query = "
         SELECT cs.*, 
-               GROUP_CONCAT(DISTINCT CONCAT(sft.flight_type_name, '|', sft.price) SEPARATOR ';;') as flight_types,
-               GROUP_CONCAT(DISTINCT sop.photo_path SEPARATOR ';;') as office_photos
+               GROUP_CONCAT(DISTINCT CONCAT(sft.flight_type_name, '|', COALESCE(sft.price, '0')) SEPARATOR ';;') as flight_types,
+               GROUP_CONCAT(DISTINCT sop.photo_path SEPARATOR ';;') as office_photos,
+               COALESCE(AVG(CAST(r.rating AS DECIMAL(3,2))), 0) as avg_rating,
+               COUNT(DISTINCT r.id) as total_reviews,
+               COUNT(DISTINCT CASE WHEN b.status = 'completed' THEN b.booking_id END) as total_flights
         FROM company_services cs
         LEFT JOIN service_flight_types sft ON cs.id = sft.service_id
         LEFT JOIN service_office_photos sop ON cs.id = sop.service_id
+        LEFT JOIN reviews r ON cs.id = r.service_id AND r.rating IS NOT NULL AND r.rating > 0
+        LEFT JOIN bookings b ON cs.id = b.service_id
     ";
 
     // Filter by company user_id if it's a company, otherwise show only approved services
@@ -55,6 +60,9 @@ try {
 
     $services = [];
     while ($row = $result->fetch_assoc()) {
+        // Debug logging
+        error_log("Service ID: " . $row['id'] . " - Rating: " . $row['avg_rating'] . " - Flights: " . $row['total_flights']);
+        
         // Parse flight types
         $flightTypes = [];
         if (!empty($row['flight_types'])) {
@@ -79,17 +87,31 @@ try {
             }
         }
 
+        // Format rating data - ensure proper number conversion
+        $avgRating = floatval($row['avg_rating']);
+        $totalReviews = intval($row['total_reviews']);
+        $totalFlights = intval($row['total_flights']);
+
         $services[] = [
-            'id' => $row['id'],
+            'id' => intval($row['id']),
             'company_name' => $row['company_name'] ?? '',
             'service_title' => $row['service_title'] ?? '',
             'service_description' => $row['service_description'] ?? '',
             'thumbnail_path' => $row['thumbnail_path'] ?? '',
-            'status' => $row['status'] ?? 'pending', // Include status in response
+            'status' => $row['status'] ?? 'pending',
             'flight_types' => $flightTypes,
             'office_photos' => $officePhotos,
+            'avg_rating' => $avgRating,
+            'total_reviews' => $totalReviews,
+            'total_flights' => $totalFlights,
             'created_at' => $row['created_at'] ?? null
         ];
+    }
+
+    // Debug the final response
+    error_log("Total services found: " . count($services));
+    foreach ($services as $service) {
+        error_log("Service: " . $service['company_name'] . " - Rating: " . $service['avg_rating'] . " - Flights: " . $service['total_flights']);
     }
 
     echo json_encode([

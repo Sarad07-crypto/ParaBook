@@ -23,16 +23,16 @@ body {
 <body>
 
     <?php
-        require('partials/header.php');
-        $accType = $_SESSION['acc_type'] ?? 'passenger';
-        if ($accType === 'company') {
-            require('partials/nav_C.php');
-            require('addServices.php');
-        } else {
-            require('partials/nav_P.php');
-            require('servicePassenger.php');
-        }
-    ?>
+            require('partials/header.php');
+            $accType = $_SESSION['acc_type'] ?? 'passenger';
+            if ($accType === 'company') {
+                require('partials/nav_C.php');
+                require('addServices.php');
+            } else {
+                require('partials/nav_P.php');
+                require('servicePassenger.php');
+            }
+        ?>
 
     <?php require('partials/footer.php'); ?>
     <script>
